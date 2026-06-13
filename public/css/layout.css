@@ -1,0 +1,72 @@
+/* ═══════════════════════════════════════════
+   SmartPro — layout.css
+   Login, App Shell, Topbar, Sidebar, Content
+   ═══════════════════════════════════════════ */
+
+/* LOGIN */
+#loginPage{display:flex;align-items:center;justify-content:center;height:100vh;background:radial-gradient(ellipse at 50% -10%,rgba(27,234,205,.1) 0%,transparent 55%),var(--bg)}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:44px 40px;width:400px;box-shadow:0 0 80px rgba(27,234,205,.07),var(--shadow)}
+.login-logo{text-align:center;margin-bottom:30px}
+.login-logo img{height:52px;max-width:200px;object-fit:contain}
+.login-logo .logo-fallback{display:none;flex-direction:column;align-items:center;gap:8px}
+.login-logo .logo-fallback .sp-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--accent-d),var(--accent));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff}
+.login-sub{color:var(--text2);font-size:13px;margin-top:6px}
+.login-title{font-size:20px;font-weight:800;color:var(--text);margin-top:8px;letter-spacing:-.3px}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent-d),#0067c8);color:#fff;border-radius:var(--radius2);font-size:15px;font-weight:700;margin-top:8px;border:none;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.login-btn::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(27,234,205,.15),transparent);transition:left .4s}
+.login-btn:hover::after{left:100%}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,69,132,.4)}
+.err-box{background:rgba(255,64,96,.1);border:1px solid rgba(255,64,96,.25);color:#ff8099;border-radius:var(--radius2);padding:10px 14px;font-size:13px;margin-bottom:12px;display:none}
+.login-hint{margin-top:16px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius2);font-size:12px;color:var(--text2);line-height:1.8}
+.login-hint strong{color:var(--text)}
+
+/* APP SHELL */
+#appShell{display:none;flex-direction:column;height:100vh;overflow:hidden}
+
+/* TOPBAR */
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0;z-index:100}
+.tbar-left{display:flex;align-items:center;gap:14px}
+.tbar-logo{display:flex;align-items:center;gap:8px}
+.tbar-logo img{height:30px;max-width:130px;object-fit:contain}
+.tbar-logo .sp-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--accent-d),var(--accent));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;display:none}
+.tbar-sep{width:1px;height:24px;background:var(--border)}
+.tbar-app{font-size:13px;font-weight:600;color:var(--text2)}
+.tbar-right{display:flex;align-items:center;gap:10px}
+
+/* LANG SWITCHER */
+.lang-switcher{display:flex;gap:2px;background:var(--bg3);border-radius:var(--radius2);padding:3px;border:1px solid var(--border)}
+.lang-btn{padding:4px 9px;border-radius:4px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;border:none;background:none;transition:all .14s;text-transform:uppercase;letter-spacing:.5px}
+.lang-btn.active{background:var(--accent);color:#0B1825}
+.lang-btn:hover:not(.active){color:var(--text);background:var(--border)}
+
+/* USER CHIP */
+.user-chip{display:flex;align-items:center;gap:8px;padding:5px 12px;background:var(--bg3);border-radius:20px;border:1px solid var(--border)}
+.av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent-d),var(--accent));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.uname{font-size:13px;font-weight:600}
+.rtag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700}
+.r-super_admin{background:rgba(27,234,205,.15);color:var(--accent);border:1px solid rgba(27,234,205,.25)}
+.r-admin{background:rgba(0,69,132,.25);color:#5baeff;border:1px solid rgba(0,69,132,.35)}
+.r-specialist{background:rgba(229,217,54,.12);color:var(--warning);border:1px solid rgba(229,217,54,.2)}
+
+/* LAYOUT WRAP */
+#wrap{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{width:216px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;padding:10px 8px}
+.nav-sec{padding:14px 10px 5px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);font-weight:700}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:var(--radius2);margin:2px 0;cursor:pointer;transition:all .14s;color:var(--text2);font-size:13px;font-weight:500;user-select:none}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,rgba(27,234,205,.15),rgba(27,234,205,.05));color:var(--accent);border:1px solid rgba(27,234,205,.15)}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;display:none}
+.dir-sub{display:flex;align-items:center;gap:7px;padding:6px 10px 6px 28px;border-radius:var(--radius2);margin:1px 0;cursor:pointer;font-size:12px;color:var(--text2);transition:all .13s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dir-sub:hover{background:var(--bg3);color:var(--text)}
+.dir-sub.active{background:var(--bg4);font-weight:700}
+
+/* CONTENT */
+#content{flex:1;overflow-y:auto;padding:22px;background:var(--bg2)}
+.page{display:none}.page.active{display:block}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap}
+.pt{font-size:22px;font-weight:800;letter-spacing:-.3px}
+.ps{font-size:12px;color:var(--text2);margin-top:2px}
+.accent-line{height:2px;background:linear-gradient(90deg,var(--accent),transparent);border-radius:1px;margin-bottom:20px}

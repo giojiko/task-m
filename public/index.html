@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartPro — მართვის პლატფორმა</title>
+<!-- CSS Modules -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     LOGIN PAGE
+══════════════════════════════════════════ -->
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png" alt="SmartPro" id="loginLogoImg"
+           onerror="this.style.display='none';document.querySelector('.logo-fallback').style.display='flex'">
+      <div class="logo-fallback">
+        <div class="sp-icon">SP</div>
+        <div class="login-title">SmartPro</div>
+      </div>
+    </div>
+    <div class="login-sub" id="ls-sub"></div>
+    <div style="height:4px;background:linear-gradient(90deg,var(--accent),var(--accent-d),transparent);border-radius:2px;margin:14px 0 20px"></div>
+    <div class="err-box" id="loginErr"></div>
+    <div class="fg"><label id="ls-email"></label><input type="email" id="lemail" autocomplete="email"></div>
+    <div class="fg"><label id="ls-pass"></label><input type="password" id="lpass" autocomplete="current-password"></div>
+    <button class="login-btn" onclick="doLogin()" id="ls-btn"></button>
+    <div class="login-hint">
+      <strong id="ls-hint-title"></strong><br>
+      Email: <span style="color:var(--accent)">admin@smartpro.ge</span><br>
+      <span id="ls-hint-pass"></span>: <span style="color:var(--accent)">admin123</span>
+    </div>
+    <div style="display:flex;justify-content:center;gap:6px;margin-top:16px">
+      <button class="lang-btn active" onclick="setLang('ka')">ქარ</button>
+      <button class="lang-btn" onclick="setLang('en')">ENG</button>
+      <button class="lang-btn" onclick="setLang('ru')">РУС</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════ -->
+<div id="appShell">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="tbar-left">
+      <div class="tbar-logo">
+        <img src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png" alt="SmartPro"
+             style="height:30px;max-width:130px;object-fit:contain"
+             onerror="this.style.display='none';document.querySelector('.sp-mark').style.display='flex'">
+        <div class="sp-mark">SP</div>
+      </div>
+      <div class="tbar-sep"></div>
+      <div class="tbar-app" id="tb-appname"></div>
+    </div>
+    <div class="tbar-right">
+      <div class="lang-switcher" id="appLangSwitcher">
+        <button class="lang-btn active" onclick="setLang('ka')">ქარ</button>
+        <button class="lang-btn" onclick="setLang('en')">ENG</button>
+        <button class="lang-btn" onclick="setLang('ru')">РУС</button>
+      </div>
+      <div class="user-chip">
+        <div class="av" id="tav"></div>
+        <div><div class="uname" id="tname"></div><span class="rtag" id="trole"></span></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()" id="tb-logout"></button>
+    </div>
+  </div>
+
+  <div id="wrap">
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="nav-sec" id="ns-menu"></div>
+      <div class="nav-item active" onclick="goto('dashboard')" data-p="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span data-i18n="dashboard"></span>
+      </div>
+      <div class="nav-item" onclick="goto('tasks')" data-p="tasks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span data-i18n="tasks"></span>
+      </div>
+      <div class="nav-item" onclick="goto('clients')" data-p="clients" id="navC">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span data-i18n="clients"></span>
+      </div>
+      <div class="nav-item" onclick="goto('warehouse')" data-p="warehouse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        <span data-i18n="warehouse"></span>
+        <span class="nav-badge" id="wbadge">!</span>
+      </div>
+      <div class="nav-item" onclick="goto('directions')" data-p="directions" id="navD">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span data-i18n="directions"></span>
+      </div>
+      <div id="sidebarDirLabel" class="nav-sec" style="display:none" data-i18n="directions"></div>
+      <div id="sidebarDirs" style="padding:0 8px 4px"></div>
+      <div class="nav-item" onclick="goto('employees')" data-p="employees" id="navE">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+        <span data-i18n="employees"></span>
+      </div>
+      <div class="nav-sec" id="ns-account"></div>
+      <div class="nav-item" onclick="goto('profile')" data-p="profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+        <span data-i18n="settings"></span>
+      </div>
+    </div>
+
+    <!-- CONTENT PAGES -->
+    <div id="content">
+
+      <!-- DASHBOARD -->
+      <div class="page" id="page-dashboard">
+        <div class="ph"><div><div class="pt" id="dash-title"></div><div class="ps" id="dwelcome"></div></div></div>
+        <div class="accent-line"></div>
+        <div class="sgrid" id="sgrid"></div>
+        <div id="deadline-warnings"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card"><div class="ch"><span class="ct" data-i18n="recent_tasks"></span><button class="btn btn-ghost btn-sm" onclick="goto('tasks')" data-i18n="all"></button></div><div id="rtasks"></div></div>
+          <div class="card"><div class="ch"><span class="ct" data-i18n="status_dist"></span></div><div id="tchart"></div></div>
+        </div>
+      </div>
+
+      <!-- TASKS -->
+      <div class="page" id="page-tasks">
+        <div class="ph">
+          <div><div class="pt" data-i18n="tasks"></div></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div class="tabs">
+              <div class="tab active" onclick="setTaskView('list')" data-i18n="list"></div>
+              <div class="tab" onclick="setTaskView('kanban')" data-i18n="kanban"></div>
+            </div>
+            <button class="btn btn-teal" id="addTaskBtn" onclick="openTaskModal()" data-i18n="add_task"></button>
+          </div>
+        </div>
+        <div class="sbar">
+          <input id="tsearch" data-i18n-ph="search" oninput="renderTasks()">
+          <select id="tsfil" onchange="renderTasks()">
+            <option value="" data-i18n="all_statuses"></option>
+            <option value="pending" data-i18n="st_pending"></option>
+            <option value="in_progress" data-i18n="st_in_progress"></option>
+            <option value="paused" data-i18n="st_paused"></option>
+            <option value="completed" data-i18n="st_completed"></option>
+            <option value="stopped" data-i18n="st_stopped"></option>
+          </select>
+          <select id="tpfil" onchange="renderTasks()">
+            <option value="" data-i18n="all_priorities"></option>
+            <option value="high" data-i18n="pr_high"></option>
+            <option value="medium" data-i18n="pr_medium"></option>
+            <option value="low" data-i18n="pr_low"></option>
+          </select>
+        </div>
+        <div id="tlistView"><div class="tw"><table><thead><tr>
+          <th data-i18n="title"></th><th data-i18n="client"></th><th data-i18n="assignees"></th>
+          <th data-i18n="priority"></th><th data-i18n="status"></th><th data-i18n="deadline"></th><th data-i18n="actions"></th>
+        </tr></thead><tbody id="ttbody"></tbody></table></div></div>
+        <div id="tkanbanView" style="display:none"><div class="kanban" id="kboard"></div></div>
+      </div>
+
+      <!-- CLIENTS -->
+      <div class="page" id="page-clients">
+        <div class="ph"><div><div class="pt" data-i18n="clients"></div></div><button class="btn btn-teal" id="addClientBtn" onclick="openClientModal()" data-i18n="add_client"></button></div>
+        <div class="sbar">
+          <input id="csearch" data-i18n-ph="search" oninput="renderClients()">
+          <div id="cDirFilterBadge" style="display:none;align-items:center;gap:6px;padding:5px 10px;background:var(--bg3);border-radius:20px;border:1px solid var(--border2);font-size:12px;font-weight:600">
+            <span id="cDirFilterLabel"></span>
+            <span onclick="clearDirFilter()" style="cursor:pointer;color:var(--text3);font-size:14px;line-height:1">✕</span>
+          </div>
+        </div>
+        <div class="tw"><table><thead><tr>
+          <th data-i18n="name"></th><th data-i18n="c_mobile"></th><th data-i18n="address"></th>
+          <th data-i18n="c_referral"></th><th data-i18n="email_lbl"></th><th data-i18n="actions"></th>
+        </tr></thead><tbody id="ctbody"></tbody></table></div>
+      </div>
+
+      <!-- WAREHOUSE -->
+      <div class="page" id="page-warehouse">
+        <div class="ph"><div><div class="pt" data-i18n="warehouse"></div></div><button class="btn btn-teal" id="addWhBtn" onclick="openWhModal()" data-i18n="add_item"></button></div>
+        <div class="sbar">
+          <input id="wsearch" data-i18n-ph="search" oninput="renderWarehouse()">
+          <select id="wcatfil" onchange="renderWarehouse()"><option value="" data-i18n="all_categories"></option></select>
+        </div>
+        <div class="tw"><table><thead><tr>
+          <th data-i18n="name"></th><th data-i18n="category"></th><th data-i18n="quantity"></th>
+          <th data-i18n="unit"></th><th data-i18n="min_qty"></th><th data-i18n="stock_status"></th><th data-i18n="actions"></th>
+        </tr></thead><tbody id="wtbody"></tbody></table></div>
+      </div>
+
+      <!-- EMPLOYEES -->
+      <div class="page" id="page-employees">
+        <div class="ph"><div><div class="pt" data-i18n="employees"></div></div><button class="btn btn-teal" id="addEmpBtn" onclick="openEmpModal()" data-i18n="add_employee"></button></div>
+        <div class="tw"><table><thead><tr>
+          <th data-i18n="name"></th><th data-i18n="email_lbl"></th>
+          <th data-i18n="position"></th><th data-i18n="role"></th>
+          <th data-i18n="status"></th><th data-i18n="actions"></th>
+        </tr></thead><tbody id="etbody"></tbody></table></div>
+      </div>
+
+      <!-- DIRECTIONS -->
+      <div class="page" id="page-directions">
+        <div class="ph"><div><div class="pt" data-i18n="directions"></div><div class="ps" data-i18n="directions_sub"></div></div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px" id="dirGrid"></div>
+        <div id="dirClientPanel" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div id="dirClientPanelTitle" style="font-size:17px;font-weight:700"></div>
+              <span id="dirClientCount" style="font-size:12px;padding:2px 10px;border-radius:12px;background:var(--bg3);color:var(--text2)"></span>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="clearDirPageFilter()" data-i18n="show_all_dirs"></button>
+          </div>
+          <div class="tw"><table><thead><tr>
+            <th data-i18n="name"></th><th data-i18n="c_mobile"></th><th data-i18n="address"></th>
+            <th data-i18n="c_referral"></th><th data-i18n="email_lbl"></th>
+          </tr></thead><tbody id="dirClientBody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="page" id="page-profile">
+        <div class="ph"><div class="pt" data-i18n="settings"></div></div>
+        <div style="max-width:520px;display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="ch"><span class="ct" data-i18n="my_account"></span><button class="btn btn-teal btn-sm" onclick="openProfileEdit()" data-i18n="edit_profile"></button></div>
+            <div id="profInfo"></div>
+          </div>
+          <div class="card"><div class="ch"><span class="ct" data-i18n="change_password"></span></div>
+            <div class="fg"><label data-i18n="current_pass"></label><input type="password" id="pCur"></div>
+            <div class="fg"><label data-i18n="new_pass"></label><input type="password" id="pNew"></div>
+            <div class="fg"><label data-i18n="repeat_pass"></label><input type="password" id="pNew2"></div>
+            <button class="btn btn-teal" onclick="changePw()" data-i18n="save"></button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /wrap -->
+</div><!-- /appShell -->
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+
+<!-- TASK MODAL -->
+<div class="ov" id="mTask">
+  <div class="modal modal-lg">
+    <div class="mh"><h3 id="mTaskTitle"></h3><button class="mc" onclick="cm('mTask')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="fTaskId">
+      <div class="fg"><label data-i18n="title_req"></label><input id="fTtitle"></div>
+      <div class="fg"><label data-i18n="description"></label><textarea id="fTdesc"></textarea></div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="client"></label><select id="fTclient"><option value=""></option></select></div>
+        <div class="fg">
+          <label data-i18n="assignees"></label>
+          <div style="position:relative" id="assignDropWrap">
+            <div id="assignTrigger" onclick="toggleAssignDrop()" style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);cursor:pointer;font-size:12px;min-height:36px;gap:6px">
+              <span id="assignLabel" style="color:var(--text3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" data-i18n="no_assignees"></span>
+              <span style="color:var(--text3);font-size:9px;flex-shrink:0">▼</span>
+            </div>
+            <div id="assignDropBox" style="display:none;position:absolute;top:calc(100%+3px);left:0;right:0;background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius2);z-index:300;max-height:220px;overflow-y:auto;padding:4px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="priority"></label>
+          <select id="fTprio"><option value="low" data-i18n="pr_low"></option><option value="medium" selected data-i18n="pr_medium"></option><option value="high" data-i18n="pr_high"></option></select>
+        </div>
+        <div class="fg"><label data-i18n="duration_days"></label>
+          <input type="number" id="fTdurationDays" min="1" max="365" placeholder="5" oninput="onDurationChange()" style="width:100%">
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="created_at"></label>
+          <input type="text" id="fTcreatedAt" readonly style="background:var(--bg3);color:var(--text3);cursor:default">
+        </div>
+        <div class="fg"><label data-i18n="deadline_auto"></label>
+          <input type="text" id="fTdeadlineDisplay" readonly style="background:var(--bg3);color:var(--accent);font-weight:600;cursor:default">
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('mTask')" data-i18n="cancel"></button><button class="btn btn-teal" onclick="saveTask()" data-i18n="save"></button></div>
+  </div>
+</div>
+
+<!-- TASK DETAIL -->
+<div class="ov" id="mDetail">
+  <div class="modal modal-xl">
+    <div class="mh"><h3 id="mDetailTitle"></h3><button class="mc" onclick="cm('mDetail')">✕</button></div>
+    <div class="mb" id="mDetailBody"></div>
+  </div>
+</div>
+
+<!-- ACTION MODAL -->
+<div class="ov" id="mAction">
+  <div class="modal">
+    <div class="mh"><h3 id="mActionTitle"></h3><button class="mc" onclick="cm('mAction')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="aTaskId"><input type="hidden" id="aType">
+      <div class="fg"><label data-i18n="comment_req"></label><textarea id="aCmt" rows="4"></textarea></div>
+      <div id="aPhotoSec" style="display:none">
+        <div class="divider"></div>
+        <div class="fg"><label data-i18n="photos_optional"></label><input type="file" id="aPhotos" accept="image/*" multiple style="background:none;border:none;padding:0;color:var(--text2)"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('mAction')" data-i18n="cancel"></button><button class="btn" id="aConfBtn" onclick="confirmAction()"></button></div>
+  </div>
+</div>
+
+<!-- SUBTASK MODAL -->
+<div class="ov" id="mSub">
+  <div class="modal">
+    <div class="mh"><h3 data-i18n="add_subtask"></h3><button class="mc" onclick="cm('mSub')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="sParentId">
+      <div class="fg"><label data-i18n="title_req"></label><input id="sTitle"></div>
+      <div class="fg"><label data-i18n="description"></label><textarea id="sDesc"></textarea></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('mSub')" data-i18n="cancel"></button><button class="btn btn-teal" onclick="saveSub()" data-i18n="add"></button></div>
+  </div>
+</div>
+
+<!-- CLIENT MODAL -->
+<div class="ov" id="mClient">
+  <div class="modal modal-lg">
+    <div class="mh"><h3 id="mClientTitle"></h3><button class="mc" onclick="cm('mClient')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="fCid">
+      <div style="font-size:11px;color:var(--accent);margin-bottom:12px;padding:8px 12px;background:rgba(27,234,205,.07);border-radius:var(--radius2);border:1px solid rgba(27,234,205,.15)" data-i18n="required_fields_note"></div>
+      <div class="fg"><label data-i18n="c_name_req"></label><input id="fCname"></div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="c_mobile_req"></label><input id="fCphone" maxlength="13"></div>
+        <div class="fg"><label data-i18n="c_address_req"></label><input id="fCaddr"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="c_pid_opt"></label><input id="fCpid" maxlength="15" oninput="this.value=this.value.replace(/[^0-9]/,'')"></div>
+        <div class="fg"><label data-i18n="email_lbl"></label><input id="fCemail" type="email"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="c_referral"></label><input id="fCreferral"></div>
+        <div class="fg">
+          <label data-i18n="c_direction"></label>
+          <div style="position:relative" id="dirDropWrap">
+            <div id="dirDropTrigger" onclick="toggleDirDrop()" style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);cursor:pointer;font-size:12px;min-height:36px;gap:6px">
+              <span id="dirDropLabel" style="color:var(--text3);flex:1;overflow:hidden" data-i18n="no_direction"></span>
+              <span style="color:var(--text3);font-size:9px;flex-shrink:0">▼</span>
+            </div>
+            <div id="fCdirectionBox" style="display:none;position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius2);z-index:200;max-height:200px;overflow-y:auto;padding:4px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fg"><label data-i18n="notes"></label><textarea id="fCnotes" rows="2"></textarea></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('mClient')" data-i18n="cancel"></button><button class="btn btn-teal" onclick="saveClient()" data-i18n="save"></button></div>
+  </div>
+</div>
+
+<!-- WAREHOUSE MODAL -->
+<div class="ov" id="mWh">
+  <div class="modal">
+    <div class="mh"><h3 id="mWhTitle"></h3><button class="mc" onclick="cm('mWh')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="fWhId">
+      <div class="fg"><label data-i18n="name_req"></label><input id="fWhName"></div>
+      <div class="frow"><div class="fg"><label data-i18n="category"></label><input id="fWhCat"></div><div class="fg"><label data-i18n="unit"></label><input id="fWhUnit" value="ც"></div></div>
+      <div class="frow"><div class="fg"><label data-i18n="quantity"></label><input type="number" id="fWhQty" value="0" min="0" step="0.01"></div><div class="fg"><label data-i18n="min_qty_warn"></label><input type="number" id="fWhMin" value="0" min="0" step="0.01"></div></div>
+      <div class="fg"><label data-i18n="notes"></label><textarea id="fWhDesc" rows="2"></textarea></div>
+      <div class="fg" id="fWhReasonG" style="display:none"><label data-i18n="change_reason"></label><input id="fWhReason"></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('mWh')" data-i18n="cancel"></button><button class="btn btn-teal" onclick="saveWh()" data-i18n="save"></button></div>
+  </div>
+</div>
+
+<!-- WH LOGS -->
+<div class="ov" id="mWhLogs">
+  <div class="modal"><div class="mh"><h3 id="mWhLogsTitle"></h3><button class="mc" onclick="cm('mWhLogs')">✕</button></div><div class="mb"><div id="mWhLogsBody"></div></div></div>
+</div>
+
+<!-- EMPLOYEE MODAL -->
+<div class="ov" id="mEmp">
+  <div class="modal modal-lg">
+    <div class="mh"><h3 id="mEmpTitle"></h3><button class="mc" onclick="cm('mEmp')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="fEid">
+      <div style="font-size:11px;color:var(--accent);margin-bottom:12px;padding:8px 12px;background:rgba(27,234,205,.07);border-radius:var(--radius2);border:1px solid rgba(27,234,205,.15)" data-i18n="required_fields_note"></div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="first_name_lbl"></label><input id="fEfirst"></div>
+        <div class="fg"><label data-i18n="last_name_lbl"></label><input id="fElast"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="mobile_lbl"></label><input id="fEphone" maxlength="13"></div>
+        <div class="fg"><label data-i18n="email_req"></label><input id="fEemail" type="email"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="birth_date_lbl"></label><input type="date" id="fEbirth"></div>
+        <div class="fg" id="fEpassG"><label data-i18n="pass_req"></label><input type="password" id="fEpass"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="position"></label><input id="fEpos"></div>
+        <div class="fg"><label data-i18n="emp_address"></label><input id="fEaddr"></div>
+      </div>
+      <div class="frow" id="fEsupervisorRow">
+        <div class="fg"><label data-i18n="supervisor"></label><select id="fEsupervisor"><option value=""></option></select></div>
+        <div class="fg"><label data-i18n="role"></label>
+          <select id="fErole">
+            <option value="specialist" data-i18n="r_specialist"></option>
+            <option value="admin" data-i18n="r_admin"></option>
+            <option value="super_admin" id="saOpt" data-i18n="r_super_admin"></option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('mEmp')" data-i18n="cancel"></button><button class="btn btn-teal" onclick="saveEmp()" data-i18n="save"></button></div>
+  </div>
+</div>
+
+<!-- RESET PASSWORD -->
+<div class="ov" id="mRP">
+  <div class="modal"><div class="mh"><h3 data-i18n="reset_password"></h3><button class="mc" onclick="cm('mRP')">✕</button></div>
+  <div class="mb"><input type="hidden" id="rpUid"><div class="fg"><label data-i18n="new_pass"></label><input type="text" id="rpPass"></div></div>
+  <div class="mf"><button class="btn btn-ghost" onclick="cm('mRP')" data-i18n="cancel"></button><button class="btn btn-teal" onclick="doRP()" data-i18n="save"></button></div></div>
+</div>
+
+<!-- FIRST LOGIN SETUP -->
+<div class="ov" id="mSetup" style="z-index:2000">
+  <div class="modal" style="max-width:520px">
+    <div class="mh" style="padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div><h3 data-i18n="setup_title"></h3><div class="ts tm" style="margin-top:4px" data-i18n="setup_subtitle"></div></div>
+    </div>
+    <div class="mb">
+      <div style="background:rgba(27,234,205,.07);border:1px solid rgba(27,234,205,.15);border-radius:var(--radius2);padding:10px 14px;margin-bottom:16px;font-size:12.5px;color:var(--accent)" data-i18n="setup_info"></div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="first_name_lbl"></label><input id="suFirst"></div>
+        <div class="fg"><label data-i18n="last_name_lbl"></label><input id="suLast"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="birth_date_lbl"></label><input type="date" id="suBirth"></div>
+        <div class="fg"><label data-i18n="mobile_lbl"></label><input id="suPhone" maxlength="13"></div>
+      </div>
+      <div class="fg">
+        <label data-i18n="personal_id_lbl"></label>
+        <input id="suPid" placeholder="11 ციფრი" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)">
+        <div class="ts" style="color:var(--text3);margin-top:4px" data-i18n="personal_id_hint"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="fg"><label data-i18n="new_pass"></label><input type="password" id="suNewPass"></div>
+      <div class="fg"><label data-i18n="repeat_pass"></label><input type="password" id="suNewPass2"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-teal" style="width:100%;justify-content:center;padding:12px" onclick="saveSetup()" data-i18n="setup_save"></button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE EDIT -->
+<div class="ov" id="mProfileEdit">
+  <div class="modal" style="max-width:520px">
+    <div class="mh"><h3 data-i18n="edit_profile"></h3><button class="mc" onclick="cm('mProfileEdit')">✕</button></div>
+    <div class="mb">
+      <div class="frow">
+        <div class="fg"><label data-i18n="first_name_lbl"></label><input id="peFirst"></div>
+        <div class="fg"><label data-i18n="last_name_lbl"></label><input id="peLast"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="birth_date_lbl"></label><input type="date" id="peBirth"></div>
+        <div class="fg"><label data-i18n="mobile_lbl"></label><input id="pePhone" maxlength="13"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label data-i18n="personal_id_lbl"></label><input id="pePid" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)"></div>
+        <div class="fg"><label data-i18n="position"></label><input id="pePosition"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('mProfileEdit')" data-i18n="cancel"></button><button class="btn btn-teal" onclick="saveProfileEdit()" data-i18n="save"></button></div>
+  </div>
+</div>
+
+<!-- DIR CLIENT DETAIL MODAL -->
+<div class="ov" id="mDirClientDetail">
+  <div class="modal modal-lg">
+    <div class="mh"><h3 id="mDirClientDetailTitle"></h3><button class="mc" onclick="cm('mDirClientDetail')">✕</button></div>
+    <div class="mb" id="mDirClientDetailBody"></div>
+  </div>
+</div>
+
+<!-- Photo Viewer + Toast -->
+<div id="pviewer"><button class="pvc" onclick="document.getElementById('pviewer').classList.remove('open')">✕</button><img id="pvimg" src="" alt=""></div>
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     JS MODULES (load order matters!)
+══════════════════════════════════════════ -->
+<script src="js/modules/i18n.js"></script>
+<script src="js/modules/db.js"></script>
+<script src="js/modules/utils.js"></script>
+<script src="js/modules/app.js"></script>
+<script src="js/modules/auth.js"></script>
+<script src="js/modules/dashboard.js"></script>
+<script src="js/modules/tasks.js"></script>
+<script src="js/modules/clients.js"></script>
+<script src="js/modules/warehouse.js"></script>
+<script src="js/modules/employees.js"></script>
+<script src="js/modules/directions.js"></script>
+
+</body>
+</html>
