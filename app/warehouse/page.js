@@ -22,7 +22,7 @@ function ItemModal({ item, onClose, onSave }) {
     <Modal open title={isNew ? t('add_item') : t('edit')} onClose={onClose}
       footer={<>
         <button className="btn btn-ghost btn-sm" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-teal btn-sm" onClick={() => { onSave({ ...item, ...form }); onClose(); }}>{t('save')}</button>
+        <button className="btn btn-primary btn-sm" onClick={() => { onSave({ ...item, ...form }); onClose(); }}>{t('save')}</button>
       </>}
     >
       <div className="fg"><label>{t('name')}</label><input value={form.name} onChange={e => upd('name', e.target.value)} autoFocus /></div>
@@ -49,7 +49,7 @@ function ChangeModal({ item, onClose, onSave }) {
     <Modal open title={`${item.name} — ${t('change_reason')}`} onClose={onClose}
       footer={<>
         <button className="btn btn-ghost btn-sm" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-teal btn-sm" onClick={() => { onSave({ type, qty: Number(qty), reason }); onClose(); }}>{t('save')}</button>
+        <button className="btn btn-primary btn-sm" onClick={() => { onSave({ type, qty: Number(qty), reason }); onClose(); }}>{t('save')}</button>
       </>}
     >
       <div className="fg">
@@ -145,9 +145,8 @@ export default function WarehousePage() {
     <AppShell>
       <div className="ph">
         <div><div className="pt">{t('warehouse')}</div></div>
-        {isAdmin && <button className="btn btn-teal btn-sm" onClick={() => { setEditItem(null); setShowForm(true); }}>{t('add_item')}</button>}
+        {isAdmin && <button className="btn btn-primary btn-sm" onClick={() => { setEditItem(null); setShowForm(true); }}>{t('add_item')}</button>}
       </div>
-      <div className="accent-line" />
       <div className="sbar">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('search')} />
         <select value={filterCat} onChange={e => setFilterCat(e.target.value)}>
@@ -182,7 +181,7 @@ export default function WarehousePage() {
                   <td>
                     <div style={{ display:'flex', gap:4 }}>
                       {isAdmin && <>
-                        <button className="btn btn-success btn-xs" onClick={() => setChangeItem(i)}>{t('wh_in')}/{t('wh_out')}</button>
+                        <button className="btn btn-ghost btn-xs" onClick={() => setChangeItem(i)}>{t('wh_in')}/{t('wh_out')}</button>
                         <button className="btn btn-ghost btn-xs" onClick={() => { setEditItem(i); setShowForm(true); }}>✏️</button>
                         <button className="btn btn-danger btn-xs" onClick={() => handleDelete(i.id)}>🗑</button>
                       </>}

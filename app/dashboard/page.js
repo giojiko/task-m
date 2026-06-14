@@ -53,7 +53,6 @@ export default function DashboardPage() {
           <div className="ps">{t('welcome_msg')}, {user.firstName || user.name}</div>
         </div>
       </div>
-      <div className="accent-line" />
 
       {warnings.length > 0 && (
         <div className="card" style={{ marginBottom:18, borderColor:'rgba(255,64,96,.3)' }}>

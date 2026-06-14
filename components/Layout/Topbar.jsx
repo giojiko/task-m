@@ -1,46 +1,58 @@
 'use client';
 import { useApp } from '@/context/AppContext';
-import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+const PAGE_TITLES = {
+  '/dashboard': { key: 'dashboard', icon: '📊' },
+  '/tasks':     { key: 'tasks',     icon: '✅' },
+  '/clients':   { key: 'clients',   icon: '👥' },
+  '/warehouse': { key: 'warehouse', icon: '📦' },
+  '/employees': { key: 'employees', icon: '👤' },
+  '/directions':{ key: 'directions',icon: '🏢' },
+  '/profile':   { key: 'my_account',icon: '⚙️' },
+};
 
 export default function Topbar() {
-  const { user, lang, setLang, t, logout } = useApp();
-  const router = useRouter();
+  const { lang, setLang, t, db } = useApp();
+  const pathname = usePathname();
+  const [notifCount, setNotifCount] = useState(0);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
-  };
+  const pageInfo = Object.entries(PAGE_TITLES).find(([path]) => pathname.startsWith(path))?.[1];
 
-  const initials = user ? `${(user.firstName||user.name||'?')[0]}${(user.lastName||'')[0]||''}`.toUpperCase() : '?';
+  useEffect(() => {
+    if (!db?.tasks) return;
+    const now = Date.now();
+    const count = db.tasks.filter(tk => {
+      if (!tk.deadline || ['completed','stopped'].includes(tk.status)) return false;
+      return new Date(tk.deadline).getTime() - now < 24 * 3600 * 1000;
+    }).length;
+    setNotifCount(count);
+  }, [db]);
 
   return (
-    <div className="topbar">
-      <div className="tbar-left">
-        <div className="tbar-logo">
-          <div className="sp-mark">SP</div>
-        </div>
-        <div className="tbar-sep" />
-        <div className="tbar-app">{t('app_label')}</div>
-      </div>
-      <div className="tbar-right">
-        <div className="lang-switcher">
-          {['ka','en','ru'].map(l => (
-            <button key={l} className={`lang-btn${lang===l?' active':''}`} onClick={() => setLang(l)}>
-              {l==='ka'?'ქარ':l==='en'?'ENG':'РУС'}
-            </button>
-          ))}
-        </div>
-        {user && (
-          <div className="user-chip">
-            <div className="av">{initials}</div>
-            <div>
-              <div className="uname">{user.firstName || user.name}</div>
-              <span className={`rtag r-${user.role}`}>{t(`r_${user.role}`)}</span>
-            </div>
-          </div>
+    <header className="topbar">
+      <div className="topbar-title">
+        {pageInfo && (
+          <span style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span>{pageInfo.icon}</span>
+            <span>{t(pageInfo.key)}</span>
+          </span>
         )}
-        <button className="btn btn-ghost btn-sm" onClick={handleLogout}>{t('logout')}</button>
       </div>
-    </div>
+
+      <div className="topbar-actions">
+        {['ka','en','ru'].map(l => (
+          <button key={l} className={`lang-btn ${lang === l ? 'active' : ''}`} onClick={() => setLang(l)}>
+            {l.toUpperCase()}
+          </button>
+        ))}
+
+        <button className="icon-btn" title="გაფრთხილებები">
+          🔔
+          {notifCount > 0 && <span className="notif-dot" />}
+        </button>
+      </div>
+    </header>
   );
 }

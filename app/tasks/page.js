@@ -46,7 +46,7 @@ function TaskModal({ task, onClose, onSave }) {
     <Modal open title={isNew ? t('add_task') : t('edit')} onClose={onClose} size="modal-lg"
       footer={<>
         <button className="btn btn-ghost btn-sm" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-teal btn-sm" onClick={submit}>{t('save')}</button>
+        <button className="btn btn-primary btn-sm" onClick={submit}>{t('save')}</button>
       </>}
     >
       {err && <div className="err-box" style={{ display:'block', marginBottom:10 }}>{err}</div>}
@@ -133,7 +133,7 @@ function ActionModal({ task, action, onClose, onSave, t }) {
     <Modal open title={t(titleKey[action] || 'status')} onClose={onClose}
       footer={<>
         <button className="btn btn-ghost btn-sm" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-teal btn-sm" onClick={submit}>{t('save')}</button>
+        <button className="btn btn-primary btn-sm" onClick={submit}>{t('save')}</button>
       </>}
     >
       {err && <div className="err-box" style={{ display:'block', marginBottom:8 }}>{err}</div>}
@@ -246,8 +246,8 @@ function TaskDetailModal({ task, onClose, onRefresh }) {
             <div className="wfbar">
               {task.status === 'pending' && <button className="btn-start" onClick={() => setActionModal('start')}>{t('action_start')}</button>}
               {task.status === 'in_progress' && <>
-                <button className="btn btn-warning btn-sm" onClick={() => setActionModal('pause')}>{t('action_pause')}</button>
-                <button className="btn btn-success btn-sm" onClick={() => setActionModal('complete')}>{t('action_complete')}</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setActionModal('pause')}>{t('action_pause')}</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setActionModal('complete')}>{t('action_complete')}</button>
                 <button className="btn btn-danger btn-sm" onClick={() => setActionModal('stop')}>{t('action_stop')}</button>
               </>}
               {task.status === 'paused' && <>
@@ -255,7 +255,7 @@ function TaskDetailModal({ task, onClose, onRefresh }) {
                 <button className="btn btn-danger btn-sm" onClick={() => setActionModal('stop')}>{t('action_stop')}</button>
               </>}
               {task.status === 'pending_approval' && isAdmin && <>
-                <button className="btn btn-success btn-sm" onClick={approve}>{t('approve')}</button>
+                <button className="btn btn-ghost btn-sm" onClick={approve}>{t('approve')}</button>
                 <button className="btn btn-ghost btn-sm" onClick={cancelApproval}>{t('cancel_approval')}</button>
               </>}
             </div>
@@ -276,7 +276,7 @@ function TaskDetailModal({ task, onClose, onRefresh }) {
           {canAct && !['completed','stopped'].includes(task.status) && (
             <div style={{ display:'flex', gap:8, marginTop:12 }}>
               <input value={subtaskTitle} onChange={e => setSubtaskTitle(e.target.value)} placeholder={t('add_subtask')} onKeyDown={e => e.key === 'Enter' && addSubtask()} />
-              <button className="btn btn-teal btn-sm" onClick={addSubtask}>{t('add')}</button>
+              <button className="btn btn-primary btn-sm" onClick={addSubtask}>{t('add')}</button>
             </div>
           )}
         </>
@@ -335,6 +335,7 @@ export default function TasksPage() {
   const handleSave = async (data) => {
     const newDb = { ...db };
     const isNew = !data.id;
+    const prevResponsible = !isNew ? (db.tasks || []).find(tk => tk.id === data.id)?.responsible : null;
     if (isNew) {
       data.id = uid();
       data.created = new Date().toISOString();
@@ -348,6 +349,19 @@ export default function TasksPage() {
     }
     await saveDB(newDb);
     toast(t('toast_task_saved'));
+
+    const responsibleChanged = data.responsible && data.responsible !== prevResponsible;
+    if (responsibleChanged) {
+      const responsible = (newDb.users || []).find(u => u.id === data.responsible);
+      const client = (newDb.clients || []).find(c => c.id === data.client);
+      if (responsible?.email) {
+        fetch('/api/email/task-assigned', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task: data, responsible, client }),
+        }).catch(e => console.warn('task email failed', e));
+      }
+    }
   };
 
   const handleDelete = async (id) => {
@@ -378,10 +392,9 @@ export default function TasksPage() {
             <button className={`tab${viewMode==='list'?' active':''}`} onClick={() => setViewMode('list')}>{t('list')}</button>
             <button className={`tab${viewMode==='kanban'?' active':''}`} onClick={() => setViewMode('kanban')}>{t('kanban')}</button>
           </div>
-          {isAdmin && <button className="btn btn-teal btn-sm" onClick={() => { setEditTask(null); setShowForm(true); }}>{t('add_task')}</button>}
+          {isAdmin && <button className="btn btn-primary btn-sm" onClick={() => { setEditTask(null); setShowForm(true); }}>{t('add_task')}</button>}
         </div>
       </div>
-      <div className="accent-line" />
 
       <div className="sbar">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('search')} />

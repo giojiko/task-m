@@ -4,56 +4,90 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 
 export default function LoginPage() {
-  const { user, db, loading, login, t } = useApp();
+  const { user, db, login, lang, setLang, t } = useApp();
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
-  const [err, setErr] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) router.replace('/dashboard');
-  }, [user, loading, router]);
+    if (user) router.replace('/dashboard');
+  }, [user, router]);
 
-  const handleLogin = (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setErr('');
-    if (!db) return;
-    const found = (db.users || []).find(
-      u => u.email === email.trim() && u.password === pass && u.active !== false
+    setError('');
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 200));
+    const found = (db?.users || []).find(u =>
+      u.email?.toLowerCase() === email.toLowerCase() &&
+      u.password === password &&
+      u.active !== false
     );
-    if (!found) return setErr(t('err_login'));
-    login(found);
-    router.push('/dashboard');
-  };
-
-  if (loading) return null;
+    if (found) {
+      login(found);
+      router.replace('/dashboard');
+    } else {
+      setError(t('err_login'));
+    }
+    setLoading(false);
+  }
 
   return (
     <div className="login-page">
-      <div className="login-box">
+      <div className="login-card">
         <div className="login-logo">
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-            <div style={{ width:52, height:52, background:'linear-gradient(135deg,var(--accent-d),var(--accent))', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, fontWeight:900, color:'#fff' }}>SP</div>
-            <div className="login-title">SmartPro</div>
-            <div className="login-sub">{t('platform_name')}</div>
-          </div>
+          <img
+            src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png"
+            alt="SmartPro"
+            style={{ height: 40, objectFit: 'contain' }}
+            onError={e => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'block';
+            }}
+          />
+          <span className="logo-text" style={{ display:'none', fontSize:28, fontWeight:900 }}>SmartPro</span>
         </div>
-        {err && <div className="err-box" style={{ display:'block' }}>{err}</div>}
-        <form onSubmit={handleLogin}>
-          <div className="fg">
-            <label>{t('email')}</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} autoFocus />
+        <div className="login-subtitle">{t('platform_name')}</div>
+
+        <div className="login-lang">
+          {['ka','en','ru'].map(l => (
+            <button key={l} className={`lang-btn ${lang === l ? 'active' : ''}`} onClick={() => setLang(l)}>
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        {error && <div className="login-error">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">{t('email')}</label>
+            <input
+              type="email"
+              className="input"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="admin@smartpro.ge"
+              required
+            />
           </div>
-          <div className="fg">
-            <label>{t('password')}</label>
-            <input type="password" value={pass} onChange={e => setPass(e.target.value)} />
+          <div className="form-group" style={{ marginBottom: 20 }}>
+            <label className="form-label">{t('password')}</label>
+            <input
+              type="password"
+              className="input"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
           </div>
-          <button type="submit" className="login-btn">{t('login_btn')}</button>
+          <button type="submit" className="btn btn-primary" style={{ width:'100%', justifyContent:'center', padding:'11px' }} disabled={loading}>
+            {loading ? <span className="spinner" style={{ width:16,height:16,borderWidth:2 }} /> : t('login_btn')}
+          </button>
         </form>
-        <div className="login-hint">
-          <strong>{t('first_login')}</strong><br />
-          admin@smartpro.ge / admin123
-        </div>
       </div>
     </div>
   );

@@ -60,13 +60,12 @@ export default function ProfilePage() {
           {editMode ? t('cancel') : t('edit_profile')}
         </button>
       </div>
-      <div className="accent-line" />
 
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, marginBottom:18 }}>
         <div className="card">
           <div className="ch">
             <div className="ct">{t('my_account')}</div>
-            {editMode && <button className="btn btn-teal btn-sm" onClick={saveProfile}>{t('save')}</button>}
+            {editMode && <button className="btn btn-primary btn-sm" onClick={saveProfile}>{t('save')}</button>}
           </div>
           {err && <div className="err-box" style={{ display:'block', marginBottom:10 }}>{err}</div>}
           {editMode ? (
@@ -110,7 +109,7 @@ export default function ProfilePage() {
           <div className="fg"><label>{t('current_pass')}</label><input type="password" value={passForm.cur} onChange={e => setPassForm(p => ({ ...p, cur: e.target.value }))} /></div>
           <div className="fg"><label>{t('new_pass')}</label><input type="password" value={passForm.new} onChange={e => setPassForm(p => ({ ...p, new: e.target.value }))} /></div>
           <div className="fg"><label>{t('repeat_pass')}</label><input type="password" value={passForm.rep} onChange={e => setPassForm(p => ({ ...p, rep: e.target.value }))} /></div>
-          <button className="btn btn-teal btn-sm" onClick={changePassword}>{t('change_password')}</button>
+          <button className="btn btn-primary btn-sm" onClick={changePassword}>{t('change_password')}</button>
         </div>
       </div>
     </AppShell>

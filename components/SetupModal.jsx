@@ -85,7 +85,7 @@ export default function SetupModal() {
             <input type="password" value={form.repeatPass} onChange={e => upd('repeatPass', e.target.value)} />
           </div>
         </div>
-        <button className="btn btn-teal" style={{ width:'100%', marginTop:8 }} onClick={save}>{t('setup_save')}</button>
+        <button className="btn btn-primary" style={{ width:'100%', marginTop:8 }} onClick={save}>{t('setup_save')}</button>
       </div>
     </div>
   );

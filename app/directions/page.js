@@ -34,7 +34,6 @@ function DirectionsContent() {
           <button className="btn btn-ghost btn-sm" onClick={() => setSelectedDir(null)}>{t('show_all_dirs')}</button>
         )}
       </div>
-      <div className="accent-line" />
 
       {!selectedDir ? (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:16 }}>

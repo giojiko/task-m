@@ -37,7 +37,7 @@ function ClientModal({ client, onClose, onSave }) {
     <Modal open title={isNew ? t('add_client') : t('edit')} onClose={onClose}
       footer={<>
         <button className="btn btn-ghost btn-sm" onClick={onClose}>{t('cancel')}</button>
-        <button className="btn btn-teal btn-sm" onClick={submit}>{t('save')}</button>
+        <button className="btn btn-primary btn-sm" onClick={submit}>{t('save')}</button>
       </>}
     >
       {err && <div className="err-box" style={{ display:'block', marginBottom:10 }}>{err}</div>}
@@ -108,9 +108,8 @@ export default function ClientsPage() {
     <AppShell>
       <div className="ph">
         <div><div className="pt">{t('clients')}</div></div>
-        {isAdmin && <button className="btn btn-teal btn-sm" onClick={() => { setEditClient(null); setShowForm(true); }}>{t('add_client')}</button>}
+        {isAdmin && <button className="btn btn-primary btn-sm" onClick={() => { setEditClient(null); setShowForm(true); }}>{t('add_client')}</button>}
       </div>
-      <div className="accent-line" />
       <div className="sbar">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('search')} />
         <select value={filterDir} onChange={e => setFilterDir(e.target.value)}>

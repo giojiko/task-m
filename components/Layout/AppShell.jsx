@@ -11,23 +11,28 @@ export default function AppShell({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
+    if (!loading && !user) router.replace('/login');
   }, [user, loading, router]);
 
-  if (loading) return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', color:'var(--text2)' }}>
-      Loading...
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="loading-page">
+        <div className="spinner spinner-lg" />
+        <span style={{ color: 'var(--text2)', fontSize: 13 }}>იტვირთება...</span>
+      </div>
+    );
+  }
 
   if (!user) return null;
 
   return (
     <div className="app-shell">
-      <Topbar />
-      <div className="wrap">
-        <Sidebar />
-        <div className="content">{children}</div>
+      <Sidebar />
+      <div className="main-content">
+        <Topbar />
+        <main className="page-body">
+          {children}
+        </main>
       </div>
       {user.mustSetup && <SetupModal />}
     </div>
