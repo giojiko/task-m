@@ -77,9 +77,9 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{ user, setUser, db, saveDB, lang, setLang, t, loading, toast, login, logout, refreshUser }}>
       {children}
-      <div id="toast" style={{ position:'fixed', bottom:20, right:20, zIndex:9999, display:'flex', flexDirection:'column', gap:7, pointerEvents:'none' }}>
+      <div style={{ position:'fixed', bottom:20, right:20, zIndex:9999, display:'flex', flexDirection:'column', gap:8, pointerEvents:'none' }}>
         {toasts.map(x => (
-          <div key={x.id} className={`ti show ${x.type}`} style={{ pointerEvents:'all' }}>{x.msg}</div>
+          <div key={x.id} className={`toast ${x.type}`} style={{ pointerEvents:'all' }}>{x.msg}</div>
         ))}
       </div>
     </AppContext.Provider>

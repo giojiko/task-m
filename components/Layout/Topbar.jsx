@@ -4,13 +4,13 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 const PAGE_TITLES = {
-  '/dashboard': { key: 'dashboard', icon: '📊' },
-  '/tasks':     { key: 'tasks',     icon: '✅' },
-  '/clients':   { key: 'clients',   icon: '👥' },
-  '/warehouse': { key: 'warehouse', icon: '📦' },
-  '/employees': { key: 'employees', icon: '👤' },
-  '/directions':{ key: 'directions',icon: '🏢' },
-  '/profile':   { key: 'my_account',icon: '⚙️' },
+  '/dashboard':  { key: 'dashboard',   icon: '◫' },
+  '/tasks':      { key: 'tasks',       icon: '☑' },
+  '/clients':    { key: 'clients',     icon: '◉' },
+  '/warehouse':  { key: 'warehouse',   icon: '⬡' },
+  '/employees':  { key: 'employees',   icon: '◎' },
+  '/directions': { key: 'directions',  icon: '⬡' },
+  '/profile':    { key: 'my_account',  icon: '⊙' },
 };
 
 export default function Topbar() {
@@ -34,10 +34,11 @@ export default function Topbar() {
     <header className="topbar">
       <div className="topbar-title">
         {pageInfo && (
-          <span style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <span>{pageInfo.icon}</span>
+          <>
+            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{pageInfo.icon}</span>
+            <span style={{ color: 'var(--text-muted)' }}>/</span>
             <span>{t(pageInfo.key)}</span>
-          </span>
+          </>
         )}
       </div>
 
@@ -48,7 +49,7 @@ export default function Topbar() {
           </button>
         ))}
 
-        <button className="icon-btn" title="გაფრთხილებები">
+        <button className="icon-btn" title="გაფრთხილებები" style={{ fontSize: 15 }}>
           🔔
           {notifCount > 0 && <span className="notif-dot" />}
         </button>

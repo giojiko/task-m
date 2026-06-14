@@ -17,12 +17,14 @@ export default function DashboardPage() {
     ? tasks.filter(tk => tk.assignees?.includes(user.id) || tk.responsible === user.id)
     : tasks;
 
-  const total = myTasks.length;
+  const total      = myTasks.length;
   const inProgress = myTasks.filter(tk => tk.status === 'in_progress').length;
-  const completed = myTasks.filter(tk => tk.status === 'completed').length;
-  const lowStock = wh.filter(i => i.qty !== undefined && i.minQty !== undefined && i.qty <= i.minQty).length;
+  const completed  = myTasks.filter(tk => tk.status === 'completed').length;
+  const lowStock   = wh.filter(i => i.qty !== undefined && i.minQty !== undefined && i.qty <= i.minQty).length;
 
-  const recent = [...myTasks].sort((a, b) => new Date(b.updated || b.created) - new Date(a.updated || a.created)).slice(0, 8);
+  const recent = [...myTasks]
+    .sort((a, b) => new Date(b.updated || b.created) - new Date(a.updated || a.created))
+    .slice(0, 8);
 
   const warnings = myTasks.filter(tk => {
     if (!tk.deadline) return false;
@@ -35,83 +37,123 @@ export default function DashboardPage() {
   const statuses = ['pending','in_progress','paused','completed','stopped','pending_approval'];
 
   const STAT_CARDS = [
-    { key: 'total_tasks', val: total, cls: 'teal', icon: '📋' },
-    { key: 'in_progress_tasks', val: inProgress, cls: 'blue', icon: '⚙️' },
-    { key: 'completed_tasks', val: completed, cls: 'purple', icon: '✅' },
+    { key: 'total_tasks',      val: total,            cls: 'stat-blue',   icon: '☑' },
+    { key: 'in_progress_tasks',val: inProgress,       cls: 'stat-teal',   icon: '⚙' },
+    { key: 'completed_tasks',  val: completed,        cls: 'stat-green',  icon: '✓' },
     ...(user.role !== 'specialist' ? [
-      { key: 'clients_count', val: clients.length, cls: 'yellow', icon: '👥' },
-      { key: 'employees_count', val: employees.length, cls: 'blue', icon: '👤' },
-      { key: 'low_stock', val: lowStock, cls: 'red', icon: '⚠️' },
+      { key: 'clients_count',   val: clients.length,   cls: 'stat-yellow', icon: '◉' },
+      { key: 'employees_count', val: employees.length, cls: 'stat-purple', icon: '◎' },
+      { key: 'low_stock',       val: lowStock,         cls: 'stat-red',    icon: '⚠' },
     ] : []),
   ];
 
+  const statusColors = {
+    pending: '#A1A1AA',
+    in_progress: '#60A5FA',
+    paused: '#FCD34D',
+    completed: '#4ADE80',
+    stopped: '#F87171',
+    pending_approval: '#C084FC',
+  };
+
   return (
     <AppShell>
-      <div className="ph">
+      <div className="page-header">
         <div>
-          <div className="pt">{t('dashboard')}</div>
-          <div className="ps">{t('welcome_msg')}, {user.firstName || user.name}</div>
+          <div className="page-title">{t('dashboard')}</div>
+          <div className="page-subtitle">{t('welcome_msg')}, {user.firstName || user.name}</div>
         </div>
       </div>
 
       {warnings.length > 0 && (
-        <div className="card" style={{ marginBottom:18, borderColor:'rgba(255,64,96,.3)' }}>
-          <div className="ch"><div className="ct" style={{ color:'var(--danger)' }}>{t('deadline_warning_title')}</div></div>
-          {warnings.map(tk => {
-            const ds = deadlineStatus(tk.deadline);
-            return (
-              <div key={tk.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 0', borderTop:'1px solid var(--border)', fontSize:13 }}>
-                <span>{tk.title}</span>
-                <span style={{ color: ds === 'overdue' ? 'var(--danger)' : 'var(--warning)', fontWeight:700 }}>
-                  {ds === 'overdue' ? t('overdue') : t('deadline_warning')} ({timeLeft(tk.deadline, lang)})
-                </span>
-              </div>
-            );
-          })}
+        <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(239,68,68,0.25)' }}>
+          <div className="card-header" style={{ background: 'rgba(239,68,68,0.05)' }}>
+            <span className="card-title" style={{ color: 'var(--danger)' }}>
+              ⚠ {t('deadline_warning_title')} ({warnings.length})
+            </span>
+          </div>
+          <div className="card-body" style={{ padding: '8px 16px' }}>
+            {warnings.map(tk => {
+              const ds = deadlineStatus(tk.deadline);
+              return (
+                <div
+                  key={tk.id}
+                  style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--border)', fontSize:13 }}
+                >
+                  <span style={{ color: 'var(--text-primary)' }}>{tk.title}</span>
+                  <span style={{ color: ds === 'overdue' ? 'var(--danger)' : 'var(--warning)', fontWeight: 600, fontSize: 12 }}>
+                    {ds === 'overdue' ? t('overdue') : t('deadline_warning')} ({timeLeft(tk.deadline, lang)})
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      <div className="sgrid">
+      <div className="stats-grid">
         {STAT_CARDS.map(c => (
-          <div key={c.key} className={`scard ${c.cls}`}>
-            <div className="si">{c.icon}</div>
-            <div className="sv">{c.val}</div>
-            <div className="sl">{t(c.key)}</div>
+          <div key={c.key} className={`stat-card ${c.cls}`}>
+            <div className="stat-icon">{c.icon}</div>
+            <div className="stat-value">{c.val}</div>
+            <div className="stat-label">{t(c.key)}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18, flexWrap:'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <div className="card">
-          <div className="ch"><div className="ct">{t('recent_tasks')}</div></div>
-          {recent.length === 0 ? (
-            <div className="empty"><div className="eico">📋</div>{t('no_tasks')}</div>
-          ) : recent.map(tk => (
-            <div key={tk.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 0', borderTop:'1px solid var(--border)', fontSize:13 }}>
-              <span style={{ color:'var(--text)' }}>{tk.title}</span>
-              <StatusBadge status={tk.status} />
-            </div>
-          ))}
+          <div className="card-header">
+            <span className="card-title">{t('recent_tasks')}</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{recent.length}</span>
+          </div>
+          <div style={{ padding: '0 16px' }}>
+            {recent.length === 0 ? (
+              <div className="empty" style={{ padding: '32px 0' }}>
+                <div className="empty-icon">☑</div>
+                <div className="empty-title">{t('no_tasks')}</div>
+              </div>
+            ) : recent.map((tk, i) => (
+              <div
+                key={tk.id}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '10px 0',
+                  borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
+                  fontSize: 13,
+                }}
+              >
+                <span style={{ color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 12 }}>{tk.title}</span>
+                <StatusBadge status={tk.status} />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="card">
-          <div className="ch"><div className="ct">{t('status_dist')}</div></div>
-          {statuses.filter(s => statusCounts[s]).map(s => {
-            const pct = total ? Math.round((statusCounts[s] || 0) / total * 100) : 0;
-            const colors = { pending:'#5A7080', in_progress:'var(--accent)', paused:'var(--warning)', completed:'var(--accent2)', stopped:'var(--danger)', pending_approval:'var(--purple)' };
-            return (
-              <div key={s} className="bar-row">
-                <div className="bar-label">
-                  <span className={`badge b-${s}`}>{t(`st_${s}`)}</span>
-                  <span>{statusCounts[s] || 0}</span>
-                </div>
-                <div className="bar-bg">
-                  <div className="bar-fill" style={{ width:`${pct}%`, background: colors[s] }} />
-                </div>
+          <div className="card-header">
+            <span className="card-title">{t('status_dist')}</span>
+          </div>
+          <div className="card-body">
+            {total === 0 ? (
+              <div className="empty" style={{ padding: '24px 0' }}>
+                <div className="empty-title">{t('no_tasks')}</div>
               </div>
-            );
-          })}
-          {total === 0 && <div className="empty" style={{ padding:20 }}>{t('no_tasks')}</div>}
+            ) : statuses.filter(s => statusCounts[s]).map(s => {
+              const pct = Math.round((statusCounts[s] || 0) / total * 100);
+              return (
+                <div key={s} className="bar-row" style={{ marginBottom: 10 }}>
+                  <div className="bar-label">
+                    <span className={`badge b-${s}`}>{t(`st_${s}`)}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>{statusCounts[s]}</span>
+                  </div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{ width: `${pct}%`, background: statusColors[s] }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </AppShell>

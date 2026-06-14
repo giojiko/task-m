@@ -19,7 +19,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 180));
     const found = (db?.users || []).find(u =>
       u.email?.toLowerCase() === email.toLowerCase() &&
       u.password === password &&
@@ -41,15 +41,12 @@ export default function LoginPage() {
           <img
             src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png"
             alt="SmartPro"
-            style={{ height: 40, objectFit: 'contain' }}
-            onError={e => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'block';
-            }}
+            style={{ height: 36, objectFit: 'contain' }}
+            onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
           />
-          <span className="logo-text" style={{ display:'none', fontSize:28, fontWeight:900 }}>SmartPro</span>
+          <span style={{ display: 'none', fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>SmartPro</span>
         </div>
-        <div className="login-subtitle">{t('platform_name')}</div>
+        <p className="login-subtitle">{t('platform_name')}</p>
 
         <div className="login-lang">
           {['ka','en','ru'].map(l => (
@@ -58,6 +55,8 @@ export default function LoginPage() {
             </button>
           ))}
         </div>
+
+        <div className="login-divider" />
 
         {error && <div className="login-error">{error}</div>}
 
@@ -71,6 +70,7 @@ export default function LoginPage() {
               onChange={e => setEmail(e.target.value)}
               placeholder="admin@smartpro.ge"
               required
+              autoComplete="email"
             />
           </div>
           <div className="form-group" style={{ marginBottom: 20 }}>
@@ -82,12 +82,23 @@ export default function LoginPage() {
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
               required
+              autoComplete="current-password"
             />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width:'100%', justifyContent:'center', padding:'11px' }} disabled={loading}>
-            {loading ? <span className="spinner" style={{ width:16,height:16,borderWidth:2 }} /> : t('login_btn')}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{ width: '100%', justifyContent: 'center', padding: '10px' }}
+            disabled={loading}
+          >
+            {loading
+              ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+              : t('login_btn')
+            }
           </button>
         </form>
+
+        <p className="login-footer">SmartPro Georgia &copy; {new Date().getFullYear()}</p>
       </div>
     </div>
   );
