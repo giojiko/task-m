@@ -5,12 +5,12 @@ import { useApp } from '@/context/AppContext';
 import { useState } from 'react';
 
 const NAV = [
-  { href: '/dashboard',  icon: '◫',  key: 'dashboard' },
-  { href: '/tasks',      icon: '☑',  key: 'tasks' },
-  { href: '/clients',    icon: '◉',  key: 'clients' },
-  { href: '/warehouse',  icon: '⬡',  key: 'warehouse' },
-  { href: '/employees',  icon: '◎',  key: 'employees' },
-  { href: '/directions', icon: '⬡',  key: 'directions' },
+  { href: '/dashboard',  icon: '◫', key: 'dashboard' },
+  { href: '/tasks',      icon: '☑', key: 'tasks' },
+  { href: '/clients',    icon: '◉', key: 'clients' },
+  { href: '/warehouse',  icon: '⬡', key: 'warehouse' },
+  { href: '/employees',  icon: '◎', key: 'employees' },
+  { href: '/directions', icon: '⬡', key: 'directions' },
 ];
 
 export default function Sidebar() {
@@ -62,12 +62,7 @@ export default function Sidebar() {
                 {dirsOpen && (
                   <div className="nav-sub">
                     {(db?.directions || []).map(d => (
-                      <Link
-                        key={d.id}
-                        href={`/directions?dir=${d.id}`}
-                        className="nav-dir-sub"
-                        style={{ color: 'inherit' }}
-                      >
+                      <Link key={d.id} href={`/directions?dir=${d.id}`} className="nav-dir-sub">
                         <span>{d.icon}</span>
                         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                       </Link>
@@ -87,11 +82,7 @@ export default function Sidebar() {
             : null;
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-item ${isActive ? 'active' : ''}`}
-            >
+            <Link key={item.href} href={item.href} className={`nav-item ${isActive ? 'active' : ''}`}>
               <span className="nav-icon">{item.icon}</span>
               <span className="nav-label">{t(item.key)}</span>
               {badge}
@@ -108,14 +99,14 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-user" onClick={logout} title={t('logout')}>
+        <Link href="/profile" className="sidebar-user">
           <div className="avatar">{initials}</div>
           <div className="user-info">
             <div className="user-name">{displayName}</div>
             <div className="user-role">{roleLabel}</div>
           </div>
-          <span style={{ color: 'var(--text-muted)', fontSize: 12, flexShrink: 0 }}>→</span>
-        </div>
+        </Link>
+        <button className="logout-btn" onClick={logout} title={t('logout')}>⎋</button>
       </div>
     </aside>
   );

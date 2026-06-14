@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { t as translate } from '@/lib/i18n';
 
 const AppContext = createContext(null);
@@ -12,6 +13,7 @@ export function AppProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);
+  const router = useRouter();
 
   const t = useCallback((key) => translate(key, lang), [lang]);
 
@@ -66,7 +68,8 @@ export function AppProvider({ children }) {
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('spro_session');
-  }, []);
+    router.push('/login');
+  }, [router]);
 
   const refreshUser = useCallback((updatedDb) => {
     if (!user) return;
