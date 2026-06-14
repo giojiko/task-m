@@ -4,7 +4,7 @@ import AppShell from '@/components/Layout/AppShell';
 import { useApp } from '@/context/AppContext';
 import Modal from '@/components/UI/Modal';
 import { StatusBadge, PriorityBadge } from '@/components/UI/Badge';
-import { uid, fd, fdt, calcDeadline, deadlineStatus, timeLeft } from '@/lib/utils';
+import { uid, fd, fdt, calcDeadline, deadlineStatus } from '@/lib/utils';
 
 const STATUSES = ['pending','in_progress','paused','completed','stopped','pending_approval'];
 const PRIORITIES = ['high','medium','low'];
@@ -86,7 +86,7 @@ function TaskModal({ task, onClose, onSave }) {
         </div>
       </div>
       <div className="fg">
-        <label>{t('subtasks')} — {t('responsible')}</label>
+        <label>{t('responsible')}</label>
         <select value={form.responsible} onChange={e => upd('responsible', e.target.value)}>
           <option value="">{t('no_assignees')}</option>
           {employees.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
@@ -151,7 +151,7 @@ function TaskDetailModal({ task, onClose, onRefresh }) {
   const { db, user, saveDB, t, toast } = useApp();
   const [actionModal, setActionModal] = useState(null);
   const [subtaskTitle, setSubtaskTitle] = useState('');
-  const [tab, setTab] = useState('info');
+  const [viewPhoto, setViewPhoto] = useState(null);
 
   const isResponsible = task.responsible === user.id || task.assignees?.includes(user.id);
   const canAct = user.role !== 'specialist' || isResponsible;
@@ -206,103 +206,168 @@ function TaskDetailModal({ task, onClose, onRefresh }) {
     onRefresh(newDb.tasks.find(tk => tk.id === task.id), newDb);
   };
 
+  const handlePhotoUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const base64s = await Promise.all(files.map(f => new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = ev => res(ev.target.result);
+      reader.onerror = rej;
+      reader.readAsDataURL(f);
+    })));
+    const newDb = { ...db };
+    newDb.tasks = newDb.tasks.map(tk => tk.id === task.id
+      ? { ...tk, photos: [...(tk.photos || []), ...base64s] }
+      : tk
+    );
+    await saveDB(newDb);
+    toast(t('photos_uploaded'));
+    onRefresh(newDb.tasks.find(tk => tk.id === task.id), newDb);
+  };
+
   const ds = task.deadline ? deadlineStatus(task.deadline) : null;
+
+  const infoRows = [
+    { label: t('client'), value: clientName },
+    { label: t('responsible'), value: responsibleUser ? `${responsibleUser.firstName} ${responsibleUser.lastName}` : '—' },
+    { label: t('priority'), value: <PriorityBadge priority={task.priority} /> },
+    ...(task.deadline ? [{ label: t('deadline_auto'), value: <span style={{ color: ds === 'overdue' ? 'var(--danger)' : ds === 'warning' ? 'var(--warning)' : 'inherit' }}>{fd(task.deadline)}</span> }] : []),
+    { label: t('created_at'), value: fd(task.created) },
+    ...(assigneeUsers.length > 0 ? [{ label: t('assignees'), value: assigneeUsers.map(u => `${u.firstName} ${u.lastName}`).join(', ') }] : []),
+  ];
 
   return (
     <Modal open title={task.title} onClose={onClose} size="modal-xl">
-      <div className="tabs" style={{ marginBottom:14 }}>
-        {['info','subtasks','logs'].map(tb => (
-          <button key={tb} className={`tab${tab===tb?' active':''}`} onClick={() => setTab(tb)}>
-            {tb === 'info' ? t('description') : tb === 'subtasks' ? t('subtasks') : t('history')}
-          </button>
-        ))}
+      {/* Status badge in header area */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <StatusBadge status={task.status} />
+        {ds === 'overdue' && <span style={{ fontSize: 11, color: 'var(--danger)', fontWeight: 600 }}>⚠ {t('overdue')}</span>}
+        {ds === 'warning' && <span style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>⚠ {t('deadline_warning')}</span>}
       </div>
 
-      {tab === 'info' && (
-        <>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:14, fontSize:13 }}>
-            <div><span style={{ color:'var(--text3)' }}>{t('status')}: </span><StatusBadge status={task.status} /></div>
-            <div><span style={{ color:'var(--text3)' }}>{t('priority')}: </span><PriorityBadge priority={task.priority} /></div>
-            <div><span style={{ color:'var(--text3)' }}>{t('client')}: </span>{clientName}</div>
-            <div><span style={{ color:'var(--text3)' }}>{t('responsible')}: </span>{responsibleUser ? `${responsibleUser.firstName} ${responsibleUser.lastName}` : '—'}</div>
-            {task.deadline && (
-              <div style={{ gridColumn:'1/-1' }}>
-                <span style={{ color:'var(--text3)' }}>{t('deadline_auto')}: </span>
-                <span style={{ color: ds === 'overdue' ? 'var(--danger)' : ds === 'warning' ? 'var(--warning)' : 'var(--text)' }}>
-                  {fd(task.deadline)} {ds !== 'ok' && ds && `(${t(ds === 'overdue' ? 'overdue' : 'deadline_warning')})`}
-                </span>
+      <div className="task-detail-grid">
+        {/* LEFT: description, subtasks, photos, logs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
+          {/* Description */}
+          {task.desc && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)', marginBottom: 8 }}>{t('description')}</div>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{task.desc}</p>
+            </div>
+          )}
+
+          {/* Subtasks */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)', marginBottom: 8 }}>
+              {t('subtasks')} {subtasks.length > 0 && `(${subtasks.length})`}
+            </div>
+            {subtasks.length === 0
+              ? <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('no_subtasks')}</div>
+              : subtasks.map(st => (
+                <div key={st.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 0', borderTop:'1px solid var(--border)', fontSize:13 }}>
+                  <span>{st.title}</span>
+                  <StatusBadge status={st.status} />
+                </div>
+              ))
+            }
+            {canAct && !['completed','stopped'].includes(task.status) && (
+              <div style={{ display:'flex', gap:8, marginTop:10 }}>
+                <input value={subtaskTitle} onChange={e => setSubtaskTitle(e.target.value)} placeholder={t('add_subtask')} onKeyDown={e => e.key === 'Enter' && addSubtask()} style={{ flex: 1, background: 'var(--bg-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', color: 'var(--text-primary)', padding: '6px 10px', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+                <button className="btn btn-primary btn-sm" onClick={addSubtask}>{t('add')}</button>
               </div>
             )}
           </div>
-          {assigneeUsers.length > 0 && (
-            <div style={{ marginBottom:12, fontSize:13 }}>
-              <span style={{ color:'var(--text3)' }}>{t('assignees')}: </span>
-              {assigneeUsers.map(u => `${u.firstName} ${u.lastName}`).join(', ')}
-            </div>
-          )}
-          {task.desc && <p style={{ fontSize:13, color:'var(--text2)', marginBottom:14 }}>{task.desc}</p>}
 
-          {canAct && !['completed','stopped'].includes(task.status) && (
-            <div className="wfbar">
-              {task.status === 'pending' && <button className="btn-start" onClick={() => setActionModal('start')}>{t('action_start')}</button>}
-              {task.status === 'in_progress' && <>
-                <button className="btn btn-ghost btn-sm" onClick={() => setActionModal('pause')}>{t('action_pause')}</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => setActionModal('complete')}>{t('action_complete')}</button>
-                <button className="btn btn-danger btn-sm" onClick={() => setActionModal('stop')}>{t('action_stop')}</button>
-              </>}
-              {task.status === 'paused' && <>
-                <button className="btn-start" onClick={() => setActionModal('start')}>{t('action_start')}</button>
-                <button className="btn btn-danger btn-sm" onClick={() => setActionModal('stop')}>{t('action_stop')}</button>
-              </>}
-              {task.status === 'pending_approval' && isAdmin && <>
-                <button className="btn btn-ghost btn-sm" onClick={approve}>{t('approve')}</button>
-                <button className="btn btn-ghost btn-sm" onClick={cancelApproval}>{t('cancel_approval')}</button>
-              </>}
-            </div>
-          )}
-        </>
-      )}
-
-      {tab === 'subtasks' && (
-        <>
-          {subtasks.length === 0 ? <div className="empty"><div className="eico">📋</div>{t('no_subtasks')}</div>
-            : subtasks.map(st => (
-              <div key={st.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 0', borderTop:'1px solid var(--border)', fontSize:13 }}>
-                <span>{st.title}</span>
-                <StatusBadge status={st.status} />
-              </div>
-            ))
-          }
-          {canAct && !['completed','stopped'].includes(task.status) && (
-            <div style={{ display:'flex', gap:8, marginTop:12 }}>
-              <input value={subtaskTitle} onChange={e => setSubtaskTitle(e.target.value)} placeholder={t('add_subtask')} onKeyDown={e => e.key === 'Enter' && addSubtask()} />
-              <button className="btn btn-primary btn-sm" onClick={addSubtask}>{t('add')}</button>
-            </div>
-          )}
-        </>
-      )}
-
-      {tab === 'logs' && (
-        <div className="loglist">
-          {logs.length === 0 ? <div className="empty"><div className="eico">📋</div>{t('no_logs')}</div>
-            : logs.map(l => {
-              const u = (db?.users || []).find(x => x.id === l.userId);
-              return (
-                <div key={l.id} className="logitem">
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600 }}>{u ? `${u.firstName} ${u.lastName}` : '?'} — <StatusBadge status={l.status} /></div>
-                    {l.comment && <div style={{ color:'var(--text2)', marginTop:3 }}>{l.comment}</div>}
-                  </div>
-                  <div style={{ color:'var(--text3)', whiteSpace:'nowrap', fontSize:11 }}>{fdt(l.date)}</div>
+          {/* Photos */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)', marginBottom: 8 }}>📸 {t('photos_optional')}</div>
+            <div className="photos-grid">
+              {(task.photos || []).map((photo, i) => (
+                <div key={i} className="photo-thumb" onClick={() => setViewPhoto(photo)}>
+                  <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 6 }} />
                 </div>
-              );
-            })
-          }
+              ))}
+              <label className="photo-upload-btn">
+                <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotoUpload} />
+                <span style={{ fontSize: 22 }}>+</span>
+                <span style={{ fontSize: 10 }}>ატვირთვა</span>
+              </label>
+            </div>
+          </div>
+
+          {/* History */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)', marginBottom: 8 }}>📋 {t('history')}</div>
+            {logs.length === 0
+              ? <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('no_logs')}</div>
+              : logs.slice(0, 5).map(l => {
+                const u = (db?.users || []).find(x => x.id === l.userId);
+                return (
+                  <div key={l.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'8px 0', borderTop:'1px solid var(--border)', fontSize:12, gap: 12 }}>
+                    <div>
+                      <span style={{ fontWeight:600 }}>{u ? `${u.firstName} ${u.lastName}` : '?'}</span>
+                      <span style={{ color: 'var(--text-muted)', margin: '0 6px' }}>→</span>
+                      <StatusBadge status={l.status} />
+                      {l.comment && <div style={{ color:'var(--text-muted)', marginTop:2, fontSize:11 }}>{l.comment}</div>}
+                    </div>
+                    <div style={{ color:'var(--text-muted)', whiteSpace:'nowrap', fontSize:11, flexShrink: 0 }}>{fdt(l.date)}</div>
+                  </div>
+                );
+              })
+            }
+          </div>
         </div>
-      )}
+
+        {/* RIGHT: info + actions */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Info panel */}
+          <div style={{ background: 'var(--bg-muted)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {infoRows.map(({ label, value }) => (
+              <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--text-muted)' }}>{label}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>{value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
+          {canAct && !['completed','stopped'].includes(task.status) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text-muted)' }}>სტატუსის შეცვლა</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {task.status === 'pending' && (
+                  <button className="btn btn-primary btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setActionModal('start')}>{t('action_start')}</button>
+                )}
+                {task.status === 'in_progress' && <>
+                  <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setActionModal('pause')}>{t('action_pause')}</button>
+                  <button className="btn btn-success btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setActionModal('complete')}>{t('action_complete')}</button>
+                  <button className="btn btn-danger btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setActionModal('stop')}>{t('action_stop')}</button>
+                </>}
+                {task.status === 'paused' && <>
+                  <button className="btn btn-primary btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setActionModal('start')}>{t('action_start')}</button>
+                  <button className="btn btn-danger btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setActionModal('stop')}>{t('action_stop')}</button>
+                </>}
+                {task.status === 'pending_approval' && isAdmin && <>
+                  <button className="btn btn-success btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={approve}>{t('approve')}</button>
+                  <button className="btn btn-ghost btn-sm" style={{ width: '100%', justifyContent: 'center' }} onClick={cancelApproval}>{t('cancel_approval')}</button>
+                </>}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {actionModal && (
         <ActionModal task={task} action={actionModal} onClose={() => setActionModal(null)} onSave={applyAction} t={t} />
+      )}
+
+      {viewPhoto && (
+        <div
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.9)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}
+          onClick={() => setViewPhoto(null)}
+        >
+          <img src={viewPhoto} alt="" style={{ maxWidth:'90vw', maxHeight:'90vh', objectFit:'contain', borderRadius: 8 }} />
+        </div>
       )}
     </Modal>
   );
@@ -313,7 +378,7 @@ export default function TasksPage() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
-  const [viewMode, setViewMode] = useState('list');
+  const [view, setView] = useState('list');
   const [modalTask, setModalTask] = useState(null);
   const [editTask, setEditTask] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -339,7 +404,6 @@ export default function TasksPage() {
     if (isNew) {
       data.id = uid();
       data.created = new Date().toISOString();
-      data.tasklogs = [];
       data.photos = [];
       newDb.tasks = [...newDb.tasks, { ...data, updated: data.created }];
       newDb.tasklogs = [...(newDb.tasklogs || []), { id: uid(), taskId: data.id, userId: user.id, date: data.created, status: 'created', comment: t('log_created') }];
@@ -350,8 +414,7 @@ export default function TasksPage() {
     await saveDB(newDb);
     toast(t('toast_task_saved'));
 
-    const responsibleChanged = data.responsible && data.responsible !== prevResponsible;
-    if (responsibleChanged) {
+    if (data.responsible && data.responsible !== prevResponsible) {
       const responsible = (newDb.users || []).find(u => u.id === data.responsible);
       const client = (newDb.clients || []).find(c => c.id === data.client);
       if (responsible?.email) {
@@ -372,25 +435,25 @@ export default function TasksPage() {
     toast(t('toast_task_deleted'));
   };
 
-  const refreshDetail = (updated, newDb) => {
+  const refreshDetail = (updated) => {
     if (updated) setModalTask(updated);
   };
 
   const isAdmin = user?.role === 'super_admin' || user?.role === 'admin';
-
-  const getClientName = (clientId) => {
-    if (!clientId) return '—';
-    return (db?.clients || []).find(c => c.id === clientId)?.name || '—';
-  };
+  const getClientName = (clientId) => clientId ? (db?.clients || []).find(c => c.id === clientId)?.name || '—' : '—';
 
   return (
     <AppShell>
       <div className="ph">
         <div><div className="pt">{t('tasks')}</div></div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          <div className="tabs">
-            <button className={`tab${viewMode==='list'?' active':''}`} onClick={() => setViewMode('list')}>{t('list')}</button>
-            <button className={`tab${viewMode==='kanban'?' active':''}`} onClick={() => setViewMode('kanban')}>{t('kanban')}</button>
+          <div className="view-toggle">
+            <button className={`view-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>
+              ☰ {t('list_view')}
+            </button>
+            <button className={`view-btn ${view === 'board' ? 'active' : ''}`} onClick={() => setView('board')}>
+              ⊞ {t('board_view')}
+            </button>
           </div>
           {isAdmin && <button className="btn btn-primary btn-sm" onClick={() => { setEditTask(null); setShowForm(true); }}>{t('add_task')}</button>}
         </div>
@@ -408,7 +471,7 @@ export default function TasksPage() {
         </select>
       </div>
 
-      {viewMode === 'list' ? (
+      {view === 'list' ? (
         <div className="tw">
           <table>
             <thead>
@@ -423,24 +486,24 @@ export default function TasksPage() {
             </thead>
             <tbody>
               {rootTasks.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign:'center', padding:40, color:'var(--text3)' }}>{t('no_tasks')}</td></tr>
+                <tr><td colSpan={6} style={{ textAlign:'center', padding:40, color:'var(--text-muted)' }}>{t('no_tasks')}</td></tr>
               ) : rootTasks.map(tk => {
                 const ds = tk.deadline ? deadlineStatus(tk.deadline) : null;
                 return (
                   <tr key={tk.id}>
-                    <td><span style={{ cursor:'pointer', color:'var(--accent)' }} onClick={() => setModalTask(tk)}>{tk.title}</span></td>
-                    <td style={{ color:'var(--text2)' }}>{getClientName(tk.client)}</td>
+                    <td><span style={{ cursor:'pointer', color:'var(--accent)', fontWeight: 500 }} onClick={() => setModalTask(tk)}>{tk.title}</span></td>
+                    <td style={{ color:'var(--text-secondary)' }}>{getClientName(tk.client)}</td>
                     <td><StatusBadge status={tk.status} /></td>
                     <td><PriorityBadge priority={tk.priority} /></td>
-                    <td style={{ color: ds === 'overdue' ? 'var(--danger)' : ds === 'warning' ? 'var(--warning)' : 'var(--text2)', fontSize:12 }}>
+                    <td style={{ color: ds === 'overdue' ? 'var(--danger)' : ds === 'warning' ? 'var(--warning)' : 'var(--text-secondary)', fontSize:12 }}>
                       {tk.deadline ? fd(tk.deadline) : '—'}
                     </td>
                     <td>
                       <div style={{ display:'flex', gap:4 }}>
-                        <button className="btn btn-ghost btn-xs" data-tip={t('tip_view')} onClick={() => setModalTask(tk)}>👁</button>
+                        <button className="btn btn-ghost btn-xs" onClick={() => setModalTask(tk)}>👁</button>
                         {isAdmin && <>
-                          <button className="btn btn-ghost btn-xs" data-tip={t('tip_edit')} onClick={() => { setEditTask(tk); setShowForm(true); }}>✏️</button>
-                          <button className="btn btn-danger btn-xs" data-tip={t('tip_delete')} onClick={() => handleDelete(tk.id)}>🗑</button>
+                          <button className="btn btn-ghost btn-xs" onClick={() => { setEditTask(tk); setShowForm(true); }}>✏️</button>
+                          <button className="btn btn-danger btn-xs" onClick={() => handleDelete(tk.id)}>🗑</button>
                         </>}
                       </div>
                     </td>
@@ -454,20 +517,26 @@ export default function TasksPage() {
         <div className="kanban">
           {STATUSES.map(s => {
             const col = filtered.filter(tk => tk.status === s);
-            const colors = { pending:'#5A7080', in_progress:'var(--accent)', paused:'var(--warning)', completed:'var(--accent2)', stopped:'var(--danger)', pending_approval:'var(--purple)' };
+            const colors = { pending:'var(--text-muted)', in_progress:'var(--accent)', paused:'var(--warning)', completed:'var(--success)', stopped:'var(--danger)', pending_approval:'var(--purple)' };
             return (
               <div key={s} className="kcol">
                 <div className="kch" style={{ color: colors[s] }}>
                   <span>{t(`st_${s}`)}</span>
-                  <span style={{ background:'var(--bg4)', padding:'1px 6px', borderRadius:10, fontSize:10, color:'var(--text2)' }}>{col.length}</span>
+                  <span style={{ background:'var(--bg-muted)', padding:'1px 7px', borderRadius:10, fontSize:10, color:'var(--text-secondary)' }}>{col.length}</span>
                 </div>
                 <div className="kcb">
-                  {col.map(tk => (
-                    <div key={tk.id} className="kcard" onClick={() => setModalTask(tk)}>
-                      <div className="kcard-t">{tk.title}</div>
-                      <div className="kcard-m"><PriorityBadge priority={tk.priority} /></div>
-                    </div>
-                  ))}
+                  {col.length === 0
+                    ? <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>—</div>
+                    : col.map(tk => (
+                      <div key={tk.id} className="kcard" onClick={() => setModalTask(tk)}>
+                        <div className="kcard-t">{tk.title}</div>
+                        <div className="kcard-m">
+                          <PriorityBadge priority={tk.priority} />
+                          {tk.deadline && <span style={{ fontSize: 10, color: deadlineStatus(tk.deadline) === 'overdue' ? 'var(--danger)' : 'var(--text-muted)' }}>{fd(tk.deadline)}</span>}
+                        </div>
+                      </div>
+                    ))
+                  }
                 </div>
               </div>
             );
