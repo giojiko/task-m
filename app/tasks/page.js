@@ -58,23 +58,23 @@ function TaskModal({ task, onClose, onSave }) {
       {err && <div className="err-box" style={{ display:'block', marginBottom:10 }}>{err}</div>}
       <div className="fg">
         <label>{t('title_req')}</label>
-        <input value={form.title} onChange={e => upd('title', e.target.value)} autoFocus />
+        <input className="input" value={form.title} onChange={e => upd('title', e.target.value)} autoFocus />
       </div>
       <div className="fg">
         <label>{t('description')}</label>
-        <textarea value={form.desc} onChange={e => upd('desc', e.target.value)} />
+        <textarea className="textarea" value={form.desc} onChange={e => upd('desc', e.target.value)} />
       </div>
       <div className="frow">
         <div className="fg">
           <label>{t('client')}</label>
-          <select value={form.client} onChange={e => upd('client', e.target.value)}>
+          <select className="select" value={form.client} onChange={e => upd('client', e.target.value)}>
             <option value="">{t('no_direction')}</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div className="fg">
           <label>{t('priority')}</label>
-          <select value={form.priority} onChange={e => upd('priority', e.target.value)}>
+          <select className="select" value={form.priority} onChange={e => upd('priority', e.target.value)}>
             {PRIORITIES.map(p => <option key={p} value={p}>{t(`pr_${p}`)}</option>)}
           </select>
         </div>
@@ -82,18 +82,18 @@ function TaskModal({ task, onClose, onSave }) {
       <div className="frow">
         <div className="fg">
           <label>{t('status')}</label>
-          <select value={form.status} onChange={e => upd('status', e.target.value)}>
+          <select className="select" value={form.status} onChange={e => upd('status', e.target.value)}>
             {STATUSES.map(s => <option key={s} value={s}>{t(`st_${s}`)}</option>)}
           </select>
         </div>
         <div className="fg">
           <label>{t('duration_days')}</label>
-          <input type="number" min="1" value={form.durationDays} onChange={e => upd('durationDays', e.target.value)} />
+          <input className="input" type="number" min="1" value={form.durationDays} onChange={e => upd('durationDays', e.target.value)} />
         </div>
       </div>
       <div className="fg">
         <label>{t('responsible')}</label>
-        <select value={form.responsible} onChange={e => upd('responsible', e.target.value)}>
+        <select className="select" value={form.responsible} onChange={e => upd('responsible', e.target.value)}>
           <option value="">{t('no_assignees')}</option>
           {employees.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
         </select>
@@ -212,21 +212,27 @@ export default function TasksPage() {
         </div>
       </div>
 
-      <div className="sbar">
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('search')} />
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+      <div className="filter-bar">
+        <input className="input" style={{ maxWidth: 240 }} value={search} onChange={e => setSearch(e.target.value)} placeholder={t('search')} />
+        <select className="select" style={{ width: 'auto' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="">{t('all_statuses')}</option>
           {STATUSES.map(s => <option key={s} value={s}>{t(`st_${s}`)}</option>)}
         </select>
-        <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
+        <select className="select" style={{ width: 'auto' }} value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
           <option value="">{t('all_priorities')}</option>
           {PRIORITIES.map(p => <option key={p} value={p}>{t(`pr_${p}`)}</option>)}
         </select>
+        {(search || filterStatus || filterPriority) && (
+          <button className="btn btn-ghost btn-sm" onClick={() => { setSearch(''); setFilterStatus(''); setFilterPriority(''); }}>
+            × {t('clear')}
+          </button>
+        )}
       </div>
 
       {view === 'list' ? (
-        <div className="tw">
-          <table>
+        <div className="card" style={{ padding: 0 }}>
+          <div className="table-wrap">
+          <table className="table">
             <thead>
               <tr>
                 <th>{t('title')}</th>
@@ -265,32 +271,31 @@ export default function TasksPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
-        <div className="kanban">
+        <div className="kanban-board">
           {STATUSES.map(s => {
             const col = filtered.filter(tk => tk.status === s);
             const colors = { pending:'var(--text-muted)', in_progress:'var(--accent)', paused:'var(--warning)', completed:'var(--success)', stopped:'var(--danger)', pending_approval:'var(--purple)' };
             return (
-              <div key={s} className="kcol">
-                <div className="kch" style={{ color: colors[s] }}>
-                  <span>{t(`st_${s}`)}</span>
-                  <span style={{ background:'var(--bg-muted)', padding:'1px 7px', borderRadius:10, fontSize:10, color:'var(--text-secondary)' }}>{col.length}</span>
+              <div key={s} className="kanban-col">
+                <div className="kanban-col-title">
+                  <span style={{ color: colors[s] }}>{t(`st_${s}`)}</span>
+                  <span className="kanban-col-badge">{col.length}</span>
                 </div>
-                <div className="kcb">
-                  {col.length === 0
-                    ? <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>—</div>
-                    : col.map(tk => (
-                      <div key={tk.id} className="kcard" onClick={() => setModalTask(tk)}>
-                        <div className="kcard-t">{tk.title}</div>
-                        <div className="kcard-m">
-                          <PriorityBadge priority={tk.priority} />
-                          {tk.deadline && <span style={{ fontSize: 10, color: deadlineStatus(tk.deadline) === 'overdue' ? 'var(--danger)' : 'var(--text-muted)' }}>{fd(tk.deadline)}</span>}
-                        </div>
+                {col.length === 0
+                  ? <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>—</div>
+                  : col.map(tk => (
+                    <div key={tk.id} className="kanban-card" onClick={() => setModalTask(tk)}>
+                      <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)', marginBottom: 8 }}>{tk.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                        <PriorityBadge priority={tk.priority} />
+                        {tk.deadline && <span style={{ fontSize: 10, color: deadlineStatus(tk.deadline) === 'overdue' ? 'var(--danger)' : 'var(--text-muted)' }}>{fd(tk.deadline)}</span>}
                       </div>
-                    ))
-                  }
-                </div>
+                    </div>
+                  ))
+                }
               </div>
             );
           })}
