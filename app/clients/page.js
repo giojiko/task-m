@@ -4,6 +4,7 @@ import AppShell from '@/components/Layout/AppShell';
 import { useApp } from '@/context/AppContext';
 import Modal from '@/components/UI/Modal';
 import { uid, fd } from '@/lib/utils';
+import InvoiceGenerator from '@/components/Invoice/InvoiceGenerator';
 
 function ClientModal({ client, onClose, onSave }) {
   const { db, t } = useApp();
@@ -72,10 +73,11 @@ function ClientModal({ client, onClose, onSave }) {
   );
 }
 
-function ClientDetailModal({ client: initialClient, onClose }) {
+function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info' }) {
   const { db, saveDB, t, toast } = useApp();
   const [client, setClient] = useState(initialClient);
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [invoiceSelected, setInvoiceSelected] = useState([]);
   const dirs = db?.directions || [];
   const usedItems = client.usedItems || [];
   const clientTasks = (db?.tasks || []).filter(tk => tk.client === client.id);
@@ -168,6 +170,7 @@ function ClientDetailModal({ client: initialClient, onClose }) {
       {/* Tab: warehouse */}
       {activeTab === 'warehouse' && (
         <div>
+          {/* Summary */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
             {[
               { label: 'სულ ღირებულება', val: `₾${totalCost.toFixed(2)}`,  color: 'var(--text-primary)' },
@@ -180,31 +183,82 @@ function ClientDetailModal({ client: initialClient, onClose }) {
               </div>
             ))}
           </div>
+
+          {/* Invoice bar */}
+          {usedItems.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(27,234,205,0.06)', border: '1px solid rgba(27,234,205,0.2)', borderRadius: 'var(--radius)', marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                {invoiceSelected.length === 0
+                  ? 'ინვოისისთვის მონიშნეთ პოზიციები ↓'
+                  : `${invoiceSelected.length} პოზიცია მონიშნული`
+                }
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {invoiceSelected.length > 0 && (
+                  <button className="btn btn-ghost btn-xs" onClick={() => setInvoiceSelected([])}>× გასუფთავება</button>
+                )}
+                <InvoiceGenerator
+                  client={client}
+                  selectedItems={invoiceSelected.length > 0 ? invoiceSelected : usedItems}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Items */}
           {usedItems.length === 0 ? (
             <div className="empty"><div className="empty-icon">📦</div><div className="empty-title">პროდუქცია არ გამოყენებულა</div></div>
           ) : (
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>პროდუქცია</th><th>რაოდ.</th><th>ფასი/ც</th><th>სულ</th><th>თარიღი</th><th>გადახდა</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th style={{ width: 36 }}>
+                      <input type="checkbox"
+                        style={{ width: 14, height: 14, accentColor: 'var(--accent)', cursor: 'pointer' }}
+                        checked={invoiceSelected.length === usedItems.length && usedItems.length > 0}
+                        onChange={e => setInvoiceSelected(e.target.checked ? usedItems.map((item, i) => ({ ...item, _index: i })) : [])}
+                      />
+                    </th>
+                    <th>პროდუქცია</th><th>რაოდ.</th><th>ფასი/ც</th><th>სულ</th><th>თარიღი</th><th>გადახდა</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {usedItems.map((item, i) => (
-                    <tr key={i} style={{ opacity: item.paid ? 0.7 : 1 }}>
-                      <td style={{ fontWeight: 600 }}>{item.itemName}</td>
-                      <td style={{ color: 'var(--text-secondary)' }}>{item.qty}</td>
-                      <td style={{ color: 'var(--text-secondary)' }}>₾{Number(item.unitPrice).toFixed(2)}</td>
-                      <td style={{ fontWeight: 700, color: item.paid ? 'var(--success)' : 'var(--text-primary)' }}>₾{Number(item.totalPrice).toFixed(2)}</td>
-                      <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fd(item.date)}</td>
-                      <td>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                          <input type="checkbox" checked={!!item.paid} onChange={() => togglePayment(i)}
-                            style={{ width: 14, height: 14, accentColor: 'var(--success)', cursor: 'pointer' }} />
-                          <span style={{ fontSize: 11, fontWeight: 600, color: item.paid ? 'var(--success)' : 'var(--text-muted)' }}>
-                            {item.paid ? '✅ გადახდილია' : 'გადაუხდელი'}
-                          </span>
-                        </label>
-                      </td>
-                    </tr>
-                  ))}
+                  {usedItems.map((item, i) => {
+                    const isSelected = invoiceSelected.some(x => x._index === i);
+                    return (
+                      <tr key={i} style={{ opacity: item.paid ? 0.7 : 1, background: isSelected ? 'rgba(27,234,205,0.05)' : 'transparent' }}>
+                        <td>
+                          <input type="checkbox"
+                            style={{ width: 14, height: 14, accentColor: 'var(--accent)', cursor: 'pointer' }}
+                            checked={isSelected}
+                            onChange={() => {
+                              setInvoiceSelected(prev =>
+                                isSelected ? prev.filter(x => x._index !== i) : [...prev, { ...item, _index: i }]
+                              );
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{item.itemName}</div>
+                          {item.notes && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.notes}</div>}
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{item.qty}</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>₾{Number(item.unitPrice).toFixed(2)}</td>
+                        <td style={{ fontWeight: 700, color: item.paid ? 'var(--success)' : 'var(--text-primary)' }}>₾{Number(item.totalPrice).toFixed(2)}</td>
+                        <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fd(item.date)}</td>
+                        <td>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={!!item.paid} onChange={() => togglePayment(i)}
+                              style={{ width: 14, height: 14, accentColor: 'var(--success)', cursor: 'pointer' }} />
+                            <span style={{ fontSize: 11, fontWeight: 600, color: item.paid ? 'var(--success)' : 'var(--text-muted)' }}>
+                              {item.paid ? '✅ გადახდილია' : 'გადაუხდელი'}
+                            </span>
+                          </label>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -243,6 +297,12 @@ export default function ClientsPage() {
   const [editClient, setEditClient] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [detailClient, setDetailClient] = useState(null);
+  const [detailClientTab, setDetailClientTab] = useState('info');
+
+  function openDetail(c, tab = 'info') {
+    setDetailClientTab(tab);
+    setDetailClient(c);
+  }
 
   const clients = db?.clients || [];
   const dirs = db?.directions || [];
@@ -323,10 +383,7 @@ export default function ClientsPage() {
                 return (
                   <tr key={c.id}>
                     <td>
-                      <div
-                        className="clickable-name"
-                        onClick={() => setDetailClient(c)}
-                      >{c.name}</div>
+                      <div className="clickable-name" onClick={() => openDetail(c)}>{c.name}</div>
                       {c.email && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.email}</div>}
                     </td>
                     <td style={{ color: 'var(--text-secondary)' }}>{c.phone}</td>
@@ -345,7 +402,7 @@ export default function ClientsPage() {
                     </td>
                     <td>
                       {(c.usedItems || []).length > 0 ? (
-                        <button className="btn btn-ghost btn-xs" onClick={() => setDetailClient(c)} title="პროდუქცია">
+                        <button className="btn btn-ghost btn-xs" onClick={() => openDetail(c, 'warehouse')} title="პროდუქცია / ინვოისი">
                           📦 <span style={{ color: 'var(--success)', fontWeight: 700 }}>₾{usedTotal.toFixed(0)}</span>
                         </button>
                       ) : <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>}
@@ -354,6 +411,9 @@ export default function ClientsPage() {
                     {isAdmin && (
                       <td>
                         <div style={{ display: 'flex', gap: 4 }}>
+                          {(c.usedItems || []).length > 0 && (
+                            <button className="btn btn-ghost btn-xs" title="ინვოისი" onClick={() => openDetail(c, 'warehouse')}>🧾</button>
+                          )}
                           <button className="btn btn-ghost btn-xs" onClick={() => { setEditClient(c); setShowForm(true); }}>✏️</button>
                           <button className="btn btn-danger btn-xs" onClick={() => handleDelete(c.id)}>🗑</button>
                         </div>
@@ -368,7 +428,7 @@ export default function ClientsPage() {
       </div>
 
       {showForm     && <ClientModal       client={editClient}   onClose={() => setShowForm(false)}    onSave={handleSave} />}
-      {detailClient && <ClientDetailModal client={detailClient} onClose={() => setDetailClient(null)} />}
+      {detailClient && <ClientDetailModal client={detailClient} onClose={() => setDetailClient(null)} defaultTab={detailClientTab} />}
     </AppShell>
   );
 }
