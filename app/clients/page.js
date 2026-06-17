@@ -72,53 +72,165 @@ function ClientModal({ client, onClose, onSave }) {
   );
 }
 
-function UsedItemsModal({ client, onClose }) {
-  const usedItems = client?.usedItems || [];
-  const total = usedItems.reduce((s, i) => s + (i.totalPrice || 0), 0);
+function ClientDetailModal({ client: initialClient, onClose }) {
+  const { db, saveDB, t, toast } = useApp();
+  const [client, setClient] = useState(initialClient);
+  const [activeTab, setActiveTab] = useState('info');
+  const dirs = db?.directions || [];
+  const usedItems = client.usedItems || [];
+  const clientTasks = (db?.tasks || []).filter(tk => tk.client === client.id);
+
+  const totalCost = usedItems.reduce((s, i) => s + (i.totalPrice || 0), 0);
+  const paidCost  = usedItems.filter(i => i.paid).reduce((s, i) => s + (i.totalPrice || 0), 0);
+  const unpaid    = totalCost - paidCost;
+
+  const togglePayment = async (idx) => {
+    const newItems = usedItems.map((item, i) => i === idx ? { ...item, paid: !item.paid, paidAt: !item.paid ? new Date().toISOString() : null } : item);
+    const updated = { ...client, usedItems: newItems };
+    const newDb = { ...db, clients: db.clients.map(c => c.id === client.id ? updated : c) };
+    await saveDB(newDb);
+    setClient(updated);
+    toast(newItems[idx].paid ? '✅ გადახდილად მოინიშნა' : 'გადაუხდელად მოინიშნა');
+  };
 
   return (
-    <Modal open size="lg" title={`📦 ${client.name} — გამოყენებული პროდუქცია`} onClose={onClose}>
-      {usedItems.length === 0 ? (
-        <div className="empty" style={{ padding: 32 }}>
-          <div className="empty-icon">📦</div>
-          <div className="empty-title">პროდუქცია არ გამოყენებულა</div>
+    <Modal open title={null} onClose={onClose} size="modal-lg">
+      {/* Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(27,234,205,0.08), transparent)',
+        borderBottom: '1px solid var(--border)',
+        padding: '16px 20px', margin: '-20px -20px 20px',
+        display: 'flex', alignItems: 'center', gap: 16,
+      }}>
+        <div className="avatar" style={{ width: 44, height: 44, fontSize: 15, flexShrink: 0 }}>
+          {client.name?.[0]}{client.name?.split(' ')?.[1]?.[0] || ''}
         </div>
-      ) : (
-        <>
-          <div className="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>პროდუქცია</th>
-                  <th>რაოდ.</th>
-                  <th>ფასი/ც</th>
-                  <th>სულ</th>
-                  <th>თარიღი</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usedItems.map((item, i) => (
-                  <tr key={i}>
-                    <td><strong>{item.itemName}</strong></td>
-                    <td>{item.qty}</td>
-                    <td style={{ color: 'var(--text-secondary)' }}>₾{Number(item.unitPrice).toFixed(2)}</td>
-                    <td style={{ color: 'var(--success)', fontWeight: 700 }}>₾{Number(item.totalPrice).toFixed(2)}</td>
-                    <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fd(item.date)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: 0 }}>{client.name}</h2>
+          {client.phone && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{client.phone}</div>}
+        </div>
+        <button className="modal-close" onClick={onClose}>✕</button>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 18, borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
+        {[
+          { key: 'info',      label: `👤 ინფო` },
+          { key: 'warehouse', label: `📦 პროდუქცია (${usedItems.length})` },
+          { key: 'tasks',     label: `☑ ტასკები (${clientTasks.length})` },
+        ].map(tab => (
+          <button key={tab.key} className={`btn btn-sm ${activeTab === tab.key ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveTab(tab.key)}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: info */}
+      {activeTab === 'info' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {[
+            { label: 'ტელეფონი',  val: client.phone    || '—', icon: '📱' },
+            { label: 'მეილი',     val: client.email    || '—', icon: '✉️' },
+            { label: 'მისამართი', val: client.addr     || '—', icon: '📍' },
+            { label: 'პ/ნ',       val: client.pid      || '—', icon: '🪪' },
+            { label: 'რეფერალი',  val: client.referral || '—', icon: '🔗' },
+            { label: 'შეიქმნა',   val: fd(client.created),     icon: '📅' },
+          ].map(({ label, val, icon }) => (
+            <div key={label} style={{ background: 'var(--bg-muted)', borderRadius: 'var(--radius)', padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 15, flexShrink: 0 }}>{icon}</span>
+              <div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{val}</div>
+              </div>
+            </div>
+          ))}
+          {(client.directions || []).length > 0 && (
+            <div style={{ gridColumn: 'span 2', background: 'var(--bg-muted)', borderRadius: 'var(--radius)', padding: '10px 12px' }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>მიმართულებები</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {(client.directions || []).map(did => {
+                  const d = dirs.find(x => x.id === did);
+                  return d ? <span key={did} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: d.color + '22', color: d.color, border: `1px solid ${d.color}44`, fontWeight: 600 }}>{d.icon} {d.name}</span> : null;
+                })}
+              </div>
+            </div>
+          )}
+          {client.notes && (
+            <div style={{ gridColumn: 'span 2', background: 'var(--bg-muted)', borderRadius: 'var(--radius)', padding: '10px 12px' }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 6 }}>შენიშვნები</div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{client.notes}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: warehouse */}
+      {activeTab === 'warehouse' && (
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
+            {[
+              { label: 'სულ ღირებულება', val: `₾${totalCost.toFixed(2)}`,  color: 'var(--text-primary)' },
+              { label: 'გადახდილი',      val: `₾${paidCost.toFixed(2)}`,   color: 'var(--success)' },
+              { label: 'გადასახდელი',    val: `₾${unpaid.toFixed(2)}`,     color: unpaid > 0 ? 'var(--danger)' : 'var(--success)' },
+            ].map(({ label, val, color }) => (
+              <div key={label} style={{ background: 'var(--bg-muted)', borderRadius: 'var(--radius)', padding: '10px 12px' }}>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color }}>{val}</div>
+              </div>
+            ))}
           </div>
-          <div style={{
-            display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
-            gap: 16, padding: '12px 16px',
-            background: 'rgba(34,197,94,0.06)', borderTop: '1px solid var(--border)',
-            borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
-          }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>სულ:</span>
-            <span style={{ color: 'var(--success)', fontWeight: 800, fontSize: 18 }}>₾{total.toFixed(2)}</span>
-          </div>
-        </>
+          {usedItems.length === 0 ? (
+            <div className="empty"><div className="empty-icon">📦</div><div className="empty-title">პროდუქცია არ გამოყენებულა</div></div>
+          ) : (
+            <div className="table-wrap">
+              <table className="table">
+                <thead><tr><th>პროდუქცია</th><th>რაოდ.</th><th>ფასი/ც</th><th>სულ</th><th>თარიღი</th><th>გადახდა</th></tr></thead>
+                <tbody>
+                  {usedItems.map((item, i) => (
+                    <tr key={i} style={{ opacity: item.paid ? 0.7 : 1 }}>
+                      <td style={{ fontWeight: 600 }}>{item.itemName}</td>
+                      <td style={{ color: 'var(--text-secondary)' }}>{item.qty}</td>
+                      <td style={{ color: 'var(--text-secondary)' }}>₾{Number(item.unitPrice).toFixed(2)}</td>
+                      <td style={{ fontWeight: 700, color: item.paid ? 'var(--success)' : 'var(--text-primary)' }}>₾{Number(item.totalPrice).toFixed(2)}</td>
+                      <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fd(item.date)}</td>
+                      <td>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                          <input type="checkbox" checked={!!item.paid} onChange={() => togglePayment(i)}
+                            style={{ width: 14, height: 14, accentColor: 'var(--success)', cursor: 'pointer' }} />
+                          <span style={{ fontSize: 11, fontWeight: 600, color: item.paid ? 'var(--success)' : 'var(--text-muted)' }}>
+                            {item.paid ? '✅ გადახდილია' : 'გადაუხდელი'}
+                          </span>
+                        </label>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: tasks */}
+      {activeTab === 'tasks' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {clientTasks.length === 0 ? (
+            <div className="empty"><div className="empty-icon">☑</div><div className="empty-title">ტასკები არ არის</div></div>
+          ) : clientTasks.map(tk => (
+            <div key={tk.id} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 14px', background: 'var(--bg-muted)', borderRadius: 'var(--radius)',
+              border: '1px solid var(--border)',
+            }}>
+              <div style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{tk.title}</div>
+                {tk.deadline && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>📅 {fd(tk.deadline)}</div>}
+              </div>
+              <span className={`badge b-${tk.status}`}>{t('st_' + tk.status)}</span>
+            </div>
+          ))}
+        </div>
       )}
     </Modal>
   );
@@ -130,7 +242,7 @@ export default function ClientsPage() {
   const [filterDir, setFilterDir] = useState('');
   const [editClient, setEditClient] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [usedModal, setUsedModal] = useState(null);
+  const [detailClient, setDetailClient] = useState(null);
 
   const clients = db?.clients || [];
   const dirs = db?.directions || [];
@@ -211,7 +323,10 @@ export default function ClientsPage() {
                 return (
                   <tr key={c.id}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{c.name}</div>
+                      <div
+                        className="clickable-name"
+                        onClick={() => setDetailClient(c)}
+                      >{c.name}</div>
                       {c.email && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{c.email}</div>}
                     </td>
                     <td style={{ color: 'var(--text-secondary)' }}>{c.phone}</td>
@@ -230,11 +345,7 @@ export default function ClientsPage() {
                     </td>
                     <td>
                       {(c.usedItems || []).length > 0 ? (
-                        <button
-                          className="btn btn-ghost btn-xs"
-                          onClick={() => setUsedModal(c)}
-                          title="გამოყენებული პროდუქცია"
-                        >
+                        <button className="btn btn-ghost btn-xs" onClick={() => setDetailClient(c)} title="პროდუქცია">
                           📦 <span style={{ color: 'var(--success)', fontWeight: 700 }}>₾{usedTotal.toFixed(0)}</span>
                         </button>
                       ) : <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>}
@@ -256,8 +367,8 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      {showForm  && <ClientModal    client={editClient} onClose={() => setShowForm(false)}  onSave={handleSave} />}
-      {usedModal && <UsedItemsModal client={usedModal}  onClose={() => setUsedModal(null)} />}
+      {showForm     && <ClientModal       client={editClient}   onClose={() => setShowForm(false)}    onSave={handleSave} />}
+      {detailClient && <ClientDetailModal client={detailClient} onClose={() => setDetailClient(null)} />}
     </AppShell>
   );
 }

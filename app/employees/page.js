@@ -4,7 +4,7 @@ import AppShell from '@/components/Layout/AppShell';
 import { useApp } from '@/context/AppContext';
 import Modal from '@/components/UI/Modal';
 import { RoleBadge } from '@/components/UI/Badge';
-import { uid } from '@/lib/utils';
+import { uid, fd } from '@/lib/utils';
 
 function EmployeeModal({ emp, onClose, onSave }) {
   const { db, user: currentUser, t } = useApp();
@@ -129,11 +129,98 @@ function EmployeeModal({ emp, onClose, onSave }) {
   );
 }
 
+function EmployeeDetailModal({ emp, onClose }) {
+  const { db, t } = useApp();
+  const supervisor = emp.supervisorId ? (db?.users || []).find(u => u.id === emp.supervisorId) : null;
+  const myTasks = (db?.tasks || []).filter(tk => tk.responsible === emp.id || (tk.assignees || []).includes(emp.id));
+  const activeTasks = myTasks.filter(tk => !['completed', 'stopped'].includes(tk.status));
+
+  return (
+    <Modal open title={null} onClose={onClose} size="modal-lg">
+      {/* Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(27,234,205,0.1), transparent)',
+        borderBottom: '1px solid var(--border)',
+        padding: '18px 20px', margin: '-20px -20px 20px',
+        display: 'flex', alignItems: 'center', gap: 14,
+      }}>
+        <div className="avatar" style={{ width: 48, height: 48, fontSize: 16, flexShrink: 0 }}>
+          {emp.firstName?.[0]}{emp.lastName?.[0]}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>
+            {emp.firstName} {emp.lastName}
+          </h2>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <RoleBadge role={emp.role} />
+            {emp.position && <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{emp.position}</span>}
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: emp.active !== false ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', color: emp.active !== false ? 'var(--success)' : 'var(--danger)' }}>
+              {emp.active !== false ? '● აქტიური' : '● არააქტიური'}
+            </span>
+          </div>
+        </div>
+        <button className="modal-close" onClick={onClose}>✕</button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {/* Personal info */}
+        <div className="card" style={{ margin: 0 }}>
+          <div className="card-header"><span className="card-title">👤 პირადი ინფო</span></div>
+          <div>
+            {[
+              { label: 'ელ. ფოსტა', val: emp.email       || '—', icon: '✉️' },
+              { label: 'ტელეფონი',  val: emp.phone       || '—', icon: '📱' },
+              { label: 'დ. თარიღი', val: emp.birthDate ? fd(emp.birthDate) : '—', icon: '🎂' },
+              { label: 'პ/ნ',       val: emp.personalId  || '—', icon: '🪪' },
+              { label: 'მისამართი', val: emp.address     || '—', icon: '📍' },
+              { label: 'ხელმძღვ.', val: supervisor ? `${supervisor.firstName} ${supervisor.lastName}` : '—', icon: '👆' },
+              { label: 'შეიქმნა',  val: fd(emp.created),          icon: '📅' },
+            ].map(({ label, val, icon }) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 16px', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 2 }}>{label}</div>
+                  <div style={{ fontWeight: 500, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{val}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tasks */}
+        <div className="card" style={{ margin: 0 }}>
+          <div className="card-header">
+            <span className="card-title">☑ ტასკები</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{activeTasks.length} აქტ. / {myTasks.length} სულ</span>
+          </div>
+          <div style={{ maxHeight: 340, overflowY: 'auto' }}>
+            {myTasks.length === 0 ? (
+              <div className="empty" style={{ padding: 24 }}>
+                <div className="empty-icon">☑</div>
+                <div className="empty-title">ტასკები არ არის</div>
+              </div>
+            ) : myTasks.map(tk => (
+              <div key={tk.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 16px', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
+                  <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{tk.title}</div>
+                  {tk.deadline && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>📅 {fd(tk.deadline)}</div>}
+                </div>
+                <span className={`badge b-${tk.status}`} style={{ flexShrink: 0 }}>{t('st_' + tk.status)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 export default function EmployeesPage() {
   const { db, user, saveDB, t, toast, refreshUser } = useApp();
   const [search, setSearch] = useState('');
   const [editEmp, setEditEmp] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [detailEmp, setDetailEmp] = useState(null);
 
   const isAdmin = user?.role === 'super_admin' || user?.role === 'admin';
   const isSuper = user?.role === 'super_admin';
@@ -220,8 +307,8 @@ export default function EmployeesPage() {
                       {(e.firstName?.[0]||'') + (e.lastName?.[0]||'')}
                     </div>
                     <div>
-                      <div style={{ fontWeight:600 }}>{e.firstName} {e.lastName}</div>
-                      <div style={{ fontSize:11, color:'var(--text3)' }}>{e.email}</div>
+                      <div className="clickable-name" onClick={() => setDetailEmp(e)}>{e.firstName} {e.lastName}</div>
+                      <div style={{ fontSize:11, color:'var(--text-muted)' }}>{e.email}</div>
                     </div>
                   </div>
                 </td>
@@ -257,9 +344,8 @@ export default function EmployeesPage() {
         </table>
       </div>
 
-      {showForm && (
-        <EmployeeModal emp={editEmp} onClose={() => setShowForm(false)} onSave={handleSave} />
-      )}
+      {showForm  && <EmployeeModal       emp={editEmp}   onClose={() => setShowForm(false)}  onSave={handleSave} />}
+      {detailEmp && <EmployeeDetailModal emp={detailEmp} onClose={() => setDetailEmp(null)} />}
     </AppShell>
   );
 }

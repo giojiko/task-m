@@ -343,6 +343,17 @@ a { color:inherit; text-decoration:none; }
 /* Task Detail */
 .task-detail-grid { display:grid; grid-template-columns:1fr 260px; gap:20px; }
 
+/* XL Modal */
+.modal.modal-xl { max-width: 900px; }
+
+/* Success button */
+.btn-success { background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.3); color:#4ADE80; }
+.btn-success:hover { background:#22C55E; color:#0D1117; border-color:transparent; }
+
+/* Clickable name in tables */
+.clickable-name { cursor:pointer; color:var(--text-primary); font-weight:600; transition:color var(--transition); display:inline; }
+.clickable-name:hover { color:var(--accent); }
+
 /* Price Calculator */
 .price-calc-box { background:rgba(27,234,205,0.05); border:1px solid rgba(27,234,205,0.2); border-radius:var(--radius-lg); padding:16px; margin-bottom:14px; }
 .price-calc-title { font-size:11px; font-weight:700; color:var(--accent); margin-bottom:12px; text-transform:uppercase; letter-spacing:.06em; }

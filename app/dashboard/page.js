@@ -1,11 +1,14 @@
 'use client';
+import { useState } from 'react';
 import AppShell from '@/components/Layout/AppShell';
 import { useApp } from '@/context/AppContext';
 import { fd, deadlineStatus, timeLeft } from '@/lib/utils';
 import { StatusBadge } from '@/components/UI/Badge';
+import TaskDetailModal from '@/components/UI/TaskDetailModal';
 
 export default function DashboardPage() {
-  const { db, user, t, lang } = useApp();
+  const { db, user, saveDB, t, lang, toast } = useApp();
+  const [detailTask, setDetailTask] = useState(null);
   if (!db || !user) return null;
 
   const tasks = db.tasks || [];
@@ -116,14 +119,25 @@ export default function DashboardPage() {
             ) : recent.map((tk, i) => (
               <div
                 key={tk.id}
+                onClick={() => setDetailTask(tk)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '10px 0',
                   borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
-                  fontSize: 13,
+                  fontSize: 13, cursor: 'pointer', borderRadius: 4,
+                  transition: 'background var(--transition)',
                 }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,234,205,0.04)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <span style={{ color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 12 }}>{tk.title}</span>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tk.title}</div>
+                  {tk.client && (
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {(db.clients || []).find(c => c.id === tk.client)?.name}
+                    </div>
+                  )}
+                </div>
                 <StatusBadge status={tk.status} />
               </div>
             ))}
@@ -156,6 +170,13 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      {detailTask && (
+        <TaskDetailModal
+          task={detailTask}
+          onClose={() => setDetailTask(null)}
+          onRefresh={(updated) => updated && setDetailTask(updated)}
+        />
+      )}
     </AppShell>
   );
 }
