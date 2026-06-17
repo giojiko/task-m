@@ -11,6 +11,7 @@ const NAV = [
   { href: '/warehouse',  icon: '⬡', key: 'warehouse' },
   { href: '/employees',  icon: '◎', key: 'employees' },
   { href: '/directions', icon: '⬡', key: 'directions' },
+  { href: '/invoice',    icon: '🧾', key: 'invoice' },
 ];
 
 export default function Sidebar() {
