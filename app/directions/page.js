@@ -25,10 +25,10 @@ function DirectionsContent() {
 
   return (
     <AppShell>
-      <div className="ph">
+      <div className="page-header">
         <div>
-          <div className="pt">{t('directions')}</div>
-          <div className="ps">{t('directions_sub')}</div>
+          <div className="page-title">{t('directions')}</div>
+          <div className="page-subtitle">{t('directions_sub')}</div>
         </div>
         {selectedDir && (
           <button className="btn btn-ghost btn-sm" onClick={() => setSelectedDir(null)}>{t('show_all_dirs')}</button>
@@ -47,9 +47,9 @@ function DirectionsContent() {
               >
                 <div style={{ fontSize:32, marginBottom:8 }}>{d.icon}</div>
                 <div style={{ fontSize:15, fontWeight:700, color: d.color, marginBottom:4 }}>{getDirName(d)}</div>
-                <div style={{ fontSize:12, color:'var(--text3)', marginBottom:10 }}>{d.desc}</div>
-                <div style={{ fontSize:12, color:'var(--text2)' }}>
-                  {t('clients_count')}: <strong style={{ color:'var(--text)' }}>{clientCount}</strong>
+                <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:10 }}>{d.desc}</div>
+                <div style={{ fontSize:12, color:'var(--text-secondary)' }}>
+                  {t('clients_count')}: <strong style={{ color:'var(--text-primary)' }}>{clientCount}</strong>
                 </div>
               </div>
             );
@@ -63,7 +63,7 @@ function DirectionsContent() {
                 <span style={{ fontSize:36 }}>{activeDir.icon}</span>
                 <div>
                   <div style={{ fontSize:18, fontWeight:700, color: activeDir.color }}>{getDirName(activeDir)}</div>
-                  <div style={{ fontSize:12, color:'var(--text3)' }}>{activeDir.desc}</div>
+                  <div style={{ fontSize:12, color:'var(--text-muted)' }}>{activeDir.desc}</div>
                 </div>
               </div>
             </div>

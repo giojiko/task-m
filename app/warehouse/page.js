@@ -74,11 +74,9 @@ function ItemModal({ item, onClose, onSave }) {
       </div>
 
       {/* Price Calculator */}
-      <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 'var(--radius-lg)', padding: '16px', marginBottom: 14 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          💰 {t('wh_price_calc')}
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+      <div className="price-calc-box">
+        <div className="price-calc-title">💰 {t('wh_price_calc')}</div>
+        <div className="price-calc-grid">
           <div className="fg" style={{ marginBottom: 0 }}>
             <label>{t('wh_cost_price')} (₾) *</label>
             <input type="number" min="0" step="0.01" value={form.costPrice} onChange={e => upd('costPrice', e.target.value)} />
@@ -89,13 +87,7 @@ function ItemModal({ item, onClose, onSave }) {
           </div>
           <div className="fg" style={{ marginBottom: 0 }}>
             <label>{t('wh_sell_price')}</label>
-            <div style={{
-              background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
-              borderRadius: 'var(--radius)', padding: '8px 12px',
-              color: 'var(--success)', fontWeight: 700, fontSize: 15,
-            }}>
-              ₾{sellPrice}
-            </div>
+            <div className="price-sell-display">₾{sellPrice}</div>
           </div>
         </div>
       </div>
