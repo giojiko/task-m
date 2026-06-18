@@ -5,6 +5,7 @@ import { useApp } from '@/context/AppContext';
 import Modal from '@/components/UI/Modal';
 import { uid, fd } from '@/lib/utils';
 import InvoiceGenerator from '@/components/Invoice/InvoiceGenerator';
+import InvoiceEditor from '@/components/Invoice/InvoiceEditor';
 
 function ClientModal({ client, onClose, onSave }) {
   const { db, t } = useApp();
@@ -29,7 +30,9 @@ function ClientModal({ client, onClose, onSave }) {
   };
 
   const submit = () => {
-    if (!form.name.trim() || !form.phone.trim() || !form.addr.trim()) return setErr(t('err_client_required'));
+    if (!form.name.trim()) return setErr('სახელი სავალდებულოა');
+    if (!form.pid.trim()) return setErr('პირადი / საიდენტიფიკაციო კოდი სავალდებულოა');
+    if (form.pid.trim().length !== 11) return setErr('კოდი უნდა შედგებოდეს 11 ციფრისგან');
     onSave({ ...client, ...form, name: form.name.trim() });
     onClose();
   };
@@ -42,33 +45,64 @@ function ClientModal({ client, onClose, onSave }) {
       </>}
     >
       {err && <div className="err-box">{err}</div>}
-      <div className="fg"><label>{t('c_name_req')}</label><input value={form.name} onChange={e => upd('name', e.target.value)} autoFocus /></div>
-      <div className="frow">
-        <div className="fg"><label>{t('c_mobile_req')}</label><input value={form.phone} onChange={e => upd('phone', e.target.value)} /></div>
-        <div className="fg"><label>{t('email_lbl')}</label><input value={form.email} onChange={e => upd('email', e.target.value)} /></div>
-      </div>
-      <div className="fg"><label>{t('c_address_req')}</label><input value={form.addr} onChange={e => upd('addr', e.target.value)} /></div>
-      <div className="frow">
-        <div className="fg"><label>{t('c_pid_opt')}</label><input value={form.pid} onChange={e => upd('pid', e.target.value)} /></div>
-        <div className="fg"><label>{t('c_referral')}</label><input value={form.referral} onChange={e => upd('referral', e.target.value)} /></div>
-      </div>
       <div className="fg">
-        <label>{t('c_direction')}</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-          {dirs.map(d => (
-            <label key={d.id} style={{
-              display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', fontSize: 12,
-              background: form.directions.includes(d.id) ? 'rgba(59,130,246,0.1)' : 'var(--bg-muted)',
-              padding: '4px 8px', borderRadius: 6,
-              border: `1px solid ${form.directions.includes(d.id) ? 'var(--accent)' : 'var(--border)'}`,
-            }}>
-              <input type="checkbox" checked={form.directions.includes(d.id)} onChange={() => toggleDir(d.id)} style={{ width: 'auto' }} />
-              {d.icon} {d.name}
-            </label>
-          ))}
+        <label className="form-label req">სახელი / დასახელება</label>
+        <input className="input" value={form.name} onChange={e => upd('name', e.target.value)} autoFocus />
+      </div>
+      <div className="frow">
+        <div className="fg">
+          <label className="form-label req">პირ. ნომ. / საიდ. კოდი</label>
+          <input className="input" value={form.pid} maxLength={11}
+            onChange={e => upd('pid', e.target.value.replace(/\D/g, ''))}
+            placeholder="11 ციფრი" />
+        </div>
+        <div className="fg">
+          <label className="form-label">მობილური</label>
+          <input className="input" value={form.phone} onChange={e => upd('phone', e.target.value)} />
         </div>
       </div>
-      <div className="fg"><label>{t('notes')}</label><textarea value={form.notes} onChange={e => upd('notes', e.target.value)} /></div>
+      <div className="frow">
+        <div className="fg">
+          <label className="form-label">ელ.ფოსტა</label>
+          <input className="input" value={form.email} onChange={e => upd('email', e.target.value)} />
+        </div>
+        <div className="fg">
+          <label className="form-label">რეფერალი (ვინ მოიყვანა)</label>
+          <input className="input" value={form.referral} onChange={e => upd('referral', e.target.value)} />
+        </div>
+      </div>
+      <div className="fg">
+        <label className="form-label">მისამართი</label>
+        <input className="input" value={form.addr} onChange={e => upd('addr', e.target.value)} />
+      </div>
+      <div className="fg">
+        <label className="form-label">მიმართულება</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 4 }}>
+          {dirs.map(d => {
+            const active = form.directions.includes(d.id);
+            return (
+              <label key={d.id} style={{
+                display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12.5,
+                background: active ? `${d.color}18` : 'var(--bg-muted)',
+                padding: '6px 12px', borderRadius: 8,
+                border: `1px solid ${active ? d.color : 'var(--border)'}`,
+                transition: 'var(--transition)',
+              }}>
+                <input type="checkbox" checked={active} onChange={() => toggleDir(d.id)}
+                  style={{ width: 13, height: 13, accentColor: d.color }} />
+                <span>{d.icon}</span>
+                <span style={{ color: active ? d.color : 'var(--text-secondary)', fontWeight: active ? 600 : 400 }}>
+                  {d.name}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+      <div className="fg" style={{ marginBottom: 0 }}>
+        <label className="form-label">შენიშვნები</label>
+        <textarea className="textarea" rows={3} value={form.notes} onChange={e => upd('notes', e.target.value)} />
+      </div>
     </Modal>
   );
 }
@@ -78,9 +112,11 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
   const [client, setClient] = useState(initialClient);
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [invoiceSelected, setInvoiceSelected] = useState([]);
+  const [showInvoiceEditor, setShowInvoiceEditor] = useState(false);
   const dirs = db?.directions || [];
   const usedItems = client.usedItems || [];
   const clientTasks = (db?.tasks || []).filter(tk => tk.client === client.id);
+  const clientInvoices = (db?.invoices || []).filter(inv => inv.clientId === client.id);
 
   const totalCost = usedItems.reduce((s, i) => s + (i.totalPrice || 0), 0);
   const paidCost  = usedItems.filter(i => i.paid).reduce((s, i) => s + (i.totalPrice || 0), 0);
@@ -111,6 +147,10 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
           <h2 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: 0 }}>{client.name}</h2>
           {client.phone && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{client.phone}</div>}
         </div>
+        <button className="btn btn-secondary btn-sm" style={{ marginRight: 8 }}
+          onClick={() => setShowInvoiceEditor(true)}>
+          🧾 ახალი ინვოისი
+        </button>
         <button className="modal-close" onClick={onClose}>✕</button>
       </div>
 
@@ -120,6 +160,7 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
           { key: 'info',      label: `👤 ინფო` },
           { key: 'warehouse', label: `📦 პროდუქცია (${usedItems.length})` },
           { key: 'tasks',     label: `☑ ტასკები (${clientTasks.length})` },
+          { key: 'invoices',  label: `🧾 ინვოისები (${clientInvoices.length})` },
         ].map(tab => (
           <button key={tab.key} className={`btn btn-sm ${activeTab === tab.key ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => setActiveTab(tab.key)}>
@@ -285,6 +326,45 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
             </div>
           ))}
         </div>
+      )}
+
+      {/* Tab: invoices */}
+      {activeTab === 'invoices' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {clientInvoices.length === 0 ? (
+            <div className="empty">
+              <div className="empty-icon">🧾</div>
+              <div className="empty-title">ინვოისები არ არის</div>
+              <div className="empty-desc">header-ში "🧾 ახალი ინვოისი" ღილაკი</div>
+            </div>
+          ) : [...clientInvoices]
+              .sort((a, b) => new Date(b.created) - new Date(a.created))
+              .map(inv => (
+            <div key={inv.id} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 14px', background: 'var(--bg-muted)', borderRadius: 'var(--radius)',
+              border: '1px solid var(--border)',
+            }}>
+              <div>
+                <div style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 13 }}>{inv.number}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  {fd(inv.issueDate)} · ₾{inv.total.toFixed(2)}
+                </div>
+              </div>
+              <span className={`badge b-${inv.status === 'paid' ? 'completed' : 'pending'}`}>
+                {inv.status === 'paid' ? '✅ გადახდილი' : '📤 გამოწერილი'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showInvoiceEditor && (
+        <InvoiceEditor
+          prefillClientId={client.id}
+          onClose={() => setShowInvoiceEditor(false)}
+          onSaved={() => setActiveTab('invoices')}
+        />
       )}
     </Modal>
   );
