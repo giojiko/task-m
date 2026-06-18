@@ -453,9 +453,9 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                         </td>
                         <td>
                           <select className="select"
-                            style={{ border: 'none', background: 'transparent', padding: '4px 0' }}
+                            style={{ border: 'none', background: 'var(--bg-subtle)', padding: '4px 4px', fontSize: 12 }}
                             value={item.unit} onChange={e => updItem(idx, 'unit', e.target.value)}>
-                            {UNITS.map(u => <option key={u}>{u}</option>)}
+                            {UNITS.map(u => <option key={u} style={{ background: 'var(--bg-subtle)', color: 'var(--text-primary)' }}>{u}</option>)}
                           </select>
                         </td>
                         <td>
