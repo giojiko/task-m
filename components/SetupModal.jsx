@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { uid } from '@/lib/utils';
+import { uid, hashPassword } from '@/lib/utils';
 
 export default function SetupModal() {
   const { user, db, saveDB, t, toast, refreshUser } = useApp();
@@ -27,6 +27,7 @@ export default function SetupModal() {
     if (form.newPass !== form.repeatPass) return setErr(t('err_pass_mismatch'));
     if (form.personalId && form.personalId.length !== 11) return setErr(t('err_pid_11'));
 
+    const passwordHash = await hashPassword(form.newPass);
     const newDb = { ...db };
     newDb.users = newDb.users.map(u => u.id === user.id ? {
       ...u,
@@ -36,7 +37,7 @@ export default function SetupModal() {
       phone: form.phone,
       birthDate: form.birthDate,
       personalId: form.personalId,
-      password: form.newPass,
+      passwordHash,
       mustSetup: false,
     } : u);
 

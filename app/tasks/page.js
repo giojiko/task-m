@@ -173,7 +173,8 @@ export default function TasksPage() {
         fetch('/api/email/task-assigned', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ task: data, responsible, client }),
+          credentials: 'include',
+          body: JSON.stringify({ taskId: data.id, responsibleId: data.responsible }),
         }).catch(e => console.warn('task email failed', e));
       }
     }

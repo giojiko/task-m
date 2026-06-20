@@ -1,6 +1,10 @@
 import { supabase } from '@/lib/supabase';
+import { getSessionUser, unauthorized } from '@/lib/auth-guard';
 
 export async function GET() {
+  const session = await getSessionUser();
+  if (!session) return unauthorized();
+
   const { data, error } = await supabase
     .from('store')
     .select('data')

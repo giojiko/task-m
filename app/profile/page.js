@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import AppShell from '@/components/Layout/AppShell';
 import { useApp } from '@/context/AppContext';
-import { fd } from '@/lib/utils';
+import { fd, hashPassword } from '@/lib/utils';
 import { RoleBadge } from '@/components/UI/Badge';
 
 export default function ProfilePage() {
@@ -42,11 +42,19 @@ export default function ProfilePage() {
 
   const changePassword = async () => {
     setPassErr('');
-    if (user.password !== passForm.cur) return setPassErr(t('err_cur_pass'));
     if (passForm.new.length < 6) return setPassErr(t('err_pass_short'));
     if (passForm.new !== passForm.rep) return setPassErr(t('err_pass_mismatch'));
+    // Verify current password server-side via login attempt
+    const checkRes = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email: user.email, password: passForm.cur }),
+    });
+    if (!checkRes.ok) return setPassErr(t('err_cur_pass'));
+    const ph = await hashPassword(passForm.new);
     const newDb = { ...db };
-    newDb.users = newDb.users.map(u => u.id === user.id ? { ...u, password: passForm.new } : u);
+    newDb.users = newDb.users.map(u => u.id === user.id ? { ...u, passwordHash: ph, password: undefined } : u);
     await saveDB(newDb);
     setPassForm({ cur: '', new: '', rep: '' });
     toast(t('toast_pass_changed'));

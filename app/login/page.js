@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 
 export default function LoginPage() {
-  const { user, db, login, lang, setLang, t } = useApp();
+  const { user, login, lang, setLang, t } = useApp();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,17 +19,11 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 180));
-    const found = (db?.users || []).find(u =>
-      u.email?.toLowerCase() === email.toLowerCase() &&
-      u.password === password &&
-      u.active !== false
-    );
-    if (found) {
-      login(found);
-      router.replace('/dashboard');
+    const result = await login(email, password);
+    if (result.error) {
+      setError(result.error);
     } else {
-      setError(t('err_login'));
+      router.replace('/dashboard');
     }
     setLoading(false);
   }

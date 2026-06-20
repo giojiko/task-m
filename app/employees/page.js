@@ -4,7 +4,7 @@ import AppShell from '@/components/Layout/AppShell';
 import { useApp } from '@/context/AppContext';
 import Modal from '@/components/UI/Modal';
 import { RoleBadge } from '@/components/UI/Badge';
-import { uid, fd } from '@/lib/utils';
+import { uid, fd, hashPassword } from '@/lib/utils';
 
 function EmployeeModal({ emp, onClose, onSave }) {
   const { db, user: currentUser, t } = useApp();
@@ -31,13 +31,19 @@ function EmployeeModal({ emp, onClose, onSave }) {
 
   const supervisors = (db?.users || []).filter(u => u.id !== emp?.id && u.active !== false);
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.firstName || !form.lastName || !form.phone || !form.email || !form.birthDate) return setErr(t('err_emp_required'));
     if (isNew && (!form.password || form.password.length < 6)) return setErr(t('err_pass_short'));
     if (form.personalId && form.personalId.length !== 11) return setErr(t('err_pid_11'));
     if ((db?.users || []).some(u => u.email === form.email && u.id !== emp?.id)) return setErr(t('email_exists'));
     const data = { ...emp, ...form, name: `${form.firstName} ${form.lastName}` };
-    if (!isNew && !form.password) delete data.password;
+    delete data.password;
+    if (isNew || form.password) {
+      data.passwordHash = await hashPassword(form.password);
+    }
+    if (!isNew && !form.password) {
+      delete data.passwordHash;
+    }
     onSave(data, isNew ? form.password : null);
     onClose();
   };
@@ -249,7 +255,8 @@ export default function EmployeesPage() {
         await fetch('/api/email/welcome', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ employee: data, tempPassword }),
+          credentials: 'include',
+          body: JSON.stringify({ employeeId: data.id, tempPassword }),
         });
       } catch (e) { console.warn('welcome email failed', e); }
     }
