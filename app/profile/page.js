@@ -54,7 +54,11 @@ export default function ProfilePage() {
     if (!checkRes.ok) return setPassErr(t('err_cur_pass'));
     const ph = await hashPassword(passForm.new);
     const newDb = { ...db };
-    newDb.users = newDb.users.map(u => u.id === user.id ? { ...u, passwordHash: ph, password: undefined } : u);
+    newDb.users = newDb.users.map(u => {
+      if (u.id !== user.id) return u;
+      const { password, ...rest } = u;
+      return { ...rest, passwordHash: ph };
+    });
     await saveDB(newDb);
     setPassForm({ cur: '', new: '', rep: '' });
     toast(t('toast_pass_changed'));

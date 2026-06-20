@@ -38,11 +38,10 @@ function EmployeeModal({ emp, onClose, onSave }) {
     if ((db?.users || []).some(u => u.email === form.email && u.id !== emp?.id)) return setErr(t('email_exists'));
     const data = { ...emp, ...form, name: `${form.firstName} ${form.lastName}` };
     delete data.password;
+    // Only update passwordHash if a new password was actually entered.
+    // Otherwise, data.passwordHash from {...emp} spread is preserved unchanged.
     if (isNew || form.password) {
       data.passwordHash = await hashPassword(form.password);
-    }
-    if (!isNew && !form.password) {
-      delete data.passwordHash;
     }
     onSave(data, isNew ? form.password : null);
     onClose();

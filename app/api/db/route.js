@@ -36,14 +36,27 @@ export async function POST(request) {
     return Response.json({ error: 'Invalid DB structure' }, { status: 400 });
   }
 
+  // Read current state once for both conflict detection and passwordHash guard
+  const { data: prevRow } = await supabase.from('store').select('data, updated').eq('id', 1).single();
+
   // Conflict detection
-  if (_expectedUpdated) {
-    const { data: current } = await supabase.from('store').select('updated').eq('id', 1).single();
-    if (current?.updated && _expectedUpdated !== current.updated) {
+  if (_expectedUpdated && prevRow?.updated && _expectedUpdated !== prevRow.updated) {
+    return Response.json({
+      error: 'CONFLICT',
+      message: 'მონაცემები შეიცვალა სხვის მიერ — გვერდი განაახლეთ',
+    }, { status: 409 });
+  }
+
+  // Defensive: never allow passwordHash to disappear from an active user
+  const prevUsers = prevRow?.data?.users || [];
+  for (const newUser of dbBody.users || []) {
+    if (newUser.active === false) continue;
+    const prev = prevUsers.find(u => u.id === newUser.id);
+    if (prev?.passwordHash && !newUser.passwordHash) {
       return Response.json({
-        error: 'CONFLICT',
-        message: 'მონაცემები შეიცვალა სხვის მიერ — გვერდი განაახლეთ',
-      }, { status: 409 });
+        error: 'INVALID_UPDATE',
+        message: `მომხმარებელი ${newUser.email || newUser.id} კარგავს passwordHash-ს`,
+      }, { status: 400 });
     }
   }
 
