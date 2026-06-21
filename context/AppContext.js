@@ -80,13 +80,23 @@ export function AppProvider({ children }) {
   }, []);
 
   const login = useCallback(async (email, password) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
+    let res;
+    try {
+      res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+    } catch (e) {
+      return { error: 'სერვერთან კავშირი ვერ დამყარდა — სცადეთ მოგვიანებით' };
+    }
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      return { error: `სერვერის შეცდომა (კოდი ${res.status}) — ადმინისტრატორს მიმართეთ` };
+    }
     if (!res.ok) return { error: data.error || 'შესვლა ვერ მოხერხდა' };
     setUser(data.user);
     const dbRes = await fetch('/api/db', { credentials: 'include', cache: 'no-store' });
