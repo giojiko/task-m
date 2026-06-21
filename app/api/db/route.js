@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { initDB } from '@/lib/utils';
+import { sendWelcomeEmail } from '@/lib/email';
 import { getSessionUser, unauthorized } from '@/lib/auth-guard';
 
 export async function GET() {
@@ -13,8 +14,13 @@ export async function GET() {
     .single();
 
   if (error || !data?.data) {
-    const fresh = await initDB();
+    const { db: fresh, tempPassword, adminUser } = await initDB();
     await supabase.from('store').upsert({ id: 1, data: fresh });
+    try {
+      await sendWelcomeEmail(adminUser, tempPassword);
+    } catch (e) {
+      console.error('initial admin welcome email failed', e);
+    }
     return Response.json(fresh);
   }
 
