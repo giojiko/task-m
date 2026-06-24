@@ -148,10 +148,11 @@ function PaymentModal({ invoice, onClose }) {
 
 export default function InvoicePage() {
   const { db } = useApp();
-  const [editorOpen,    setEditorOpen]    = useState(false);
+  const [editorOpen,     setEditorOpen]    = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [paymentInvoice, setPaymentInvoice] = useState(null);
-  const [search,        setSearch]        = useState('');
+  const [search,         setSearch]        = useState('');
+  const [refreshKey,     setRefreshKey]    = useState(0);
 
   const invoices = useMemo(() => {
     return [...(db?.invoices || [])]
@@ -162,7 +163,8 @@ export default function InvoicePage() {
         return inv.number.toLowerCase().includes(q) ||
           (inv.clientSnapshot?.name || '').toLowerCase().includes(q);
       });
-  }, [db?.invoices, search]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [db?.invoices, search, refreshKey]);
 
   const openNew  = () => { setEditingInvoice(null); setEditorOpen(true); };
   const openEdit = (inv) => { setEditingInvoice(inv); setEditorOpen(true); };
@@ -275,7 +277,10 @@ export default function InvoicePage() {
         <InvoiceEditor
           invoice={editingInvoice}
           onClose={() => setEditorOpen(false)}
-          onSaved={() => {}}
+          onSaved={() => {
+            setRefreshKey(k => k + 1);
+            setEditorOpen(false);
+          }}
         />
       )}
       {paymentInvoice && (

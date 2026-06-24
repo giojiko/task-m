@@ -439,12 +439,14 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                     return (
                       <tr key={idx}>
                         <td style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center' }}>{idx + 1}</td>
-                        <td>
+                        <td style={{ minWidth: 180, maxWidth: 280 }}>
                           <input className="input"
-                            style={{ border: 'none', background: 'transparent', padding: '4px 0' }}
+                            style={{ border: 'none', background: 'transparent', padding: '4px 2px',
+                              fontSize: 13, width: '100%', minWidth: 0 }}
                             value={item.name}
                             onChange={e => updItem(idx, 'name', e.target.value)}
-                            placeholder="პროდუქტი / სერვისი" />
+                            placeholder="პროდუქტი / სერვისი"
+                            title={item.name} />
                         </td>
                         <td>
                           <input className="input" type="number" min="0" step="0.01"
