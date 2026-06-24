@@ -26,20 +26,50 @@ function EmployeeModal({ emp, onClose, onSave }) {
     password: '',
     active: emp?.active !== false,
   });
+  const [showPass, setShowPass] = useState(false);
   const [err, setErr] = useState('');
   const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  const supervisors = (db?.users || []).filter(u => u.id !== emp?.id && u.active !== false);
+  const supervisors = (db?.users || []).filter(u => u.id !== emp?.id && u.active !== false && ['admin','super_admin'].includes(u.role));
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+    let p = '';
+    const bytes = crypto.getRandomValues(new Uint8Array(12));
+    for (let i = 0; i < 12; i++) p += chars[bytes[i] % chars.length];
+    upd('password', p);
+    setShowPass(true);
+  };
 
   const submit = async () => {
-    if (!form.firstName || !form.lastName || !form.phone || !form.email || !form.birthDate) return setErr(t('err_emp_required'));
+    setErr('');
+    if (!form.firstName.trim()) return setErr('სახელი სავალდებულოა');
+    if (!form.lastName.trim()) return setErr('გვარი სავალდებულოა');
+    if (!form.email.trim()) return setErr('ელ.ფოსტა სავალდებულოა');
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(form.email)) return setErr('ელ.ფოსტა არასწორი ფორმატით');
+    if ((db?.users || []).some(u => u.email?.toLowerCase() === form.email.toLowerCase() && u.id !== emp?.id)) return setErr(t('email_exists'));
+    if (form.personalId && form.personalId.replace(/\D/g,'').length !== 11) return setErr(t('err_pid_11'));
     if (isNew && (!form.password || form.password.length < 6)) return setErr(t('err_pass_short'));
-    if (form.personalId && form.personalId.length !== 11) return setErr(t('err_pid_11'));
-    if ((db?.users || []).some(u => u.email === form.email && u.id !== emp?.id)) return setErr(t('email_exists'));
-    const data = { ...emp, ...form, name: `${form.firstName} ${form.lastName}` };
-    delete data.password;
-    // Only update passwordHash if a new password was actually entered.
-    // Otherwise, data.passwordHash from {...emp} spread is preserved unchanged.
+
+    const data = {
+      ...emp,
+      id: emp?.id || uid(),
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      name: `${form.firstName.trim()} ${form.lastName.trim()}`,
+      email: form.email.trim().toLowerCase(),
+      position: form.position,
+      role: form.role,
+      supervisorId: form.supervisorId,
+      phone: form.phone,
+      birthDate: form.birthDate,
+      personalId: form.personalId,
+      address: form.address,
+      active: form.active,
+      mustSetup: isNew ? true : (emp?.mustSetup ?? false),
+      created: emp?.created || new Date().toISOString(),
+    };
     if (isNew || form.password) {
       data.passwordHash = await hashPassword(form.password);
     }
@@ -55,38 +85,24 @@ function EmployeeModal({ emp, onClose, onSave }) {
       </>}
     >
       {err && <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:8, color:'var(--danger)', padding:'9px 12px', marginBottom:14, fontSize:13 }}>{err}</div>}
-      <p style={{ fontSize:11, color:'var(--text3)', marginBottom:14 }}>{t('required_fields_note')}</p>
+
+      <div style={{ marginBottom: 12, fontSize: 11, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+        სავალდებულო
+      </div>
       <div className="form-row">
         <div className="form-group">
-          <label className="form-label req">{t('first_name_lbl').replace(' *','')}</label>
+          <label className="form-label req">სახელი</label>
           <input className="input" value={form.firstName} onChange={e => upd('firstName',e.target.value)} autoFocus />
         </div>
         <div className="form-group">
-          <label className="form-label req">{t('last_name_lbl').replace(' *','')}</label>
+          <label className="form-label req">გვარი</label>
           <input className="input" value={form.lastName} onChange={e => upd('lastName',e.target.value)} />
         </div>
       </div>
-      <div className="form-row">
-        <div className="form-group">
-          <label className="form-label req">{t('mobile_lbl').replace(' *','')}</label>
-          <input className="input" value={form.phone} onChange={e => upd('phone',e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label className="form-label req">{t('email_req').replace(' *','')}</label>
-          <input className="input" type="email" value={form.email} onChange={e => upd('email',e.target.value)} />
-        </div>
+      <div className="form-group">
+        <label className="form-label req">ელ.ფოსტა</label>
+        <input className="input" type="email" value={form.email} onChange={e => upd('email',e.target.value)} placeholder="example@smartpro.ge" />
       </div>
-      <div className="form-row">
-        <div className="form-group">
-          <label className="form-label req">{t('birth_date_lbl').replace(' *','')}</label>
-          <input className="input" type="date" value={form.birthDate} onChange={e => upd('birthDate',e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label className="form-label">{t('personal_id_lbl')}</label>
-          <input className="input" value={form.personalId} maxLength={11} onChange={e => upd('personalId',e.target.value)} placeholder="11 ციფრი" />
-        </div>
-      </div>
-      <hr className="divider" />
       <div className="form-row">
         <div className="form-group">
           <label className="form-label">{t('position')}</label>
@@ -103,13 +119,50 @@ function EmployeeModal({ emp, onClose, onSave }) {
           </div>
         )}
       </div>
+
+      <div className="form-group">
+        <label className={`form-label${isNew ? ' req' : ''}`}>
+          {isNew ? 'დროებითი პაროლი (email-ით გაიგზავნება)' : 'ახალი პაროლი (ცარიელი = შეუცვლელი)'}
+        </label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input className="input" type={showPass ? 'text' : 'password'} value={form.password}
+            onChange={e => upd('password', e.target.value)}
+            placeholder={isNew ? 'მინ. 6 სიმბოლო' : 'ცარიელი = არ შეიცვლება'}
+            style={{ flex: 1 }} />
+          <button className="btn btn-ghost btn-sm" type="button" onClick={() => setShowPass(s => !s)} style={{ padding: '0 10px', fontSize: 14 }}>
+            {showPass ? '🙈' : '👁️'}
+          </button>
+          <button className="btn btn-secondary btn-sm" type="button" onClick={generatePassword} title="ავტო-გენერაცია">
+            🎲
+          </button>
+        </div>
+        {form.password && (
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+            პაროლი: <span style={{ color: 'var(--accent)', fontFamily: 'monospace', userSelect: 'all' }}>
+              {showPass ? form.password : '••••••••••••'}
+            </span>
+            {' '}— email-ზე გაიგზავნება
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginTop: 16, marginBottom: 8, fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+        სურვილისამებრ (თანამშრომელი პირველ login-ზე შეავსებს)
+      </div>
       <div className="form-row">
         <div className="form-group">
-          <label className="form-label">{t('supervisor')}</label>
-          <select className="select" value={form.supervisorId} onChange={e => upd('supervisorId',e.target.value)}>
-            <option value="">{t('no_supervisor')}</option>
-            {supervisors.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
-          </select>
+          <label className="form-label">{t('mobile_lbl').replace(' *','')}</label>
+          <input className="input" value={form.phone} onChange={e => upd('phone',e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">{t('birth_date_lbl').replace(' *','')}</label>
+          <input className="input" type="date" value={form.birthDate} onChange={e => upd('birthDate',e.target.value)} />
+        </div>
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label className="form-label">{t('personal_id_lbl')}</label>
+          <input className="input" value={form.personalId} maxLength={11} onChange={e => upd('personalId', e.target.value.replace(/\D/g,''))} placeholder="11 ციფრი" />
         </div>
         <div className="form-group">
           <label className="form-label">{t('emp_address')}</label>
@@ -117,12 +170,11 @@ function EmployeeModal({ emp, onClose, onSave }) {
         </div>
       </div>
       <div className="form-group">
-        <label className="form-label" style={{ ...(isNew && { color: 'var(--danger)' }) }}>
-          {isNew ? t('pass_req') : t('reset_password')}
-        </label>
-        <input className="input" type="password" value={form.password}
-          placeholder={isNew ? '' : '(ცარიელი = არ შეიცვლება)'}
-          onChange={e => upd('password',e.target.value)} />
+        <label className="form-label">{t('supervisor')}</label>
+        <select className="select" value={form.supervisorId} onChange={e => upd('supervisorId',e.target.value)}>
+          <option value="">{t('no_supervisor')}</option>
+          {supervisors.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
+        </select>
       </div>
       {isSuper && !isSelf && (
         <label className="cb-row" style={{ marginTop: 4 }}>
@@ -236,11 +288,8 @@ export default function EmployeesPage() {
 
   const handleSave = async (data, tempPassword) => {
     const newDb = { ...db };
-    const isNew = !data.id;
+    const isNew = !(db?.users || []).some(u => u.id === data.id);
     if (isNew) {
-      data.id = uid();
-      data.created = new Date().toISOString();
-      data.mustSetup = false;
       newDb.users = [...newDb.users, data];
     } else {
       newDb.users = newDb.users.map(u => u.id === data.id ? data : u);
