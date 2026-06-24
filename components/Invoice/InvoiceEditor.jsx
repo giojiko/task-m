@@ -390,7 +390,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
         <button className="btn btn-primary btn-sm" onClick={() => handleSave(true)}>💾 შენახვა + 🖨️ გახსნა</button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 270px', gap: 20, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: 16, alignItems: 'start' }}>
 
         {/* მარცხენა */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -422,14 +422,14 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
               <table className="table">
                 <thead>
                   <tr>
-                    <th style={{ width: 26 }}>#</th>
-                    <th>დასახელება</th>
-                    <th style={{ width: 60 }}>რაოდ.</th>
-                    <th style={{ width: 80 }}>ერთ.</th>
-                    <th style={{ width: 90 }}>ფასი (₾)</th>
-                    <th style={{ width: 64 }}>დღგ</th>
-                    <th style={{ width: 90 }}>ჯამი</th>
-                    <th style={{ width: 30 }}></th>
+                    <th style={{ width: 22 }}>#</th>
+                    <th style={{ minWidth: 160 }}>დასახელება</th>
+                    <th style={{ width: 52 }}>რაოდ.</th>
+                    <th style={{ width: 70 }}>ერთ.</th>
+                    <th style={{ width: 82 }}>ფასი (₾)</th>
+                    <th style={{ width: 54 }}>დღგ</th>
+                    <th style={{ width: 82 }}>ჯამი</th>
+                    <th style={{ width: 26 }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -439,14 +439,26 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                     return (
                       <tr key={idx}>
                         <td style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center' }}>{idx + 1}</td>
-                        <td style={{ minWidth: 180, maxWidth: 280 }}>
-                          <input className="input"
-                            style={{ border: 'none', background: 'transparent', padding: '4px 2px',
-                              fontSize: 13, width: '100%', minWidth: 0 }}
+                        <td style={{ minWidth: 160 }}>
+                          <textarea
+                            className="input"
+                            rows={item.name && item.name.length > 30 ? 2 : 1}
+                            style={{
+                              border: 'none', background: 'transparent',
+                              padding: '3px 2px', fontSize: 12.5,
+                              width: '100%', minWidth: 0,
+                              resize: 'none', overflow: 'hidden',
+                              lineHeight: '1.4', whiteSpace: 'pre-wrap',
+                              wordBreak: 'break-word', display: 'block',
+                            }}
                             value={item.name}
-                            onChange={e => updItem(idx, 'name', e.target.value)}
+                            onChange={e => {
+                              updItem(idx, 'name', e.target.value);
+                              e.target.style.height = 'auto';
+                              e.target.style.height = e.target.scrollHeight + 'px';
+                            }}
                             placeholder="პროდუქტი / სერვისი"
-                            title={item.name} />
+                          />
                         </td>
                         <td>
                           <input className="input" type="number" min="0" step="0.01"
