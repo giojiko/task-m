@@ -390,7 +390,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
         <button className="btn btn-primary btn-sm" onClick={() => handleSave(true)}>💾 შენახვა + 🖨️ გახსნა</button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 14, alignItems: 'start' }}>
 
         {/* მარცხენა */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
