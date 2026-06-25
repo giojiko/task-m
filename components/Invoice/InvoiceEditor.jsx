@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Modal from '@/components/UI/Modal';
 import { useApp } from '@/context/AppContext';
 import { uid, getNextInvoiceNumber, calcInvoiceTotals } from '@/lib/utils';
@@ -280,6 +280,10 @@ function ClientPicker({ clientId, onSelect, newClientDraft, onNewClient }) {
 
 export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSaved }) {
   const { db, user, saveDB, toast } = useApp();
+  const wh = db?.wh || [];
+  const [suggestions,   setSuggestions]   = useState([]);
+  const [activeSugIdx,  setActiveSugIdx]  = useState(null);
+  const sugRef = useRef(null);
   const isNew = !invoice?.id;
   const clients = db?.clients || [];
 
@@ -439,7 +443,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                     return (
                       <tr key={idx}>
                         <td style={{ color: 'var(--text-muted)', fontSize: 11, textAlign: 'center' }}>{idx + 1}</td>
-                        <td style={{ minWidth: 160 }}>
+                        <td style={{ minWidth: 160, position: 'relative' }}>
                           <textarea
                             className="input"
                             rows={item.name && item.name.length > 30 ? 2 : 1}
@@ -453,12 +457,101 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                             }}
                             value={item.name}
                             onChange={e => {
-                              updItem(idx, 'name', e.target.value);
+                              const val = e.target.value;
+                              updItem(idx, 'name', val);
                               e.target.style.height = 'auto';
                               e.target.style.height = e.target.scrollHeight + 'px';
+                              if (val.trim().length >= 2) {
+                                const q = val.trim().toLowerCase();
+                                const matches = wh.filter(w =>
+                                  w.name?.toLowerCase().includes(q) ||
+                                  w.sku?.toLowerCase().includes(q)
+                                ).slice(0, 6);
+                                if (matches.length > 0) {
+                                  setSuggestions(matches);
+                                  setActiveSugIdx(idx);
+                                } else {
+                                  setSuggestions([]);
+                                  setActiveSugIdx(null);
+                                }
+                              } else {
+                                setSuggestions([]);
+                                setActiveSugIdx(null);
+                              }
+                            }}
+                            onBlur={() => {
+                              setTimeout(() => {
+                                setSuggestions([]);
+                                setActiveSugIdx(null);
+                              }, 180);
                             }}
                             placeholder="პროდუქტი / სერვისი"
                           />
+                          {activeSugIdx === idx && suggestions.length > 0 && (
+                            <div ref={sugRef} style={{
+                              position: 'absolute', top: '100%', left: 0, zIndex: 999,
+                              background: 'var(--bg-card)', border: '1px solid var(--border-accent)',
+                              borderRadius: 'var(--radius)', boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+                              minWidth: 260, maxWidth: 360, overflow: 'hidden',
+                            }}>
+                              <div style={{
+                                padding: '5px 10px', fontSize: 10, fontWeight: 700,
+                                color: 'var(--text-muted)', textTransform: 'uppercase',
+                                letterSpacing: '.05em', borderBottom: '1px solid var(--border)',
+                                background: 'var(--bg-subtle)',
+                              }}>
+                                📦 საწყობი — {suggestions.length} შედეგი
+                              </div>
+                              {suggestions.map(w => {
+                                const sellP = w.sellPrice ?? w.costPrice ?? 0;
+                                const inStock = (w.qty || 0) > 0;
+                                return (
+                                  <div key={w.id}
+                                    onMouseDown={e => {
+                                      e.preventDefault();
+                                      updItem(idx, 'name',  w.name || '');
+                                      updItem(idx, 'unit',  w.unit || 'ცალი');
+                                      updItem(idx, 'price', sellP);
+                                      setSuggestions([]);
+                                      setActiveSugIdx(null);
+                                    }}
+                                    style={{
+                                      padding: '7px 12px', cursor: 'pointer',
+                                      borderBottom: '1px solid var(--border)',
+                                      display: 'flex', justifyContent: 'space-between',
+                                      alignItems: 'center', gap: 8, fontSize: 12.5,
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-muted)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                  >
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ fontWeight: 600, color: 'var(--text-primary)',
+                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {w.name}
+                                      </div>
+                                      {w.sku && (
+                                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>
+                                          SKU: {w.sku}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                      <div style={{ fontWeight: 700, color: 'var(--success)', fontSize: 13 }}>
+                                        ₾{Number(sellP).toFixed(2)}
+                                      </div>
+                                      <div style={{ fontSize: 10, color: inStock ? 'var(--success)' : 'var(--danger)', marginTop: 1 }}>
+                                        {inStock ? `${w.qty} ${w.unit || 'ც'}` : 'არ არის'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              <div style={{ padding: '5px 10px', fontSize: 10,
+                                color: 'var(--text-muted)', textAlign: 'center' }}>
+                                ↵ არჩევისას ფასი და ერთეული ავტომატურად ჩაიწერება
+                              </div>
+                            </div>
+                          )}
                         </td>
                         <td>
                           <input className="input" type="number" min="0" step="0.01"

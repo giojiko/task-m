@@ -11,6 +11,7 @@ function EmployeeModal({ emp, onClose, onSave }) {
   const isNew = !emp?.id;
   const isSelf = emp?.id === currentUser?.id;
   const isSuper = currentUser?.role === 'super_admin';
+  const isCurrentUserAdmin = currentUser?.role === 'admin';
 
   const [form, setForm] = useState({
     firstName: emp?.firstName || '',
@@ -51,6 +52,7 @@ function EmployeeModal({ emp, onClose, onSave }) {
     if ((db?.users || []).some(u => u.email?.toLowerCase() === form.email.toLowerCase() && u.id !== emp?.id)) return setErr(t('email_exists'));
     if (form.personalId && form.personalId.replace(/\D/g,'').length !== 11) return setErr(t('err_pid_11'));
     if (isNew && (!form.password || form.password.length < 6)) return setErr(t('err_pass_short'));
+    if (isCurrentUserAdmin && form.role === 'super_admin') return setErr('admin-ს არ შეუძლია super_admin-ის დანიშვნა');
 
     const data = {
       ...emp,
@@ -108,13 +110,13 @@ function EmployeeModal({ emp, onClose, onSave }) {
           <label className="form-label">{t('position')}</label>
           <input className="input" value={form.position} onChange={e => upd('position',e.target.value)} />
         </div>
-        {isSuper && !isSelf && (
+        {(isSuper || isCurrentUserAdmin) && !isSelf && (
           <div className="form-group">
             <label className="form-label">{t('role')}</label>
             <select className="select" value={form.role} onChange={e => upd('role',e.target.value)}>
               <option value="specialist">{t('r_specialist')}</option>
               <option value="admin">{t('r_admin')}</option>
-              <option value="super_admin">{t('r_super_admin')}</option>
+              {isSuper && <option value="super_admin">{t('r_super_admin')}</option>}
             </select>
           </div>
         )}
@@ -176,7 +178,7 @@ function EmployeeModal({ emp, onClose, onSave }) {
           {supervisors.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>)}
         </select>
       </div>
-      {isSuper && !isSelf && (
+      {(isSuper || (isCurrentUserAdmin && emp?.role !== 'super_admin')) && !isSelf && (
         <label className="cb-row" style={{ marginTop: 4 }}>
           <input type="checkbox" checked={form.active} onChange={e => upd('active',e.target.checked)} />
           <span>{t('active')}</span>
@@ -378,10 +380,10 @@ export default function EmployeesPage() {
                 </td>
                 <td>
                   <div className="td-actions">
-                    {isAdmin && (
+                    {(isSuper || (isAdmin && e.role !== 'super_admin')) && (
                       <button className="act-btn" onClick={() => { setEditEmp(e); setShowForm(true); }}>✏️</button>
                     )}
-                    {isSuper && e.id !== user.id && (
+                    {(isSuper || (isAdmin && e.role !== 'super_admin')) && e.id !== user.id && (
                       <button className="act-btn" onClick={() => toggleActive(e)}>
                         {e.active !== false ? t('tip_disable') : t('tip_enable')}
                       </button>
