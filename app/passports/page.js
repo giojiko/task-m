@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import AppShell from '@/components/Layout/AppShell';
 import Modal from '@/components/UI/Modal';
 import { useApp } from '@/context/AppContext';
-import { uid, generatePassportCode } from '@/lib/utils';
+import { uid, generatePassportCode, generatePassportUrlId } from '@/lib/utils';
 
 export default function PassportsPage() {
   const { db, user, saveDB, toast } = useApp();
@@ -47,7 +47,7 @@ export default function PassportsPage() {
 
     const newDb = { ...db };
     newDb.passports = isNew
-      ? [...(newDb.passports || []), { ...data, id: data.id || uid(), created: new Date().toISOString(), updated: new Date().toISOString(), scans: data.scans || [], totalScans: data.totalScans || 0 }]
+      ? [...(newDb.passports || []), { ...data, id: data.id || uid(), urlId: generatePassportUrlId(), created: new Date().toISOString(), updated: new Date().toISOString(), scans: data.scans || [], totalScans: data.totalScans || 0 }]
       : (newDb.passports || []).map(p => p.id === data.id ? { ...p, ...data, updated: new Date().toISOString() } : p);
 
     await saveDB(newDb);
@@ -72,38 +72,97 @@ export default function PassportsPage() {
   };
 
   const printQR = (p) => {
-    const win = window.open('', '_blank', 'width=400,height=500');
-    const url = `https://office.smartpro.ge/p/${p.code}`;
+    if (!p.urlId) return toast('⚠️ ეს passport-ი urlId-ის გარეშეა — შეცვალე და შეინახე ხელახლა');
+    const url = `https://office.smartpro.ge/p/${p.urlId}`;
+    const win = window.open('', '_blank', 'width=420,height=560');
     win.document.write(`<!DOCTYPE html><html><head>
-      <title>QR — ${p.code}</title>
+      <title>QR სტიკერი — ${p.code}</title>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
       <style>
-        body { margin:0; background:#fff; font-family: Inter, sans-serif; }
-        .sticker { width:280px; margin:20px auto; border:2px dashed #ccc; border-radius:12px; padding:20px; text-align:center; }
-        .logo { height:32px; margin-bottom:8px; }
-        .qr-box { margin:12px auto; width:160px; height:160px; }
-        .code { font-family:monospace; font-size:18px; font-weight:700; color:#0F1117; letter-spacing:.1em; margin:10px 0; }
-        .title { font-size:12px; color:#4A5568; margin-bottom:4px; }
-        .scan-tip { font-size:10px; color:#9CA3AF; margin-top:8px; }
-        .footer { font-size:10px; color:#6B7A8D; margin-top:8px; }
-        @media print { body { -webkit-print-color-adjust: exact; } }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#fff; font-family: 'Inter', sans-serif; }
+        .page { padding: 24px; display:flex; flex-direction:column; align-items:center; }
+        .sticker {
+          width: 300px;
+          border: 2px solid #E2E8F0;
+          border-radius: 16px;
+          padding: 24px 20px;
+          text-align: center;
+          box-shadow: 0 4px 20px rgba(0,0,0,.08);
+        }
+        .logo { height: 32px; margin-bottom: 12px; }
+        .project-type {
+          font-size: 10px; color: #1BEACD; font-weight: 700;
+          letter-spacing: .12em; text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+        .title {
+          font-size: 14px; font-weight: 700; color: #0F1117;
+          margin-bottom: 16px; line-height: 1.4;
+        }
+        .qr-wrap {
+          width: 160px; height: 160px;
+          margin: 0 auto 16px;
+          border-radius: 10px; overflow: hidden;
+          border: 1px solid #E2E8F0;
+          padding: 6px; background: #fff;
+        }
+        .divider { border: none; border-top: 1.5px dashed #CBD5E0; margin: 14px 0; }
+        .code-label {
+          font-size: 9px; color: #94A3B8; letter-spacing: .1em;
+          text-transform: uppercase; margin-bottom: 4px;
+        }
+        .code {
+          font-family: 'Courier New', monospace;
+          font-size: 22px; font-weight: 700; color: #0F1117;
+          letter-spacing: .12em;
+        }
+        .instruction { font-size: 10px; color: #64748B; margin-top: 10px; line-height: 1.6; }
+        .footer {
+          font-size: 9px; color: #94A3B8;
+          margin-top: 12px; border-top: 1px solid #F1F5F9;
+          padding-top: 10px;
+        }
+        .btn {
+          margin-top: 20px; padding: 10px 24px;
+          background: #1BEACD; border: none; border-radius: 8px;
+          font-weight: 700; cursor: pointer; font-size: 13px;
+        }
+        @media print { .btn { display: none; } .page { padding: 0; } }
       </style>
     </head><body>
-      <div class="sticker">
-        <img class="logo" src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png" />
-        <div class="title">${p.title}</div>
-        <div class="qr-box" id="qr"></div>
-        <div class="code">${p.code}</div>
-        <div class="scan-tip">📱 QR დასკანირება ან კოდის შეყვანა</div>
-        <div class="footer">SmartPro Georgia · smartpro.ge</div>
-      </div>
-      <div style="text-align:center;margin-top:12px">
-        <button onclick="window.print()" style="padding:8px 20px;background:#1BEACD;border:none;border-radius:6px;font-weight:700;cursor:pointer">🖨️ ბეჭდვა</button>
+      <div class="page">
+        <div class="sticker">
+          <img class="logo"
+            src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png"
+            alt="SmartPro" onerror="this.style.display='none'" />
+
+          <div class="project-type">Project Passport</div>
+          <div class="title">${p.title}</div>
+
+          <div class="qr-wrap" id="qr"></div>
+
+          <hr class="divider" />
+
+          <div class="code-label">ავტორიზაციის კოდი</div>
+          <div class="code">${p.code}</div>
+          <div class="instruction">
+            📱 QR დასკანირება და<br/>
+            კოდის შეყვანა საჭიროა
+          </div>
+
+          <div class="footer">
+            SmartPro Georgia · smartpro.ge<br/>
+            +995 505 55 65 65
+          </div>
+        </div>
+        <button class="btn" onclick="window.print()">🖨️ ბეჭდვა</button>
       </div>
       <script>
         new QRCode(document.getElementById('qr'), {
-          text: '${url}', width:160, height:160,
-          colorDark:'#0F1117', colorLight:'#ffffff',
+          text: '${url}',
+          width: 148, height: 148,
+          colorDark: '#0F1117', colorLight: '#ffffff',
           correctLevel: QRCode.CorrectLevel.M
         });
       </script>
@@ -367,7 +426,7 @@ function PassportFormModal({ passport, clients, uploading, onClose, onSave, onDe
 
 function PassportAnalyticsModal({ passport, clients, onClose }) {
   const scans = passport.scans || [];
-  const url = `https://office.smartpro.ge/p/${passport.code}`;
+  const url = `https://office.smartpro.ge/p/${passport.urlId || passport.code}`;
 
   return (
     <Modal open title={`📊 ${passport.code} — Analytics`} onClose={onClose}
