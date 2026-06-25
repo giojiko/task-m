@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 
 const PUBLIC_PATHS = ['/login'];
-const PUBLIC_API = ['/api/auth/login', '/api/auth/logout'];
+const PUBLIC_PREFIXES = ['/p/']; // public passport pages (QR scan / code entry)
+const PUBLIC_API = [
+  '/api/auth/login', '/api/auth/logout',
+  '/api/passports/verify', '/api/passports/scan', '/api/passports/ai', '/api/passports/file',
+];
 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  if (PUBLIC_PATHS.includes(pathname) || PUBLIC_API.some(p => pathname.startsWith(p))) {
+  if (
+    PUBLIC_PATHS.includes(pathname) ||
+    PUBLIC_PREFIXES.some(p => pathname.startsWith(p)) ||
+    PUBLIC_API.some(p => pathname.startsWith(p))
+  ) {
     return NextResponse.next();
   }
 
