@@ -50,6 +50,10 @@ export default function Sidebar() {
         }).map(item => {
           if (item.key === 'directions') {
             const isActive = pathname.startsWith('/directions');
+            const dirs = db?.directions || [];
+            const activeParam = typeof window !== 'undefined'
+              ? new URLSearchParams(window.location.search).get('dir')
+              : null;
             return (
               <div key="directions">
                 <button
@@ -62,8 +66,31 @@ export default function Sidebar() {
                 </button>
                 {dirsOpen && (
                   <div className="nav-sub">
-                    {(db?.directions || []).map(d => (
-                      <Link key={d.id} href={`/directions?dir=${d.id}`} className="nav-dir-sub">
+                    <Link
+                      href="/directions"
+                      className={`nav-dir-sub ${pathname === '/directions' && !activeParam ? 'active' : ''}`}
+                    >
+                      <span>⬡</span>
+                      <span style={{ flex: 1 }}>ყველა მიმართულება</span>
+                    </Link>
+                    <Link
+                      href="/directions?dir=online"
+                      className={`nav-dir-sub ${activeParam === 'online' ? 'active' : ''}`}
+                      style={{ color: activeParam === 'online' ? '#F59E0B' : undefined }}
+                    >
+                      <span>🛒</span>
+                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        ონლაინ გაყიდვა
+                      </span>
+                    </Link>
+                    <div style={{ borderTop: '1px solid var(--border)', margin: '3px 4px' }} />
+                    {dirs.map(d => (
+                      <Link
+                        key={d.id}
+                        href={`/directions?dir=${d.id}`}
+                        className={`nav-dir-sub ${activeParam === d.id ? 'active' : ''}`}
+                        style={{ color: activeParam === d.id ? d.color : undefined }}
+                      >
                         <span>{d.icon}</span>
                         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                       </Link>

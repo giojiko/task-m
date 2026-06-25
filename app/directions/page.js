@@ -1,5 +1,6 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import AppShell from '@/components/Layout/AppShell';
 import Modal from '@/components/UI/Modal';
 import { useApp } from '@/context/AppContext';
@@ -147,18 +148,22 @@ function ClientTable({ clients, emptyMsg }) {
   );
 }
 
-/* ─── Main Page ─── */
-export default function DirectionsPage() {
+/* ─── Main Content (needs Suspense for useSearchParams) ─── */
+function DirectionsContent() {
   const { db, saveDB, toast, user, lang } = useApp();
   const isSuper = user?.role === 'super_admin';
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const [selectedDir, setSelectedDir] = useState(null);
-  const [showModal,   setShowModal]   = useState(false);
-  const [editDir,     setEditDir]     = useState(null);
-  const [confirmDel,  setConfirmDel]  = useState(null);
+  const [showModal,  setShowModal]  = useState(false);
+  const [editDir,    setEditDir]    = useState(null);
+  const [confirmDel, setConfirmDel] = useState(null);
 
   const dirs    = db?.directions || [];
   const clients = db?.clients    || [];
+
+  // URL is source of truth
+  const selectedDir = searchParams.get('dir');
 
   const onlineClients = useMemo(
     () => clients.filter(c => !c.directions || c.directions.length === 0),
@@ -166,12 +171,15 @@ export default function DirectionsPage() {
   );
 
   const activeDir = dirs.find(d => d.id === selectedDir);
-  const dirClients = useMemo(
-    () => selectedDir && selectedDir !== 'online'
-      ? clients.filter(c => (c.directions || []).includes(selectedDir))
-      : [],
-    [clients, selectedDir]
-  );
+  const dirClients = useMemo(() => {
+    if (!selectedDir || selectedDir === 'online') return [];
+    return clients.filter(c => (c.directions || []).includes(selectedDir));
+  }, [clients, selectedDir]);
+
+  const goTo = (dirId) => {
+    if (dirId) router.push(`/directions?dir=${dirId}`);
+    else router.push('/directions');
+  };
 
   /* ── CRUD ── */
   const handleSave = async (data) => {
@@ -194,14 +202,14 @@ export default function DirectionsPage() {
     await saveDB(newDb);
     toast('🗑 მიმართულება წაშლილია');
     setConfirmDel(null);
-    if (selectedDir === dirId) setSelectedDir(null);
+    if (selectedDir === dirId) goTo(null);
   };
 
   /* ── Detail View ── */
   if (selectedDir) {
     const isOnline = selectedDir === 'online';
     const displayClients = isOnline ? onlineClients : dirClients;
-    const title = isOnline ? '🛒 ონლაინ გაყიდვა' : `${activeDir?.icon} ${activeDir?.name}`;
+    const title = isOnline ? '🛒 ონლაინ გაყიდვა' : `${activeDir?.icon || ''} ${activeDir?.name || ''}`;
     const color = isOnline ? '#F59E0B' : (activeDir?.color || 'var(--accent)');
     return (
       <AppShell>
@@ -212,7 +220,7 @@ export default function DirectionsPage() {
               {isOnline ? 'მიმართულების გარეშე კლიენტები' : activeDir?.desc}
             </div>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={() => setSelectedDir(null)}>
+          <button className="btn btn-ghost btn-sm" onClick={() => goTo(null)}>
             ← ყველა მიმართულება
           </button>
         </div>
@@ -240,7 +248,7 @@ export default function DirectionsPage() {
 
       {/* ── ონლაინ გაყიდვა — special banner ── */}
       <div
-        onClick={() => setSelectedDir('online')}
+        onClick={() => goTo('online')}
         style={{
           cursor: 'pointer',
           background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.04) 100%)',
@@ -248,10 +256,7 @@ export default function DirectionsPage() {
           borderRadius: 'var(--radius-md)',
           padding: '16px 20px',
           marginBottom: 24,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
           transition: 'border-color .18s',
         }}
         onMouseEnter={e => e.currentTarget.style.borderColor = '#F59E0B'}
@@ -285,7 +290,7 @@ export default function DirectionsPage() {
             lang={lang}
             isSuper={isSuper}
             clientCount={clients.filter(c => (c.directions || []).includes(d.id)).length}
-            onClick={() => setSelectedDir(d.id)}
+            onClick={() => goTo(d.id)}
             onEdit={() => { setEditDir(d); setShowModal(true); }}
             onDelete={() => setConfirmDel(d)}
           />
@@ -313,9 +318,7 @@ export default function DirectionsPage() {
         >
           <p style={{ color: 'var(--text-secondary)' }}>
             დარწმუნებული ხარ, რომ გინდა წაშლა?<br />
-            <strong style={{ color: confirmDel.color }}>
-              {confirmDel.icon} {confirmDel.name}
-            </strong>
+            <strong style={{ color: confirmDel.color }}>{confirmDel.icon} {confirmDel.name}</strong>
             <span style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, display: 'block' }}>
               ეს მიმართულება კლიენტების პროფილებიდანაც ამოიშლება.
             </span>
@@ -323,5 +326,13 @@ export default function DirectionsPage() {
         </Modal>
       )}
     </AppShell>
+  );
+}
+
+export default function DirectionsPage() {
+  return (
+    <Suspense>
+      <DirectionsContent />
+    </Suspense>
   );
 }
