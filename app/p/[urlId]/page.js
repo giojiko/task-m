@@ -31,6 +31,12 @@ export default function PassportPage() {
   const verify = async () => {
     const enteredCode = inputCode.trim().toUpperCase();
     if (!enteredCode) return;
+
+    if (!/^SP-\d{4}-[A-Z0-9]{4}$/.test(enteredCode)) {
+      setError('კოდი SP-XXXX-XXXX ფორმატში უნდა იყოს (მაგ: SP-2026-A7X9)');
+      return;
+    }
+
     setStep('loading');
     setError('');
 
