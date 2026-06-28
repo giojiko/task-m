@@ -14,6 +14,7 @@ export default function PassportsPage() {
   const [viewP, setViewP] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState('');
+  const [confirmDel, setConfirmDel] = useState(null);
 
   const passports = useMemo(() =>
     [...(db?.passports || [])]
@@ -54,6 +55,22 @@ export default function PassportsPage() {
     toast(isNew ? '✅ Passport შეიქმნა' : '✅ Passport განახლდა');
     setShowForm(false);
     setEditingP(null);
+  };
+
+  const deletePassport = async (passport) => {
+    for (const file of passport.files || []) {
+      await fetch('/api/passports/file', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: file.path }),
+      }).catch(() => {});
+    }
+
+    const newDb = { ...db };
+    newDb.passports = (newDb.passports || []).filter(p => p.id !== passport.id);
+    await saveDB(newDb);
+    toast('🗑 Passport წაიშალა');
+    setConfirmDel(null);
   };
 
   const deleteFile = async (passport, file) => {
@@ -238,6 +255,14 @@ export default function PassportsPage() {
                         <button className="btn btn-ghost btn-xs" title="რედაქტირება"
                           onClick={() => { setEditingP(p); setShowForm(true); }}>✏️</button>
                       )}
+                      {isSuper && (
+                        <button className="btn btn-ghost btn-xs"
+                          title="წაშლა"
+                          style={{ color: 'var(--danger)' }}
+                          onClick={() => setConfirmDel(p)}>
+                          🗑
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -264,6 +289,34 @@ export default function PassportsPage() {
           clients={clients}
           onClose={() => setViewP(null)}
         />
+      )}
+
+      {confirmDel && (
+        <Modal open
+          title="🗑 Passport-ის წაშლა"
+          onClose={() => setConfirmDel(null)}
+          footer={<>
+            <button className="btn btn-ghost btn-sm"
+              onClick={() => setConfirmDel(null)}>
+              გაუქმება
+            </button>
+            <button className="btn btn-danger btn-sm"
+              onClick={() => deletePassport(confirmDel)}>
+              წაშლა
+            </button>
+          </>}
+        >
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+            დარწმუნებული ხარ?<br />
+            <strong style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>
+              {confirmDel.code}
+            </strong>
+            {' — '}{confirmDel.title}<br />
+            <span style={{ fontSize: 12, color: 'var(--danger)', marginTop: 6, display: 'block' }}>
+              ⚠️ ყველა ფაილი Supabase Storage-დანაც წაიშლება. დაბრუნება შეუძლებელია.
+            </span>
+          </p>
+        </Modal>
       )}
     </AppShell>
   );
