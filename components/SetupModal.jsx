@@ -23,7 +23,10 @@ export default function SetupModal() {
     if (!form.phone.trim()) return setErr('ტელეფონი სავალდებულოა');
     if (!form.birthDate) return setErr('დაბადების თარიღი სავალდებულოა');
     if (!form.personalId.trim()) return setErr('პირადი ნომერი სავალდებულოა');
-    if (form.personalId.replace(/\D/g,'').length !== 11) return setErr('პ/ნ უნდა შედგებოდეს 11 ციფრისგან');
+    const pLen = form.personalId.replace(/\D/g,'').length;
+    if (pLen !== 11 && pLen !== 9) {
+      return setErr('პირადი ნომერი — 11 ციფრი · საიდენტიფიკაციო კოდი — 9 ციფრი');
+    }
     if (!form.address.trim()) return setErr('მისამართი სავალდებულოა');
     if (!form.newPass || form.newPass.length < 6) return setErr('პაროლი მინიმუმ 6 სიმბოლო');
     if (form.newPass !== form.repeatPass) return setErr('პაროლები არ ემთხვევა');
@@ -106,7 +109,7 @@ export default function SetupModal() {
           <label className="form-label req">პირადი ნომერი</label>
           <input className="input" value={form.personalId} maxLength={11}
             onChange={e => upd('personalId', e.target.value.replace(/\D/g,''))}
-            placeholder="11-ნიშნა პირადი ნომერი" />
+            placeholder="9 ან 11 ციფრი" />
         </div>
         <div className="fg" style={{ marginBottom: 24 }}>
           <label className="form-label req">მისამართი</label>

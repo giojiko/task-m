@@ -32,7 +32,10 @@ function ClientModal({ client, onClose, onSave }) {
   const submit = () => {
     if (!form.name.trim()) return setErr('სახელი სავალდებულოა');
     if (!form.pid.trim()) return setErr('პირადი / საიდენტიფიკაციო კოდი სავალდებულოა');
-    if (form.pid.trim().length !== 11) return setErr('კოდი უნდა შედგებოდეს 11 ციფრისგან');
+    const pidLen = form.pid.trim().length;
+    if (pidLen !== 11 && pidLen !== 9) {
+      return setErr('პირადი ნომერი — 11 ციფრი · საიდენტიფიკაციო კოდი — 9 ციფრი');
+    }
     onSave({ ...client, ...form, name: form.name.trim() });
     onClose();
   };
@@ -54,7 +57,7 @@ function ClientModal({ client, onClose, onSave }) {
           <label className="form-label req">პირ. ნომ. / საიდ. კოდი</label>
           <input className="input" value={form.pid} maxLength={11}
             onChange={e => upd('pid', e.target.value.replace(/\D/g, ''))}
-            placeholder="11 ციფრი" />
+            placeholder="9 ან 11 ციფრი" />
         </div>
         <div className="fg">
           <label className="form-label">მობილური</label>

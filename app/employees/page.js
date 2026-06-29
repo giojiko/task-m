@@ -50,7 +50,12 @@ function EmployeeModal({ emp, onClose, onSave }) {
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRe.test(form.email)) return setErr('ელ.ფოსტა არასწორი ფორმატით');
     if ((db?.users || []).some(u => u.email?.toLowerCase() === form.email.toLowerCase() && u.id !== emp?.id)) return setErr(t('email_exists'));
-    if (form.personalId && form.personalId.replace(/\D/g,'').length !== 11) return setErr(t('err_pid_11'));
+    if (form.personalId) {
+      const pLen = form.personalId.replace(/\D/g,'').length;
+      if (pLen !== 11 && pLen !== 9) {
+        return setErr('პირადი ნომერი — 11 ციფრი · საიდენტიფიკაციო კოდი — 9 ციფრი');
+      }
+    }
     if (isNew && (!form.password || form.password.length < 6)) return setErr(t('err_pass_short'));
     if (isCurrentUserAdmin && form.role === 'super_admin') return setErr('admin-ს არ შეუძლია super_admin-ის დანიშვნა');
 
@@ -164,7 +169,7 @@ function EmployeeModal({ emp, onClose, onSave }) {
       <div className="form-row">
         <div className="form-group">
           <label className="form-label">{t('personal_id_lbl')}</label>
-          <input className="input" value={form.personalId} maxLength={11} onChange={e => upd('personalId', e.target.value.replace(/\D/g,''))} placeholder="11 ციფრი" />
+          <input className="input" value={form.personalId} maxLength={11} onChange={e => upd('personalId', e.target.value.replace(/\D/g,''))} placeholder="9 ან 11 ციფრი" />
         </div>
         <div className="form-group">
           <label className="form-label">{t('emp_address')}</label>
