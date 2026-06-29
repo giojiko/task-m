@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const PUBLIC_PATHS = ['/login'];
-const PUBLIC_PREFIXES = ['/p/']; // public passport pages (QR scan / code entry)
+const PUBLIC_PREFIXES = ['/p/', '/offline']; // public passport pages (QR scan / code entry) + PWA offline fallback
 const PUBLIC_API = [
   '/api/auth/login', '/api/auth/logout',
   '/api/passports/verify', '/api/passports/scan', '/api/passports/ai', '/api/passports/file',
