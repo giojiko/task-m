@@ -254,7 +254,7 @@ function ClientPicker({ clientId, onSelect, newClientDraft, onNewClient }) {
               <label className="form-label">პ/ნ ან საიდ. კოდი *</label>
               <input className="input" value={newClientDraft.pid} maxLength={11}
                 onChange={e => onNewClient({ ...newClientDraft, pid: e.target.value.replace(/\D/g, '') })}
-                placeholder="11 ციფრი" />
+                placeholder="9 ან 11 ციფრი" />
             </div>
           </div>
           <div className="frow">

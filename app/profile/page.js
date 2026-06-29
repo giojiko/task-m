@@ -29,7 +29,12 @@ export default function ProfilePage() {
   const saveProfile = async () => {
     setErr('');
     if (!form.firstName || !form.lastName) return setErr(t('err_name_req'));
-    if (form.personalId && form.personalId.length !== 11) return setErr(t('err_pid_11'));
+    if (form.personalId) {
+      const pLen = form.personalId.replace(/\D/g, '').length;
+      if (pLen !== 11 && pLen !== 9) {
+        return setErr('პირადი ნომერი — 11 ციფრი · საიდენტიფიკაციო კოდი — 9 ციფრი');
+      }
+    }
     const newDb = { ...db };
     newDb.users = newDb.users.map(u => u.id === user.id ? {
       ...u, ...form, name: `${form.firstName} ${form.lastName}`,
