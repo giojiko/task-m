@@ -378,6 +378,7 @@ export default function ClientsPage() {
   const [showForm, setShowForm] = useState(false);
   const [detailClient, setDetailClient] = useState(null);
   const [detailClientTab, setDetailClientTab] = useState('info');
+  const [confirmDelClient, setConfirmDelClient] = useState(null);
 
   function openDetail(c, tab = 'info') {
     setDetailClientTab(tab);
@@ -399,17 +400,42 @@ export default function ClientsPage() {
     if (!data.id) {
       data.id = uid(); data.created = new Date().toISOString();
       newDb.clients = [...newDb.clients, data];
-    } else {
-      newDb.clients = newDb.clients.map(c => c.id === data.id ? data : c);
+      await saveDB(newDb);
+      toast(t('toast_client_saved'));
+      return;
     }
+
+    newDb.clients = newDb.clients.map(c => c.id === data.id ? data : c);
+
+    const updatedSnapshot = {
+      name:  data.name  || '',
+      phone: data.phone || '',
+      email: data.email || '',
+      addr:  data.addr  || '',
+      pid:   data.pid   || '',
+    };
+    const invoicesUpdated = (newDb.invoices || []).filter(inv => inv.clientId === data.id).length;
+    newDb.invoices = (newDb.invoices || []).map(inv =>
+      inv.clientId === data.id ? { ...inv, clientSnapshot: updatedSnapshot } : inv
+    );
+
     await saveDB(newDb);
-    toast(t('toast_client_saved'));
+    toast(
+      invoicesUpdated > 0
+        ? `✅ კლიენტი შენახულია · ${invoicesUpdated} ინვოისი განახლდა`
+        : t('toast_client_saved')
+    );
   };
 
   const handleDelete = async (id) => {
-    if (!confirm(t('confirm_delete'))) return;
-    await saveDB({ ...db, clients: db.clients.filter(c => c.id !== id) });
+    const newDb = { ...db };
+    newDb.clients = newDb.clients.filter(c => c.id !== id);
+    newDb.invoices = (newDb.invoices || []).map(inv =>
+      inv.clientId === id ? { ...inv, clientId: null } : inv
+    );
+    await saveDB(newDb);
     toast(t('toast_client_deleted'));
+    setConfirmDelClient(null);
   };
 
   return (
@@ -495,7 +521,7 @@ export default function ClientsPage() {
                             <button className="btn btn-ghost btn-xs" title="ინვოისი" onClick={() => openDetail(c, 'warehouse')}>🧾</button>
                           )}
                           <button className="btn btn-ghost btn-xs" onClick={() => { setEditClient(c); setShowForm(true); }}>✏️</button>
-                          <button className="btn btn-danger btn-xs" onClick={() => handleDelete(c.id)}>🗑</button>
+                          <button className="btn btn-danger btn-xs" onClick={() => setConfirmDelClient(c)}>🗑</button>
                         </div>
                       </td>
                     )}
@@ -509,6 +535,39 @@ export default function ClientsPage() {
 
       {showForm     && <ClientModal       client={editClient}   onClose={() => setShowForm(false)}    onSave={handleSave} />}
       {detailClient && <ClientDetailModal client={detailClient} onClose={() => setDetailClient(null)} defaultTab={detailClientTab} />}
+
+      {confirmDelClient && (
+        <Modal open
+          title="🗑 კლიენტის წაშლა"
+          onClose={() => setConfirmDelClient(null)}
+          footer={<>
+            <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDelClient(null)}>
+              გაუქმება
+            </button>
+            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(confirmDelClient.id)}>
+              წაშლა
+            </button>
+          </>}
+        >
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            წაიშლება:{' '}
+            <strong style={{ color: 'var(--text-primary)' }}>
+              {confirmDelClient.name}
+            </strong>
+            <br />
+            {(() => {
+              const invCount = (db?.invoices || [])
+                .filter(inv => inv.clientId === confirmDelClient.id).length;
+              return invCount > 0 ? (
+                <span style={{ fontSize: 12, color: 'var(--warning)', display: 'block', marginTop: 4 }}>
+                  ⚠️ {invCount} ინვოისი ამ კლიენტს მიბმული აქვს —
+                  ინვოისები დარჩება, მაგრამ კლიენტის კავშირი მოიხსნება
+                </span>
+              ) : null;
+            })()}
+          </p>
+        </Modal>
+      )}
     </AppShell>
   );
 }
