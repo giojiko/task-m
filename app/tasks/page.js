@@ -177,6 +177,13 @@ export default function TasksPage() {
           body: JSON.stringify({ taskId: data.id, responsibleId: data.responsible }),
         }).catch(e => console.warn('task email failed', e));
       }
+
+      fetch('/api/telegram/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ taskId: data.id, event: 'assigned' }),
+      }).catch(e => console.warn('telegram notify failed', e));
     }
   };
 

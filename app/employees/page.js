@@ -24,6 +24,7 @@ function EmployeeModal({ emp, onClose, onSave }) {
     role: emp?.role || 'specialist',
     supervisorId: emp?.supervisorId || '',
     address: emp?.address || '',
+    telegramChatId: emp?.telegramChatId || '',
     password: '',
     active: emp?.active !== false,
   });
@@ -73,6 +74,7 @@ function EmployeeModal({ emp, onClose, onSave }) {
       birthDate: form.birthDate,
       personalId: form.personalId,
       address: form.address,
+      telegramChatId: form.telegramChatId.trim() || null,
       active: form.active,
       mustSetup: isNew ? true : (emp?.mustSetup ?? false),
       created: emp?.created || new Date().toISOString(),
@@ -174,6 +176,17 @@ function EmployeeModal({ emp, onClose, onSave }) {
         <div className="form-group">
           <label className="form-label">{t('emp_address')}</label>
           <input className="input" value={form.address} onChange={e => upd('address',e.target.value)} />
+        </div>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Telegram Chat ID</label>
+        <input className="input"
+          value={form.telegramChatId}
+          onChange={e => upd('telegramChatId', e.target.value.replace(/\D/g, ''))}
+          placeholder="მაგ: 123456789"
+        />
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
+          მისაღებად: Telegram → @userinfobot → /start
         </div>
       </div>
       <div className="form-group">
