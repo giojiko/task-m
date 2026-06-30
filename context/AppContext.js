@@ -14,6 +14,8 @@ export function AppProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);
+  const dbRef = useRef(null);
+  const dbMetaRef = useRef({ updated: null });
   const router = useRouter();
 
   const t = useCallback((key) => translate(key, lang), [lang]);
@@ -31,12 +33,13 @@ export function AppProvider({ children }) {
 
   const saveDB = useCallback(async (newDb) => {
     setDb(newDb);
+    dbRef.current = newDb;
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...newDb, _expectedUpdated: dbMeta.updated }),
+        body: JSON.stringify({ ...newDb, _expectedUpdated: dbMetaRef.current.updated }),
       });
       if (res.status === 409) {
         toast('⚠️ მონაცემები შეიცვალა სხვის მიერ — გვერდი განახლდება', 'warning');
@@ -49,11 +52,14 @@ export function AppProvider({ children }) {
         return;
       }
       const result = await res.json();
-      if (result.updated) setDbMeta({ updated: result.updated });
+      if (result.updated) {
+        setDbMeta({ updated: result.updated });
+        dbMetaRef.current = { updated: result.updated };
+      }
     } catch (e) {
       console.error('saveDB failed', e);
     }
-  }, [router, dbMeta.updated, toast]);
+  }, [router, toast]);
 
   useEffect(() => {
     const storedLang = localStorage.getItem('sp_lang') || 'ka';
@@ -72,7 +78,9 @@ export function AppProvider({ children }) {
         if (data) {
           const { _updated, ...rest } = data;
           setDb(rest);
+          dbRef.current = rest;
           setDbMeta({ updated: _updated || null });
+          dbMetaRef.current = { updated: _updated || null };
         }
       })
       .catch(() => {})
@@ -104,7 +112,9 @@ export function AppProvider({ children }) {
       const dbData = await dbRes.json();
       const { _updated, ...rest } = dbData;
       setDb(rest);
+      dbRef.current = rest;
       setDbMeta({ updated: _updated || null });
+      dbMetaRef.current = { updated: _updated || null };
     }
     return { user: data.user };
   }, []);
@@ -113,6 +123,7 @@ export function AppProvider({ children }) {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
     setDb(null);
+    dbRef.current = null;
     router.push('/login');
   }, [router]);
 
@@ -126,7 +137,7 @@ export function AppProvider({ children }) {
   }, [user]);
 
   return (
-    <AppContext.Provider value={{ user, setUser, db, saveDB, lang, setLang, t, loading, toast, login, logout, refreshUser }}>
+    <AppContext.Provider value={{ user, setUser, db, dbRef, saveDB, lang, setLang, t, loading, toast, login, logout, refreshUser }}>
       {children}
       <div style={{ position:'fixed', bottom:20, right:20, zIndex:9999, display:'flex', flexDirection:'column', gap:8, pointerEvents:'none' }}>
         {toasts.map(x => (

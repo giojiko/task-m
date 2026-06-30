@@ -279,7 +279,7 @@ function ClientPicker({ clientId, onSelect, newClientDraft, onNewClient }) {
 }
 
 export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSaved }) {
-  const { db, user, saveDB, toast } = useApp();
+  const { db, dbRef, user, saveDB, toast } = useApp();
   const wh = db?.wh || [];
   const [suggestions,   setSuggestions]   = useState([]);
   const [activeSugIdx,  setActiveSugIdx]  = useState(null);
@@ -312,7 +312,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const removeRow = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
 
   async function handleSave(openAfter = true) {
-    let newDb = { ...db };
+    let newDb = { ...(dbRef?.current || db) };
     let finalClientId = clientId;
 
     if (isCreatingNew) {
@@ -365,7 +365,6 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
 
     await saveDB(newDb);
     toast(isNew ? '✅ ინვოისი შეიქმნა' : '✅ ინვოისი განახლდა');
-    onSaved?.(invoiceData);
 
     if (openAfter) {
       const html = buildInvoiceHTML({
@@ -379,6 +378,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
       win.document.write(html);
       win.document.close();
     }
+    onSaved?.(invoiceData);
     onClose();
   }
 
