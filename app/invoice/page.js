@@ -20,7 +20,7 @@ function reopenPrint(inv) {
 
 /* ── Payment Modal ─────────────────────────────────────────────────── */
 function PaymentModal({ invoice, onClose }) {
-  const { db, saveDB, toast } = useApp();
+  const { db, dbRef, saveDB, toast } = useApp();
   const [status,     setStatus]     = useState(invoice.status || 'sent');
   const [paidAmount, setPaidAmount] = useState(invoice.paidAmount ?? invoice.total);
   const [paidAt,     setPaidAt]     = useState(
@@ -36,7 +36,8 @@ function PaymentModal({ invoice, onClose }) {
       paidAmount: status === 'paid' ? invoice.total : status === 'partial' ? Number(paidAmount) : 0,
       paidAt:     status !== 'sent' ? paidAt : null,
     };
-    const newDb = { ...db, invoices: db.invoices.map(i => i.id === invoice.id ? updated : i) };
+    const cur = dbRef?.current || db;
+    const newDb = { ...cur, invoices: cur.invoices.map(i => i.id === invoice.id ? updated : i) };
     await saveDB(newDb);
     toast(status === 'paid' ? '✅ სრულად გადახდილად მოინიშნა' : status === 'partial' ? '⚡ ნაწილობრივ გადახდილი' : '↩️ გადასახდელად დაბრუნდა');
     onClose();

@@ -6,7 +6,7 @@ import { useApp } from '@/context/AppContext';
 import { uid, generatePassportCode, generatePassportUrlId } from '@/lib/utils';
 
 export default function PassportsPage() {
-  const { db, user, saveDB, toast } = useApp();
+  const { db, dbRef, user, saveDB, toast } = useApp();
   const isSuper = ['super_admin', 'admin'].includes(user?.role);
 
   const [showForm, setShowForm] = useState(false);
@@ -27,7 +27,7 @@ export default function PassportsPage() {
   const clients = db?.clients || [];
 
   const savePassport = async (data, newFiles) => {
-    const isNew = !(db?.passports || []).some(p => p.id === data.id);
+    const isNew = !((dbRef?.current || db)?.passports || []).some(p => p.id === data.id);
 
     if (newFiles?.length > 0) {
       setUploading(true);
@@ -46,7 +46,7 @@ export default function PassportsPage() {
       setUploading(false);
     }
 
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.passports = isNew
       ? [...(newDb.passports || []), { ...data, id: data.id || uid(), urlId: generatePassportUrlId(), created: new Date().toISOString(), updated: new Date().toISOString(), scans: data.scans || [], totalScans: data.totalScans || 0 }]
       : (newDb.passports || []).map(p => p.id === data.id ? { ...p, ...data, updated: new Date().toISOString() } : p);
@@ -66,7 +66,7 @@ export default function PassportsPage() {
       }).catch(() => {});
     }
 
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.passports = (newDb.passports || []).filter(p => p.id !== passport.id);
     await saveDB(newDb);
     toast('🗑 Passport წაიშალა');
@@ -80,7 +80,7 @@ export default function PassportsPage() {
       body: JSON.stringify({ path: file.path }),
     });
     if (!passport.id) return; // not yet saved — only strip from in-memory form state
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.passports = newDb.passports.map(p =>
       p.id === passport.id ? { ...p, files: (p.files || []).filter(f => f.id !== file.id) } : p
     );

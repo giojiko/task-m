@@ -126,7 +126,7 @@ function TaskModal({ task, onClose, onSave }) {
 
 
 export default function TasksPage() {
-  const { db, user, saveDB, t, toast } = useApp();
+  const { db, dbRef, user, saveDB, t, toast } = useApp();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
@@ -150,9 +150,9 @@ export default function TasksPage() {
   const rootTasks = filtered.filter(tk => !tk.parent);
 
   const handleSave = async (data) => {
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     const isNew = !data.id;
-    const prevResponsible = !isNew ? (db.tasks || []).find(tk => tk.id === data.id)?.responsible : null;
+    const prevResponsible = !isNew ? (newDb.tasks || []).find(tk => tk.id === data.id)?.responsible : null;
     if (isNew) {
       data.id = uid();
       data.created = new Date().toISOString();
@@ -189,7 +189,7 @@ export default function TasksPage() {
 
   const handleDelete = async (id) => {
     if (!confirm(t('confirm_task_del'))) return;
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.tasks = newDb.tasks.filter(tk => tk.id !== id && tk.parent !== id);
     await saveDB(newDb);
     toast(t('toast_task_deleted'));

@@ -111,7 +111,7 @@ function ClientModal({ client, onClose, onSave }) {
 }
 
 function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info' }) {
-  const { db, saveDB, t, toast } = useApp();
+  const { db, dbRef, saveDB, t, toast } = useApp();
   const [client, setClient] = useState(initialClient);
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [invoiceSelected, setInvoiceSelected] = useState([]);
@@ -128,7 +128,8 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
   const togglePayment = async (idx) => {
     const newItems = usedItems.map((item, i) => i === idx ? { ...item, paid: !item.paid, paidAt: !item.paid ? new Date().toISOString() : null } : item);
     const updated = { ...client, usedItems: newItems };
-    const newDb = { ...db, clients: db.clients.map(c => c.id === client.id ? updated : c) };
+    const cur = dbRef?.current || db;
+    const newDb = { ...cur, clients: cur.clients.map(c => c.id === client.id ? updated : c) };
     await saveDB(newDb);
     setClient(updated);
     toast(newItems[idx].paid ? '✅ გადახდილად მოინიშნა' : 'გადაუხდელად მოინიშნა');
@@ -374,7 +375,7 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
 }
 
 export default function ClientsPage() {
-  const { db, user, saveDB, t, toast } = useApp();
+  const { db, dbRef, user, saveDB, t, toast } = useApp();
   const [search, setSearch] = useState('');
   const [filterDir, setFilterDir] = useState('');
   const [editClient, setEditClient] = useState(null);
@@ -399,7 +400,7 @@ export default function ClientsPage() {
   }), [clients, search, filterDir]);
 
   const handleSave = async (data) => {
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     if (!data.id) {
       data.id = uid(); data.created = new Date().toISOString();
       newDb.clients = [...newDb.clients, data];
@@ -431,7 +432,7 @@ export default function ClientsPage() {
   };
 
   const handleDelete = async (id) => {
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.clients = newDb.clients.filter(c => c.id !== id);
     newDb.invoices = (newDb.invoices || []).map(inv =>
       inv.clientId === id ? { ...inv, clientId: null } : inv

@@ -43,6 +43,13 @@ export async function POST(request) {
     // changer-ს ნუ ვაწუხებთ საკუთარ action-ზე
     recipientIds.delete(session.uid);
 
+    console.log('[Telegram] Task:', task.id, 'Recipients:', [...recipientIds]);
+    console.log('[Telegram] BOT_TOKEN set:', !!process.env.TELEGRAM_BOT_TOKEN);
+    for (const uid of recipientIds) {
+      const u = (db?.users || []).find(x => x.id === uid);
+      console.log('[Telegram] User:', u?.email, 'chatId:', u?.telegramChatId);
+    }
+
     // შეტყობინების ტექსტი
     let msgText;
     if (event === 'assigned') {

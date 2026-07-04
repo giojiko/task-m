@@ -35,7 +35,7 @@ function ActionModal({ task, action, onClose, onSave }) {
 }
 
 export default function TaskDetailModal({ task: initialTask, onClose, onRefresh }) {
-  const { db, user, saveDB, t, toast } = useApp();
+  const { db, dbRef, user, saveDB, t, toast } = useApp();
   const [task, setTask] = useState(initialTask);
   const [actionModal, setActionModal] = useState(null);
   const [subtaskTitle, setSubtaskTitle] = useState('');
@@ -70,7 +70,7 @@ export default function TaskDetailModal({ task: initialTask, onClose, onRefresh 
   const applyAction = async ({ status, comment }) => {
     const oldStatus = task.status;
     const logEntry = { id: uid(), taskId: task.id, userId: user.id, date: new Date().toISOString(), status, comment };
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.tasks = newDb.tasks.map(tk => tk.id === task.id ? { ...tk, status, updated: new Date().toISOString() } : tk);
     newDb.tasklogs = [...(newDb.tasklogs || []), logEntry];
     await saveDB(newDb);
@@ -81,7 +81,7 @@ export default function TaskDetailModal({ task: initialTask, onClose, onRefresh 
 
   const approve = async () => {
     const oldStatus = task.status;
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.tasks = newDb.tasks.map(tk => tk.id === task.id ? { ...tk, status: 'completed', updated: new Date().toISOString() } : tk);
     newDb.tasklogs = [...(newDb.tasklogs || []), { id: uid(), taskId: task.id, userId: user.id, date: new Date().toISOString(), status: 'completed', comment: t('log_approved') }];
     await saveDB(newDb);
@@ -92,7 +92,7 @@ export default function TaskDetailModal({ task: initialTask, onClose, onRefresh 
 
   const cancelApproval = async () => {
     const oldStatus = task.status;
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.tasks = newDb.tasks.map(tk => tk.id === task.id ? { ...tk, status: 'in_progress', updated: new Date().toISOString() } : tk);
     newDb.tasklogs = [...(newDb.tasklogs || []), { id: uid(), taskId: task.id, userId: user.id, date: new Date().toISOString(), status: 'in_progress', comment: t('log_approval_cancelled') }];
     await saveDB(newDb);
@@ -105,7 +105,7 @@ export default function TaskDetailModal({ task: initialTask, onClose, onRefresh 
     if (!subtaskTitle.trim()) return;
     if (['completed', 'stopped'].includes(task.status)) return toast(t('err_task_closed'), 'error');
     const newTask = { id: uid(), title: subtaskTitle.trim(), parent: task.id, status: 'pending', priority: 'medium', assignees: [], created: new Date().toISOString(), updated: new Date().toISOString() };
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.tasks = [...newDb.tasks, newTask];
     if (task.status === 'pending') {
       newDb.tasks = newDb.tasks.map(tk => tk.id === task.id ? { ...tk, status: 'in_progress' } : tk);
@@ -125,7 +125,7 @@ export default function TaskDetailModal({ task: initialTask, onClose, onRefresh 
       reader.onerror = rej;
       reader.readAsDataURL(f);
     })));
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.tasks = newDb.tasks.map(tk => tk.id === task.id
       ? { ...tk, photos: [...(tk.photos || []), ...base64s] }
       : tk

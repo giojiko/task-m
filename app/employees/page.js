@@ -293,7 +293,7 @@ function EmployeeDetailModal({ emp, onClose }) {
 }
 
 export default function EmployeesPage() {
-  const { db, user, saveDB, t, toast, refreshUser } = useApp();
+  const { db, dbRef, user, saveDB, t, toast, refreshUser } = useApp();
   const [search, setSearch] = useState('');
   const [editEmp, setEditEmp] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -307,8 +307,8 @@ export default function EmployeesPage() {
   ), [db?.users, search]);
 
   const handleSave = async (data, tempPassword) => {
-    const newDb = { ...db };
-    const isNew = !(db?.users || []).some(u => u.id === data.id);
+    const newDb = { ...(dbRef?.current || db) };
+    const isNew = !(newDb?.users || []).some(u => u.id === data.id);
     if (isNew) {
       newDb.users = [...newDb.users, data];
     } else {
@@ -332,7 +332,8 @@ export default function EmployeesPage() {
 
   const toggleActive = async (emp) => {
     if (emp.id === user.id) return;
-    const newDb = { ...db, users: db.users.map(u => u.id === emp.id ? { ...u, active: !u.active } : u) };
+    const cur = dbRef?.current || db;
+    const newDb = { ...cur, users: cur.users.map(u => u.id === emp.id ? { ...u, active: !u.active } : u) };
     await saveDB(newDb);
     toast(t('toast_emp_saved'));
   };
