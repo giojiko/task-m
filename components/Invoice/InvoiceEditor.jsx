@@ -394,7 +394,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
         <button className="btn btn-primary btn-sm" onClick={() => handleSave(true)}>💾 შენახვა + 🖨️ გახსნა</button>
       </>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 14, alignItems: 'start' }}>
+      <div className="invoice-editor-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 14, alignItems: 'start' }}>
 
         {/* მარცხენა */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -610,7 +610,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
         </div>
 
         {/* მარჯვენა */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="invoice-editor-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="fg" style={{ marginBottom: 0 }}>
             <label className="form-label">გამოწერის თარიღი</label>
             <input className="input" type="date" value={issueDate} onChange={e => setIssueDate(e.target.value)} />

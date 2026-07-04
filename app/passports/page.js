@@ -358,7 +358,7 @@ function PassportFormModal({ passport, clients, uploading, onClose, onSave, onDe
       </>}
     >
       {err && <div className="err-box" style={{ display: 'block', marginBottom: 12 }}>{err}</div>}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="frow" style={{ gap: 16 }}>
         <div className="fg">
           <label className="form-label req">პასპორტის კოდი</label>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -389,7 +389,7 @@ function PassportFormModal({ passport, clients, uploading, onClose, onSave, onDe
           onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="frow" style={{ gap: 16 }}>
         <div className="fg">
           <label className="form-label">კლიენტი</label>
           <select className="select" value={form.clientId}
@@ -406,7 +406,7 @@ function PassportFormModal({ passport, clients, uploading, onClose, onSave, onDe
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="frow" style={{ gap: 16 }}>
         <div className="fg">
           <label className="form-label">შესრულების თარიღი</label>
           <input className="input" type="date" value={form.completedDate}
@@ -485,7 +485,7 @@ function PassportAnalyticsModal({ passport, clients, onClose }) {
     <Modal open title={`📊 ${passport.code} — Analytics`} onClose={onClose}
       footer={<button className="btn btn-ghost btn-sm" onClick={onClose}>დახურვა</button>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="stats-grid" style={{ gap: 12, marginBottom: 20 }}>
         {[
           { label: 'სულ სკანირება', value: passport.totalScans || 0, icon: '📱' },
           { label: 'ფაილები', value: (passport.files || []).length, icon: '📁' },
