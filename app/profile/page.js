@@ -6,7 +6,7 @@ import { fd, hashPassword } from '@/lib/utils';
 import { RoleBadge } from '@/components/UI/Badge';
 
 export default function ProfilePage() {
-  const { user, db, saveDB, t, toast, refreshUser } = useApp();
+  const { user, db, dbRef, saveDB, t, toast, refreshUser } = useApp();
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({
     firstName: user?.firstName || '',
@@ -35,7 +35,7 @@ export default function ProfilePage() {
         return setErr('პირადი ნომერი — 11 ციფრი · საიდენტიფიკაციო კოდი — 9 ციფრი');
       }
     }
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.users = newDb.users.map(u => u.id === user.id ? {
       ...u, ...form, name: `${form.firstName} ${form.lastName}`,
     } : u);
@@ -58,7 +58,7 @@ export default function ProfilePage() {
     });
     if (!checkRes.ok) return setPassErr(t('err_cur_pass'));
     const ph = await hashPassword(passForm.new);
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.users = newDb.users.map(u => {
       if (u.id !== user.id) return u;
       const { password, ...rest } = u;
