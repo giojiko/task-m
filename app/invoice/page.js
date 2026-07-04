@@ -278,8 +278,9 @@ export default function InvoicePage() {
         <InvoiceEditor
           invoice={editingInvoice}
           onClose={() => setEditorOpen(false)}
-          onSaved={() => {
+          onSaved={(savedInvoice) => {
             setRefreshKey(k => k + 1);
+            setEditingInvoice(savedInvoice);
             setEditorOpen(false);
           }}
         />
