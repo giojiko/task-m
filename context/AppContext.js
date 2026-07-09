@@ -10,10 +10,12 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [db, setDb] = useState(null);
   const [dbMeta, setDbMeta] = useState({ updated: null });
+  const dbMetaRef = useRef({ updated: null });
   const [lang, setLangState] = useState('ka');
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);
+  const dbRef = useRef(null);
   const router = useRouter();
 
   const t = useCallback((key) => translate(key, lang), [lang]);
@@ -31,14 +33,21 @@ export function AppProvider({ children }) {
 
   const saveDB = useCallback(async (newDb) => {
     setDb(newDb);
+    dbRef.current = newDb;
+    // Optimistically advance the timestamp before the fetch so that
+    // back-to-back saves don't both read the same stale _expectedUpdated.
+    const sentExpected = dbMetaRef.current.updated;
+    const optimisticTs = new Date().toISOString();
+    dbMetaRef.current = { updated: optimisticTs };
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...newDb, _expectedUpdated: dbMeta.updated }),
+        body: JSON.stringify({ ...newDb, _expectedUpdated: sentExpected }),
       });
       if (res.status === 409) {
+        dbMetaRef.current = { updated: sentExpected }; // rollback
         toast('⚠️ მონაცემები შეიცვალა სხვის მიერ — გვერდი განახლდება', 'warning');
         setTimeout(() => window.location.reload(), 1500);
         return;
@@ -49,11 +58,15 @@ export function AppProvider({ children }) {
         return;
       }
       const result = await res.json();
-      if (result.updated) setDbMeta({ updated: result.updated });
+      if (result.updated) {
+        setDbMeta({ updated: result.updated });
+        dbMetaRef.current = { updated: result.updated };
+      }
     } catch (e) {
       console.error('saveDB failed', e);
+      dbMetaRef.current = { updated: sentExpected }; // rollback on network error
     }
-  }, [router, dbMeta.updated, toast]);
+  }, [router, toast]);
 
   useEffect(() => {
     const storedLang = localStorage.getItem('sp_lang') || 'ka';
@@ -72,7 +85,10 @@ export function AppProvider({ children }) {
         if (data) {
           const { _updated, ...rest } = data;
           setDb(rest);
-          setDbMeta({ updated: _updated || null });
+          dbRef.current = rest;
+          const meta = { updated: _updated || null };
+          setDbMeta(meta);
+          dbMetaRef.current = meta;
         }
       })
       .catch(() => {})
@@ -104,7 +120,10 @@ export function AppProvider({ children }) {
       const dbData = await dbRes.json();
       const { _updated, ...rest } = dbData;
       setDb(rest);
-      setDbMeta({ updated: _updated || null });
+      dbRef.current = rest;
+      const meta = { updated: _updated || null };
+      setDbMeta(meta);
+      dbMetaRef.current = meta;
     }
     return { user: data.user };
   }, []);
