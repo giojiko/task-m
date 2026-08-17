@@ -4,6 +4,7 @@ import AppShell from '@/components/Layout/AppShell';
 import { useApp } from '@/context/AppContext';
 import { fd } from '@/lib/utils';
 import InvoiceEditor from '@/components/Invoice/InvoiceEditor';
+import Modal from '@/components/UI/Modal';
 
 function reopenPrint(inv) {
   const escHtml = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -231,7 +232,7 @@ export default function InvoicePage() {
                 <th>გადახდის ვადა</th>
                 <th>სულ</th>
                 <th>სტატუსი</th>
-                <th style={{ width: 90 }}>მოქმ.</th>
+                <th style={{ width: 120 }}>მოქმ.</th>
               </tr>
             </thead>
             <tbody>
@@ -304,43 +305,34 @@ export default function InvoicePage() {
         />
       )}
       {confirmDel && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)',
-          backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 200, padding: 18,
-        }} onClick={e => e.target === e.currentTarget && setConfirmDel(null)}>
-          <div style={{
-            background: 'var(--bg-subtle)', border: '1px solid var(--border-strong)',
-            borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 380,
-            boxShadow: 'var(--shadow-lg)', overflow: 'hidden',
-          }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'rgba(0,0,0,0.12)' }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>🗑 ინვოისის წაშლა</div>
-              <button className="modal-close" onClick={() => setConfirmDel(null)}>✕</button>
-            </div>
-            <div style={{ padding: '20px 20px 16px', color: 'var(--text-secondary)', lineHeight: 1.8 }}>
-              <p>წაიშლება:{' '}
-                <strong style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>
-                  {confirmDel.number}
-                </strong>
-                {confirmDel.clientSnapshot?.name && <> — {confirmDel.clientSnapshot.name}</>}
-              </p>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--success)' }}>
-                ₾{confirmDel.total?.toFixed(2)}
-              </p>
-              <p style={{ fontSize: 12, color: 'var(--danger)', marginTop: 8 }}>
-                ⚠️ წაშლა შეუქცევადია
-              </p>
-            </div>
-            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)',
-              background: 'rgba(0,0,0,0.15)', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDel(null)}>გაუქმება</button>
-              <button className="btn btn-danger btn-sm" onClick={() => deleteInvoice(confirmDel)}>წაშლა</button>
-            </div>
-          </div>
-        </div>
+        <Modal open
+          title="🗑 ინვოისის წაშლა"
+          onClose={() => setConfirmDel(null)}
+          footer={<>
+            <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDel(null)}>
+              გაუქმება
+            </button>
+            <button className="btn btn-danger btn-sm" onClick={() => deleteInvoice(confirmDel)}>
+              წაშლა
+            </button>
+          </>}
+        >
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            წაიშლება:{' '}
+            <strong style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>
+              {confirmDel.number}
+            </strong>
+            {confirmDel.clientSnapshot?.name && <> — {confirmDel.clientSnapshot.name}</>}
+            <br />
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--success)' }}>
+              ₾{confirmDel.total?.toFixed(2)}
+            </span>
+            <br />
+            <span style={{ fontSize: 12, color: 'var(--danger)', display: 'block', marginTop: 4 }}>
+              ⚠️ წაშლა შეუქცევადია
+            </span>
+          </p>
+        </Modal>
       )}
     </AppShell>
   );
