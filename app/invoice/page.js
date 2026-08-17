@@ -20,7 +20,7 @@ function reopenPrint(inv) {
 
 /* ── Payment Modal ─────────────────────────────────────────────────── */
 function PaymentModal({ invoice, onClose }) {
-  const { db, saveDB, toast } = useApp();
+  const { db, dbRef, saveDB, toast } = useApp();
   const [status,     setStatus]     = useState(invoice.status || 'sent');
   const [paidAmount, setPaidAmount] = useState(invoice.paidAmount ?? invoice.total);
   const [paidAt,     setPaidAt]     = useState(
@@ -36,7 +36,8 @@ function PaymentModal({ invoice, onClose }) {
       paidAmount: status === 'paid' ? invoice.total : status === 'partial' ? Number(paidAmount) : 0,
       paidAt:     status !== 'sent' ? paidAt : null,
     };
-    const newDb = { ...db, invoices: db.invoices.map(i => i.id === invoice.id ? updated : i) };
+    const cur = dbRef?.current || db;
+    const newDb = { ...cur, invoices: cur.invoices.map(i => i.id === invoice.id ? updated : i) };
     await saveDB(newDb);
     toast(status === 'paid' ? '✅ სრულად გადახდილად მოინიშნა' : status === 'partial' ? '⚡ ნაწილობრივ გადახდილი' : '↩️ გადასახდელად დაბრუნდა');
     onClose();
@@ -147,10 +148,11 @@ function PaymentModal({ invoice, onClose }) {
 }
 
 export default function InvoicePage() {
-  const { db } = useApp();
+  const { db, dbRef, saveDB, toast } = useApp();
   const [editorOpen,     setEditorOpen]    = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [paymentInvoice, setPaymentInvoice] = useState(null);
+  const [confirmDel,     setConfirmDel]    = useState(null);
   const [search,         setSearch]        = useState('');
   const [refreshKey,     setRefreshKey]    = useState(0);
 
@@ -168,6 +170,14 @@ export default function InvoicePage() {
 
   const openNew  = () => { setEditingInvoice(null); setEditorOpen(true); };
   const openEdit = (inv) => { setEditingInvoice(inv); setEditorOpen(true); };
+
+  const deleteInvoice = async (inv) => {
+    const cur = dbRef?.current || db;
+    const newDb = { ...cur, invoices: (cur.invoices || []).filter(i => i.id !== inv.id) };
+    await saveDB(newDb);
+    toast('🗑 ინვოისი წაიშალა');
+    setConfirmDel(null);
+  };
 
   const totalPaid    = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.total, 0);
   const totalPartial = invoices.filter(i => i.status === 'partial').reduce((s, i) => s + (i.paidAmount || 0), 0);
@@ -264,6 +274,9 @@ export default function InvoicePage() {
                       <button className="btn btn-ghost btn-xs" title="გადახდა" onClick={() => setPaymentInvoice(inv)}>💳</button>
                       <button className="btn btn-ghost btn-xs" title="ბეჭდვა" onClick={() => reopenPrint(inv)}>🖨️</button>
                       <button className="btn btn-ghost btn-xs" title="რედაქტირება" onClick={() => openEdit(inv)}>✏️</button>
+                      <button className="btn btn-ghost btn-xs" title="წაშლა"
+                        style={{ color: 'var(--danger)' }}
+                        onClick={() => setConfirmDel(inv)}>🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -277,8 +290,9 @@ export default function InvoicePage() {
         <InvoiceEditor
           invoice={editingInvoice}
           onClose={() => setEditorOpen(false)}
-          onSaved={() => {
+          onSaved={(savedInvoice) => {
             setRefreshKey(k => k + 1);
+            setEditingInvoice(savedInvoice);
             setEditorOpen(false);
           }}
         />
@@ -288,6 +302,45 @@ export default function InvoicePage() {
           invoice={paymentInvoice}
           onClose={() => setPaymentInvoice(null)}
         />
+      )}
+      {confirmDel && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)',
+          backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 200, padding: 18,
+        }} onClick={e => e.target === e.currentTarget && setConfirmDel(null)}>
+          <div style={{
+            background: 'var(--bg-subtle)', border: '1px solid var(--border-strong)',
+            borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 380,
+            boxShadow: 'var(--shadow-lg)', overflow: 'hidden',
+          }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'rgba(0,0,0,0.12)' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>🗑 ინვოისის წაშლა</div>
+              <button className="modal-close" onClick={() => setConfirmDel(null)}>✕</button>
+            </div>
+            <div style={{ padding: '20px 20px 16px', color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+              <p>წაიშლება:{' '}
+                <strong style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>
+                  {confirmDel.number}
+                </strong>
+                {confirmDel.clientSnapshot?.name && <> — {confirmDel.clientSnapshot.name}</>}
+              </p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--success)' }}>
+                ₾{confirmDel.total?.toFixed(2)}
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--danger)', marginTop: 8 }}>
+                ⚠️ წაშლა შეუქცევადია
+              </p>
+            </div>
+            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)',
+              background: 'rgba(0,0,0,0.15)', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDel(null)}>გაუქმება</button>
+              <button className="btn btn-danger btn-sm" onClick={() => deleteInvoice(confirmDel)}>წაშლა</button>
+            </div>
+          </div>
+        </div>
       )}
     </AppShell>
   );

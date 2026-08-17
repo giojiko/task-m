@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { sendDeadlineEmail } from '@/lib/email';
+import { sendTelegramMessage, msgDeadlineReminder } from '@/lib/telegram';
 
 export async function GET(req) {
   const auth = req.headers.get('authorization');
@@ -40,6 +41,18 @@ export async function GET(req) {
           console.error('deadline email error', e);
         }
       }
+
+      // ── Telegram ──
+      const telegramRecipients = new Set();
+      if (responsible?.telegramChatId) telegramRecipients.add(responsible.telegramChatId);
+      if (responsible?.supervisorId) {
+        const sup = (db.users || []).find(u => u.id === responsible.supervisorId);
+        if (sup?.telegramChatId) telegramRecipients.add(sup.telegramChatId);
+      }
+      for (const chatId of telegramRecipients) {
+        await sendTelegramMessage(chatId, msgDeadlineReminder(task, client?.name));
+      }
+
       task.deadline_email_sent = true;
     }
 

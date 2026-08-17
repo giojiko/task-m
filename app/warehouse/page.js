@@ -375,7 +375,7 @@ function ImportModal({ onClose, onImport }) {
 
 /* ── Main Page ── */
 export default function WarehousePage() {
-  const { db, user, saveDB, t, toast } = useApp();
+  const { db, dbRef, user, saveDB, t, toast } = useApp();
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('');
   const [filterSupplier, setFilterSupplier] = useState('');
@@ -411,7 +411,7 @@ export default function WarehousePage() {
 
   const handleSave = async (data) => {
     const now = new Date().toISOString();
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     const isNew = !data.id;
     if (isNew) {
       data.id = uid(); data.created = now;
@@ -436,7 +436,7 @@ export default function WarehousePage() {
     const newQty = (item.qty || 0) - qty;
     const client = (db?.clients || []).find(c => c.id === clientId);
 
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.wh = newDb.wh.map(i => i.id === item.id ? { ...i, qty: newQty, updated: now } : i);
     newDb.whlogs = [...(newDb.whlogs || []), {
       id: uid(), itemId: item.id, action: 'client_used',
@@ -456,13 +456,14 @@ export default function WarehousePage() {
 
   const handleDelete = async (id) => {
     if (!confirm(t('confirm_delete'))) return;
-    await saveDB({ ...db, wh: db.wh.filter(i => i.id !== id) });
+    const cur = dbRef?.current || db;
+    await saveDB({ ...cur, wh: cur.wh.filter(i => i.id !== id) });
     toast(t('toast_wh_deleted'));
   };
 
   const handleImport = async (items) => {
     const now = new Date().toISOString();
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.wh = [...(newDb.wh || []), ...items];
     const logs = items.map(item => ({
       id: uid(), itemId: item.id, action: 'added',

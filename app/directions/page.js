@@ -150,7 +150,7 @@ function ClientTable({ clients, emptyMsg }) {
 
 /* ─── Main Content (needs Suspense for useSearchParams) ─── */
 function DirectionsContent() {
-  const { db, saveDB, toast, user, lang } = useApp();
+  const { db, dbRef, saveDB, toast, user, lang } = useApp();
   const isSuper = user?.role === 'super_admin';
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -183,7 +183,7 @@ function DirectionsContent() {
 
   /* ── CRUD ── */
   const handleSave = async (data) => {
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     const exists = (newDb.directions || []).find(d => d.id === data.id);
     newDb.directions = exists
       ? newDb.directions.map(d => d.id === data.id ? data : d)
@@ -193,7 +193,7 @@ function DirectionsContent() {
   };
 
   const handleDelete = async (dirId) => {
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.directions = (newDb.directions || []).filter(d => d.id !== dirId);
     newDb.clients = (newDb.clients || []).map(c => ({
       ...c,

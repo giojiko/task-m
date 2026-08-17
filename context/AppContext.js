@@ -36,9 +36,9 @@ export function AppProvider({ children }) {
     dbRef.current = newDb;
     // Optimistically advance the timestamp before the fetch so that
     // back-to-back saves don't both read the same stale _expectedUpdated.
-    const sentExpected = dbMetaRef.current.updated;
-    const optimisticTs = new Date().toISOString();
-    dbMetaRef.current = { updated: optimisticTs };
+    const sentExpected  = dbMetaRef.current.updated;
+    const optimisticNow = new Date().toISOString();
+    dbMetaRef.current   = { updated: optimisticNow };
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
@@ -72,11 +72,9 @@ export function AppProvider({ children }) {
     const storedLang = localStorage.getItem('sp_lang') || 'ka';
     setLangState(storedLang);
 
-    let sessionUser = null;
     fetch('/api/auth/me', { credentials: 'include' })
       .then(r => r.json())
       .then(({ user: u }) => {
-        sessionUser = u;
         setUser(u);
         return fetch('/api/db', { credentials: 'include', cache: 'no-store' });
       })
@@ -132,6 +130,7 @@ export function AppProvider({ children }) {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
     setDb(null);
+    dbRef.current = null;
     router.push('/login');
   }, [router]);
 
@@ -145,7 +144,7 @@ export function AppProvider({ children }) {
   }, [user]);
 
   return (
-    <AppContext.Provider value={{ user, setUser, db, saveDB, lang, setLang, t, loading, toast, login, logout, refreshUser }}>
+    <AppContext.Provider value={{ user, setUser, db, dbRef, saveDB, lang, setLang, t, loading, toast, login, logout, refreshUser }}>
       {children}
       <div style={{ position:'fixed', bottom:20, right:20, zIndex:9999, display:'flex', flexDirection:'column', gap:8, pointerEvents:'none' }}>
         {toasts.map(x => (

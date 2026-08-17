@@ -6,7 +6,7 @@ import { useApp } from '@/context/AppContext';
 import { uid, generatePassportCode, generatePassportUrlId } from '@/lib/utils';
 
 export default function PassportsPage() {
-  const { db, user, saveDB, toast } = useApp();
+  const { db, dbRef, user, saveDB, toast } = useApp();
   const isSuper = ['super_admin', 'admin'].includes(user?.role);
 
   const [showForm, setShowForm] = useState(false);
@@ -27,7 +27,7 @@ export default function PassportsPage() {
   const clients = db?.clients || [];
 
   const savePassport = async (data, newFiles) => {
-    const isNew = !(db?.passports || []).some(p => p.id === data.id);
+    const isNew = !((dbRef?.current || db)?.passports || []).some(p => p.id === data.id);
 
     if (newFiles?.length > 0) {
       setUploading(true);
@@ -46,7 +46,7 @@ export default function PassportsPage() {
       setUploading(false);
     }
 
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.passports = isNew
       ? [...(newDb.passports || []), { ...data, id: data.id || uid(), urlId: generatePassportUrlId(), created: new Date().toISOString(), updated: new Date().toISOString(), scans: data.scans || [], totalScans: data.totalScans || 0 }]
       : (newDb.passports || []).map(p => p.id === data.id ? { ...p, ...data, updated: new Date().toISOString() } : p);
@@ -66,7 +66,7 @@ export default function PassportsPage() {
       }).catch(() => {});
     }
 
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.passports = (newDb.passports || []).filter(p => p.id !== passport.id);
     await saveDB(newDb);
     toast('🗑 Passport წაიშალა');
@@ -80,7 +80,7 @@ export default function PassportsPage() {
       body: JSON.stringify({ path: file.path }),
     });
     if (!passport.id) return; // not yet saved — only strip from in-memory form state
-    const newDb = { ...db };
+    const newDb = { ...(dbRef?.current || db) };
     newDb.passports = newDb.passports.map(p =>
       p.id === passport.id ? { ...p, files: (p.files || []).filter(f => f.id !== file.id) } : p
     );
@@ -358,7 +358,7 @@ function PassportFormModal({ passport, clients, uploading, onClose, onSave, onDe
       </>}
     >
       {err && <div className="err-box" style={{ display: 'block', marginBottom: 12 }}>{err}</div>}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="frow" style={{ gap: 16 }}>
         <div className="fg">
           <label className="form-label req">პასპორტის კოდი</label>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -389,7 +389,7 @@ function PassportFormModal({ passport, clients, uploading, onClose, onSave, onDe
           onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="frow" style={{ gap: 16 }}>
         <div className="fg">
           <label className="form-label">კლიენტი</label>
           <select className="select" value={form.clientId}
@@ -406,7 +406,7 @@ function PassportFormModal({ passport, clients, uploading, onClose, onSave, onDe
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="frow" style={{ gap: 16 }}>
         <div className="fg">
           <label className="form-label">შესრულების თარიღი</label>
           <input className="input" type="date" value={form.completedDate}
@@ -485,7 +485,7 @@ function PassportAnalyticsModal({ passport, clients, onClose }) {
     <Modal open title={`📊 ${passport.code} — Analytics`} onClose={onClose}
       footer={<button className="btn btn-ghost btn-sm" onClick={onClose}>დახურვა</button>}
     >
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="stats-grid" style={{ gap: 12, marginBottom: 20 }}>
         {[
           { label: 'სულ სკანირება', value: passport.totalScans || 0, icon: '📱' },
           { label: 'ფაილები', value: (passport.files || []).length, icon: '📁' },

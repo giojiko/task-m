@@ -4,7 +4,7 @@ import { useApp } from '@/context/AppContext';
 import { hashPassword } from '@/lib/utils';
 
 export default function SetupModal() {
-  const { user, db, saveDB, toast, refreshUser } = useApp();
+  const { user, db, dbRef, saveDB, toast, refreshUser } = useApp();
   const [form, setForm] = useState({
     phone: user?.phone || '',
     birthDate: user?.birthDate || '',
@@ -34,7 +34,7 @@ export default function SetupModal() {
     setSaving(true);
     try {
       const passwordHash = await hashPassword(form.newPass);
-      const newDb = { ...db };
+      const newDb = { ...(dbRef?.current || db) };
       newDb.users = newDb.users.map(u => u.id === user.id ? {
         ...u,
         phone: form.phone.trim(),

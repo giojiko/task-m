@@ -24,6 +24,7 @@ function EmployeeModal({ emp, onClose, onSave }) {
     role: emp?.role || 'specialist',
     supervisorId: emp?.supervisorId || '',
     address: emp?.address || '',
+    telegramChatId: emp?.telegramChatId || '',
     password: '',
     active: emp?.active !== false,
   });
@@ -73,6 +74,7 @@ function EmployeeModal({ emp, onClose, onSave }) {
       birthDate: form.birthDate,
       personalId: form.personalId,
       address: form.address,
+      telegramChatId: form.telegramChatId.trim() || null,
       active: form.active,
       mustSetup: isNew ? true : (emp?.mustSetup ?? false),
       created: emp?.created || new Date().toISOString(),
@@ -174,6 +176,17 @@ function EmployeeModal({ emp, onClose, onSave }) {
         <div className="form-group">
           <label className="form-label">{t('emp_address')}</label>
           <input className="input" value={form.address} onChange={e => upd('address',e.target.value)} />
+        </div>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Telegram Chat ID</label>
+        <input className="input"
+          value={form.telegramChatId}
+          onChange={e => upd('telegramChatId', e.target.value.replace(/\D/g, ''))}
+          placeholder="მაგ: 123456789"
+        />
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
+          მისაღებად: Telegram → @userinfobot → /start
         </div>
       </div>
       <div className="form-group">
@@ -280,7 +293,7 @@ function EmployeeDetailModal({ emp, onClose }) {
 }
 
 export default function EmployeesPage() {
-  const { db, user, saveDB, t, toast, refreshUser } = useApp();
+  const { db, dbRef, user, saveDB, t, toast, refreshUser } = useApp();
   const [search, setSearch] = useState('');
   const [editEmp, setEditEmp] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -294,8 +307,8 @@ export default function EmployeesPage() {
   ), [db?.users, search]);
 
   const handleSave = async (data, tempPassword) => {
-    const newDb = { ...db };
-    const isNew = !(db?.users || []).some(u => u.id === data.id);
+    const newDb = { ...(dbRef?.current || db) };
+    const isNew = !(newDb?.users || []).some(u => u.id === data.id);
     if (isNew) {
       newDb.users = [...newDb.users, data];
     } else {
@@ -319,7 +332,8 @@ export default function EmployeesPage() {
 
   const toggleActive = async (emp) => {
     if (emp.id === user.id) return;
-    const newDb = { ...db, users: db.users.map(u => u.id === emp.id ? { ...u, active: !u.active } : u) };
+    const cur = dbRef?.current || db;
+    const newDb = { ...cur, users: cur.users.map(u => u.id === emp.id ? { ...u, active: !u.active } : u) };
     await saveDB(newDb);
     toast(t('toast_emp_saved'));
   };
