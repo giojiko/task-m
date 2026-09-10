@@ -42,16 +42,8 @@ export async function POST(request) {
     return Response.json({ error: 'Invalid DB structure' }, { status: 400 });
   }
 
-  // Read current state once for both conflict detection and passwordHash guard
-  const { data: prevRow } = await supabase.from('store').select('data, updated').eq('id', 1).single();
-
-  // Conflict detection
-  if (_expectedUpdated && prevRow?.updated && _expectedUpdated !== prevRow.updated) {
-    return Response.json({
-      error: 'CONFLICT',
-      message: 'მონაცემები შეიცვალა სხვის მიერ — გვერდი განაახლეთ',
-    }, { status: 409 });
-  }
+  // Read current state for passwordHash guard only
+  const { data: prevRow } = await supabase.from('store').select('data').eq('id', 1).single();
 
   // Defensive: never allow passwordHash to disappear from an active user
   const prevUsers = prevRow?.data?.users || [];
