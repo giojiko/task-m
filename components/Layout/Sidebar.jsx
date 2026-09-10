@@ -11,6 +11,7 @@ const NAV = [
   { href: '/warehouse',  icon: '⬡',  key: 'warehouse' },
   { href: '/employees',  icon: '◎',  key: 'employees' },
   { href: '/directions', icon: '⬡',  key: 'directions' },
+  { href: '/calculator', icon: '🧮', key: 'calculator' },
   { href: '/invoice',    icon: '🧾', key: 'invoice' },
   { href: '/passports',  icon: '🔖', key: 'passports' },
 ];
