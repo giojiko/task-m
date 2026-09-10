@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "smartpro-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "D:/Task-Managment/smartpro", "run", "dev", "--", "-p", "3100"],
+      "port": 3100
+    }
+  ]
+}
