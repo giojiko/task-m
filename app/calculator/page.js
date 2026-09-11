@@ -276,7 +276,8 @@ function CalculatorStep({ client, onSave, onBack }) {
   const handleSave = async () => {
     setSaving(true);
     await onSave({
-      client, rows,
+      client,
+      rows,
       lineItems: buildLineItems(),
       discount: Number(discount) || 0,
       notes,
@@ -285,6 +286,11 @@ function CalculatorStep({ client, onSave, onBack }) {
       total: totals.total,
     });
     setSaving(false);
+  };
+
+  const handlePrint = async () => {
+    await handleSave();
+    openPrintWindow();
   };
 
   const openPrintWindow = () => {
@@ -392,11 +398,6 @@ function CalculatorStep({ client, onSave, onBack }) {
     </div>
     </body></html>`);
     win.document.close();
-  };
-
-  const handlePrint = async () => {
-    await handleSave();
-    openPrintWindow();
   };
 
   return (
@@ -519,7 +520,7 @@ function EstimatesList() {
       <div className="empty" style={{ padding: '60px 0' }}>
         <div className="empty-icon">🧮</div>
         <div className="empty-title">დათვლილი პროექტები არ არის</div>
-        <div className="empty-desc">პირველი კალკულაცია შეინახე</div>
+        <div className="empty-sub">პირველი კალკულაცია შეინახე</div>
       </div>
     );
   }
