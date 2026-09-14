@@ -102,52 +102,65 @@ const TIER_INFO = {
     eco: {
       icon: '🟢',
       title: 'ეკონომი — ₾500–700/კვ.მ',
-      desc: 'ფუნქციური, გამძლე მასალები ლოკალური ან თურქული წარმოების. სამუშაო პროცესი სტანდარტულია, ვადები შედარებით გრძელი.',
+      desc: 'ფუნქციური და გამძლე მასალები ადგილობრივი ან თურქული წარმოებისა. სამუშაო პროცესი სტანდარტულია.',
       includes: [
-        'ელექტრო გაყვანილობა (NYM კაბელი, სტანდ. ავტომ.)',
-        'სანტექნიკა (ჩასაშენებელი, სტანდ. ხარისხი)',
-        'ბეტონის სტიაჟკა (5-7 სმ)',
-        'კედლის შტუკატურა (მექ. ან ხელით)',
-        'ჭერი — ბეჭდვითი / ერთ-ფენიანი',
-        'ლამინატი ან კერამიკა (ეკ. კლასი)',
-        'სტანდ. შიდა კარები',
-        'ბეჭდვითი ფერი კედლებზე',
+        'ელექტრო გაყვანილობა (NYM კაბელი, სტანდარტული ავტომატები)',
+        'სანტექნიკის გაყვანა (ჩასაშენებელი, სტანდარტული ხარისხი)',
+        'გათბობის მილების გაყვანა და გამართვა',
+        'გათბობის სექციური ალუმინის რადიატორები',
+        'ბეტონის სტიაჟკა (5–7 სმ)',
+        'კედლის შტუკატურა (მექანიკური ან ხელით)',
+        'ჭერი — ბეჭდვითი ან ერთ-ფენიანი',
+        'ლამინატი ან კერამიკული ფილა (ეკონომ კლასი)',
+        'სტანდარტული შიდა კარები',
+        'კედლების შეღებვა',
       ],
-      excludes: ['დიზაინის პროექტი', 'გათბობა/გაგრილება', 'ჭკვიანი სახლი', 'პრემ. მასალები'],
+      excludes: [
+        'დიზაინის პროექტი',
+        'ჭკვიანი სახლის სისტემა',
+        'პრემიუმ მასალები',
+      ],
       design: { label: 'დიზაინი + ნახაზები ცალკე', price: '₾50–250/კვ.მ' },
     },
     standard: {
       icon: '🟡',
       title: 'სტანდარტი — ₾700–1000/კვ.მ',
-      desc: 'ევროპული ან პრემ. თურქული მასალები, უფრო კომფორტული გარემო, კარგი ხარისხის მეკეჩნე ჯგუფი.',
+      desc: 'ევროპული ან პრემიუმ თურქული მასალები. კომფორტული გარემო, გამოცდილი სამუშაო გუნდი.',
       includes: [
-        'ელექტრო (NYM EU, შნაიდერ/ლეგრანდი)',
-        'სანტექნიკა (ჩასაშენებელი, საშ. ხარისხი)',
-        'ბეტონი (5-7 სმ) + გათბობის სისტ. (opt.)',
-        'ორ-ფენიანი გლუვი ჭერი (გ/კ ელემ.)',
-        'ნახევრად ვოლოკნო კედელზე',
-        'პარკეტი ან ხარისხ. ლამინატი',
+        'ელექტრო გაყვანილობა (NYM ევროპული, Schneider/Legrand)',
+        'სანტექნიკა (ჩასაშენებელი, საშუალო ხარისხი)',
+        'გათბობის მილების გაყვანა და გამართვა',
+        'გათბობის სექციური ფოლადის რადიატორები',
+        'ბეტონის სტიაჟკა (5–7 სმ)',
+        'ორ-ფენიანი გლუვი ჭერი (გიფსოკარტონის ელემენტებით)',
+        'გლუვი ასრული ფენა კედლებზე',
+        'პარკეტი ან ხარისხიანი ლამინატი',
         'MDF კარები',
-        'ვოდო-განმდევნელი ძირ. ფერი',
-        'სვ. კვ. ნახ. (იტ. ან ესპ. კერამ.)',
+        'ვოდო-განმდევნელი კედლის საღებავი',
+        'სველი კვანძი (იტალიური ან ესპანური კერამიკა)',
       ],
-      excludes: ['დიზ. პროექტი', 'ჭ. სახლი', 'ევრ. პრემ. მას.'],
+      excludes: [
+        'დიზაინის პროექტი',
+        'ჭკვიანი სახლის სისტემა',
+        'ევროპული პრემიუმ მასალები',
+      ],
       design: { label: 'დიზაინი + ნახაზები ცალკე', price: '₾25–150/კვ.მ' },
     },
     premium: {
       icon: '🔴',
       title: 'პრემიუმი — ₾1000–1800/კვ.მ',
-      desc: 'ევროპული ბრენდ-მასალები, ავტ. დამაგრ. სისტემა, ინდ. დიზ. პროექტი ჩართული. SmartPro-ს სრული გუნდი.',
+      desc: 'ევროპული ბრენდული მასალები, ავტომატური სისტემები, ინდივიდუალური დიზაინის პროექტი ჩართულია. SmartPro-ს სრული გუნდი.',
       includes: [
-        'ელ. (NYM EU, ABB/Hager, ავტომ. KNX-ად)',
-        'სანტ. (Grohe/Hansgrohe, ჩასაშ. პრემ.)',
-        'გათბ. (ტეპლი პოლ / რადიატ. design)',
-        'ავიმატ. ჭ. მოხატვა + გ/კ სტრუქ.',
+        'ელექტრო გაყვანილობა (NYM EU, ABB/Hager, ავტომატიზაცია KNX)',
+        'სანტექნიკა (Grohe / Hansgrohe, ჩასაშენებელი პრემიუმ)',
+        'გათბობის მილების გაყვანა და გამართვა',
+        'სართულის გათბობა (ელექტრო ან წყლის) + დიზაინ-რადიატორები',
+        'ავტომატური ჭერის მოხატვა + გიფსოკარტონის სტრუქტურები',
         'Porcelanosa / Pamesa კერამიკა',
-        'ბუნ. ხის ან ვინ. პარკეტი',
-        'ჭ. სახლი (ბ/კ, განათ. ავტ.)',
+        'ბუნებრივი ხის ან ვინილის პარკეტი',
+        'ჭკვიანი სახლის სისტემა (განათება, კლიმატ-კონტროლი)',
         '✅ დიზაინის პროექტი ჩართულია',
-        '✅ სრული ელ. ნახაზი ჩართულია',
+        '✅ სრული ელექტრო ნახაზი ჩართულია',
         '✅ 3D ვიზუალიზაცია ჩართულია',
       ],
       excludes: [],
@@ -158,48 +171,57 @@ const TIER_INFO = {
     eco: {
       icon: '🟢',
       title: 'ეკონომი — ₾300–500/კვ.მ',
-      desc: 'კედლები შეღებილია, სანტ./ელ. გაყვანილობა გათვალისწ. ახ. — მხოლოდ მოსაპირ. სამ. და მასალები.',
+      desc: 'კედლები მოსაპირკეთებელია, სანტექნიკა/ელექტრო გათვალისწინებულია. მხოლოდ სამოსახლო სამუშაოები და მასალები.',
       includes: [
-        'იატ. — ლამინატი ან კერ. (ეკ. კლ.)',
-        'კედ. — გაშლა + ფერი (1-2 ფენა)',
-        'ჭ. — სახე პოტოლოკი ან ფერი',
-        'კარ-ფანჯ. — დამოკ. მდგომ.',
-        'სვ. კვ. — სტანდ. კერ.',
-        'ბ/კ კარ (opt.)',
+        'იატაკი — ლამინატი ან კერამიკა (ეკონომ კლასი)',
+        'კედლები — გლუვი საფარი + კედლის საღებავი (1–2 ფენა)',
+        'ჭერი — გადასაკრავი ან საღებავი',
+        'კარ-ფანჯრის მოპირკეთება',
+        'სველი კვანძი — სტანდარტული კერამიკა',
+        'შიდა კარები (საჭიროების შ.)',
       ],
-      excludes: ['ელ/სანტ. ახ.', 'ბეტ. სტიაჟ.', 'დიზ.'],
+      excludes: [
+        'ელექტრო/სანტექნიკის ახლიდან გაყვანა',
+        'გათბობის სისტემა',
+        'ბეტონის სტიაჟკა',
+        'დიზაინის პროექტი',
+      ],
       design: { label: 'დიზაინი + ნახაზები ცალკე', price: '₾50–250/კვ.მ' },
     },
     standard: {
       icon: '🟡',
       title: 'სტანდარტი — ₾500–800/კვ.მ',
-      desc: 'ელ/სანტ-ის ნაწ. გადაკეთება (საჭ. შ.), ხარ. მასალ., კომფ. გარ.',
+      desc: 'ელექტრო/სანტექნიკის ნაწილობრივი განახლება საჭიროების შემთხვევაში, ხარისხიანი მასალები, კომფორტული გარემო.',
       includes: [
-        'ელ. — ნაწ. გადაყ. (ს-ო, განათ.)',
-        'სანტ. — ბ/კ სრულად',
-        'ნახ-ვოლ. ან შპ. კედ.',
-        'ხ. პარ. ან ხარ. ლამ.',
-        'გ/კ ჭ. ელემ.',
+        'ელექტრო — ნაწილობრივი განახლება (სარდომები, განათება)',
+        'სანტექნიკა — სველი კვანძის სრული განახლება',
+        'გლუვი ასრული ფენა ან ვოლოკნო კედლებზე',
+        'ხის პარკეტი ან ხარისხიანი ლამინატი',
+        'გიფსოკარტონის ჭერის ელემენტები',
         'MDF კარები',
-        'ესპ./იტ. კერ. სვ. კვ-ში',
+        'ესპანური/იტალიური კერამიკა სველ კვანძში',
       ],
-      excludes: ['ჭ. სახლი', 'ევ. პრემ. მას.', 'დიზ.'],
+      excludes: [
+        'ჭკვიანი სახლის სისტემა',
+        'ევროპული პრემიუმ მასალები',
+        'დიზაინის პროექტი',
+      ],
       design: { label: 'დიზაინი + ნახაზები ცალკე', price: '₾25–150/კვ.მ' },
     },
     premium: {
       icon: '🔴',
       title: 'პრემიუმი — ₾800–1500/კვ.მ',
-      desc: 'ევრ. ბრ. მას., ავტ. სისტ., ჭ. სახ., ინდ. დ. პრ. ჩართ.',
+      desc: 'ევროპული ბრენდული მასალები, ავტომატური სისტემები, ჭკვიანი სახლი, ინდივიდუალური დიზაინის პროექტი ჩართულია.',
       includes: [
-        'ელ. — სრული განახ. (ABB/Hager)',
-        'სანტ. — Grohe/Hansgrohe',
-        'ბ/კ — design ვანა/ს/კ',
-        'Porcelanosa კერ.',
-        'ბ/ხ. ან ვინ. პარ.',
-        'ჭ. სახლი (ავტ. განათ. + ბ/კ)',
-        '✅ დიზ. პროექტი ჩართ.',
-        '✅ ელ. ნახ. ჩართ.',
-        '✅ 3D ვიზ. ჩართ.',
+        'ელექტრო — სრული განახლება (ABB/Hager)',
+        'სანტექნიკა — Grohe / Hansgrohe',
+        'სველი კვანძი — დიზაინ-ვანა / სველი კაბინა',
+        'Porcelanosa კერამიკა',
+        'ბუნებრივი ხის ან ვინილის პარკეტი',
+        'ჭკვიანი სახლის სისტემა (ავტომატური განათება + კლიმატ-კონტ.)',
+        '✅ დიზაინის პროექტი ჩართულია',
+        '✅ ელექტრო ნახაზი ჩართულია',
+        '✅ 3D ვიზუალიზაცია ჩართულია',
       ],
       excludes: [],
       design: null,
@@ -278,24 +300,24 @@ function RenovationCalculator({ type, onSave }) {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', marginBottom: 4 }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--accent)', marginBottom: 4 }}>
           {typeIcon} {typeLabel} — საორიენტაციო კალკულაცია
         </div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>
           ავეჯის გარეშე · ცდომილება 20–25% · ფასები მოიცავს სამუშაოს და მასალას
         </div>
       </div>
 
       {/* Step 1 — SQM */}
       <div className="card" style={{ padding: '20px 22px', marginBottom: 16 }}>
-        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>1️⃣ კვადრატულობა</div>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>1️⃣ კვადრატულობა</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
           {SQM_RANGES.map(r => (
             <button key={r.label}
               onClick={() => { setSelectedRange(r); setSqm(''); setSaved(false); }}
               style={{
                 padding: '8px 16px', border: 'none', borderRadius: 8, cursor: 'pointer',
-                fontSize: 13, fontWeight: 600,
+                fontSize: 14, fontWeight: 600,
                 background: selectedRange?.label === r.label
                   ? 'linear-gradient(135deg, rgba(27,234,205,0.2), rgba(27,234,205,0.08))'
                   : 'var(--bg-muted)',
@@ -308,7 +330,7 @@ function RenovationCalculator({ type, onSave }) {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>ან ჩაწერეთ ზუსტი კვ.მ:</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>ან ჩაწერეთ ზუსტი კვ.მ:</div>
           <input className="input" type="number" min="20" max="999" value={sqm}
             onChange={e => { setSqm(e.target.value.replace(/\D/g,'')); setSelectedRange(null); setSaved(false); }}
             placeholder="მაგ: 87" style={{ width: 100, textAlign: 'center' }} />
@@ -319,7 +341,7 @@ function RenovationCalculator({ type, onSave }) {
       {/* Step 2 — Tier */}
       {actualSqm > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, padding: '0 2px' }}>2️⃣ სარემონტო კლასი</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, padding: '0 2px' }}>2️⃣ სარემონტო კლასი</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             {Object.entries(tierInfo).map(([key, info]) => {
               const t = tiers[key];
@@ -334,9 +356,9 @@ function RenovationCalculator({ type, onSave }) {
                     transition: 'all .18s',
                   }}>
                   <div style={{ fontSize: 22, marginBottom: 6 }}>{info.icon}</div>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: t.color, marginBottom: 4 }}>{info.title}</div>
-                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.5 }}>{info.desc}</div>
-                  <div style={{ fontSize: 11, lineHeight: 1.7 }}>
+                  <div style={{ fontWeight: 800, fontSize: 15, color: t.color, marginBottom: 4 }}>{info.title}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.5 }}>{info.desc}</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.7 }}>
                     {info.includes.map((item, i) => (
                       <div key={i} style={{ color: item.startsWith('✅') ? t.color : 'var(--text-secondary)' }}>
                         {item.startsWith('✅') ? item : `✓ ${item}`}
@@ -363,10 +385,10 @@ function RenovationCalculator({ type, onSave }) {
                           onChange={e => { setWithDesign(e.target.checked); setSaved(false); }}
                           style={{ marginTop: 2, accentColor: 'var(--accent)' }} />
                         <div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
                             + {info.design.label}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{info.design.price}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{info.design.price}</div>
                         </div>
                       </label>
                     </div>
@@ -385,24 +407,24 @@ function RenovationCalculator({ type, onSave }) {
           border: `1.5px solid ${tiers[selectedTier].color}44`,
           marginBottom: 16,
         }}>
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>3️⃣ საორიენტაციო ღირებულება</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>3️⃣ საორიენტაციო ღირებულება</div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
             <div style={{ background: 'var(--bg-muted)', borderRadius: 10, padding: '14px 16px' }}>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>სამუშაო + მასალა (მინ)</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>სამუშაო + მასალა (მინ)</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: tiers[selectedTier].color }}>
                 ₾{GEO(calc.hasDesign ? calc.minWithDesign : calc.minTotal)}
               </div>
             </div>
             <div style={{ background: 'var(--bg-muted)', borderRadius: 10, padding: '14px 16px' }}>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>სამუშაო + მასალა (მაქს)</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>სამუშაო + მასალა (მაქს)</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: tiers[selectedTier].color }}>
                 ₾{GEO(calc.hasDesign ? calc.maxWithDesign : calc.maxTotal)}
               </div>
             </div>
           </div>
 
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, lineHeight: 1.7 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12, lineHeight: 1.7 }}>
             <span style={{ color: 'var(--text-secondary)' }}>{actualSqm} კვ.მ</span>
             {' × '}
             <span style={{ color: tiers[selectedTier].color, fontWeight: 700 }}>
@@ -416,14 +438,14 @@ function RenovationCalculator({ type, onSave }) {
             )}
           </div>
 
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16,
+          <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 16,
             background: 'rgba(27,234,205,0.05)', borderRadius: 8, padding: '8px 12px',
             border: '1px solid rgba(27,234,205,0.1)' }}>
             ⚠️ ეს საორიენტაციო ფასია. ზუსტი ფასი განისაზღვრება ობიექტის დათვალიერების შემდეგ. ცდომილება 20–25%.
           </div>
 
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
-            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: 'var(--text-secondary)' }}>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10, color: 'var(--text-secondary)' }}>
               💾 კალკულაციის შენახვა (სურვილისამებრ)
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
@@ -443,7 +465,7 @@ function RenovationCalculator({ type, onSave }) {
             <div className="fg" style={{ marginBottom: 10 }}>
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 🔒 შიდა კომენტარი
-                <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}>(PDF-ში არ ჩანს)</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 400 }}>(PDF-ში არ ჩანს)</span>
               </label>
               <textarea className="textarea" rows={2} value={comment}
                 onChange={e => { setComment(e.target.value); setSaved(false); }}
