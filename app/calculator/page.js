@@ -83,6 +83,386 @@ const CATALOG = {
 const VAT_RATE = 0.22;
 const GN = (n) => Number(n).toLocaleString('ka-GE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// ─── Renovation Tiers ───
+const RENO_TIERS = {
+  black: {
+    eco:      { min: 500,  max: 700,  label: 'ეკონომი',    color: '#68D391' },
+    standard: { min: 700,  max: 1000, label: 'სტანდარტი',  color: '#F6AD55' },
+    premium:  { min: 1000, max: 1800, label: 'პრემიუმი',   color: '#FC8181' },
+  },
+  white: {
+    eco:      { min: 300, max: 500,  label: 'ეკონომი',    color: '#68D391' },
+    standard: { min: 500, max: 800,  label: 'სტანდარტი',  color: '#F6AD55' },
+    premium:  { min: 800, max: 1500, label: 'პრემიუმი',   color: '#FC8181' },
+  },
+};
+
+const TIER_INFO = {
+  black: {
+    eco: {
+      icon: '🟢',
+      title: 'ეკონომი — ₾500–700/კვ.მ',
+      desc: 'ფუნქციური, გამძლე მასალები ლოკალური ან თურქული წარმოების. სამუშაო პროცესი სტანდარტულია, ვადები შედარებით გრძელი.',
+      includes: [
+        'ელექტრო გაყვანილობა (NYM კაბელი, სტანდ. ავტომ.)',
+        'სანტექნიკა (ჩასაშენებელი, სტანდ. ხარისხი)',
+        'ბეტონის სტიაჟკა (5-7 სმ)',
+        'კედლის შტუკატურა (მექ. ან ხელით)',
+        'ჭერი — ბეჭდვითი / ერთ-ფენიანი',
+        'ლამინატი ან კერამიკა (ეკ. კლასი)',
+        'სტანდ. შიდა კარები',
+        'ბეჭდვითი ფერი კედლებზე',
+      ],
+      excludes: ['დიზაინის პროექტი', 'გათბობა/გაგრილება', 'ჭკვიანი სახლი', 'პრემ. მასალები'],
+      design: { label: 'დიზაინი + ნახაზები ცალკე', price: '₾50–250/კვ.მ' },
+    },
+    standard: {
+      icon: '🟡',
+      title: 'სტანდარტი — ₾700–1000/კვ.მ',
+      desc: 'ევროპული ან პრემ. თურქული მასალები, უფრო კომფორტული გარემო, კარგი ხარისხის მეკეჩნე ჯგუფი.',
+      includes: [
+        'ელექტრო (NYM EU, შნაიდერ/ლეგრანდი)',
+        'სანტექნიკა (ჩასაშენებელი, საშ. ხარისხი)',
+        'ბეტონი (5-7 სმ) + გათბობის სისტ. (opt.)',
+        'ორ-ფენიანი გლუვი ჭერი (გ/კ ელემ.)',
+        'ნახევრად ვოლოკნო კედელზე',
+        'პარკეტი ან ხარისხ. ლამინატი',
+        'MDF კარები',
+        'ვოდო-განმდევნელი ძირ. ფერი',
+        'სვ. კვ. ნახ. (იტ. ან ესპ. კერამ.)',
+      ],
+      excludes: ['დიზ. პროექტი', 'ჭ. სახლი', 'ევრ. პრემ. მას.'],
+      design: { label: 'დიზაინი + ნახაზები ცალკე', price: '₾25–150/კვ.მ' },
+    },
+    premium: {
+      icon: '🔴',
+      title: 'პრემიუმი — ₾1000–1800/კვ.მ',
+      desc: 'ევროპული ბრენდ-მასალები, ავტ. დამაგრ. სისტემა, ინდ. დიზ. პროექტი ჩართული. SmartPro-ს სრული გუნდი.',
+      includes: [
+        'ელ. (NYM EU, ABB/Hager, ავტომ. KNX-ად)',
+        'სანტ. (Grohe/Hansgrohe, ჩასაშ. პრემ.)',
+        'გათბ. (ტეპლი პოლ / რადიატ. design)',
+        'ავიმატ. ჭ. მოხატვა + გ/კ სტრუქ.',
+        'Porcelanosa / Pamesa კერამიკა',
+        'ბუნ. ხის ან ვინ. პარკეტი',
+        'ჭ. სახლი (ბ/კ, განათ. ავტ.)',
+        '✅ დიზაინის პროექტი ჩართულია',
+        '✅ სრული ელ. ნახაზი ჩართულია',
+        '✅ 3D ვიზუალიზაცია ჩართულია',
+      ],
+      excludes: [],
+      design: null,
+    },
+  },
+  white: {
+    eco: {
+      icon: '🟢',
+      title: 'ეკონომი — ₾300–500/კვ.მ',
+      desc: 'კედლები შეღებილია, სანტ./ელ. გაყვანილობა გათვალისწ. ახ. — მხოლოდ მოსაპირ. სამ. და მასალები.',
+      includes: [
+        'იატ. — ლამინატი ან კერ. (ეკ. კლ.)',
+        'კედ. — გაშლა + ფერი (1-2 ფენა)',
+        'ჭ. — სახე პოტოლოკი ან ფერი',
+        'კარ-ფანჯ. — დამოკ. მდგომ.',
+        'სვ. კვ. — სტანდ. კერ.',
+        'ბ/კ კარ (opt.)',
+      ],
+      excludes: ['ელ/სანტ. ახ.', 'ბეტ. სტიაჟ.', 'დიზ.'],
+      design: { label: 'დიზაინი + ნახაზები ცალკე', price: '₾50–250/კვ.მ' },
+    },
+    standard: {
+      icon: '🟡',
+      title: 'სტანდარტი — ₾500–800/კვ.მ',
+      desc: 'ელ/სანტ-ის ნაწ. გადაკეთება (საჭ. შ.), ხარ. მასალ., კომფ. გარ.',
+      includes: [
+        'ელ. — ნაწ. გადაყ. (ს-ო, განათ.)',
+        'სანტ. — ბ/კ სრულად',
+        'ნახ-ვოლ. ან შპ. კედ.',
+        'ხ. პარ. ან ხარ. ლამ.',
+        'გ/კ ჭ. ელემ.',
+        'MDF კარები',
+        'ესპ./იტ. კერ. სვ. კვ-ში',
+      ],
+      excludes: ['ჭ. სახლი', 'ევ. პრემ. მას.', 'დიზ.'],
+      design: { label: 'დიზაინი + ნახაზები ცალკე', price: '₾25–150/კვ.მ' },
+    },
+    premium: {
+      icon: '🔴',
+      title: 'პრემიუმი — ₾800–1500/კვ.მ',
+      desc: 'ევრ. ბრ. მას., ავტ. სისტ., ჭ. სახ., ინდ. დ. პრ. ჩართ.',
+      includes: [
+        'ელ. — სრული განახ. (ABB/Hager)',
+        'სანტ. — Grohe/Hansgrohe',
+        'ბ/კ — design ვანა/ს/კ',
+        'Porcelanosa კერ.',
+        'ბ/ხ. ან ვინ. პარ.',
+        'ჭ. სახლი (ავტ. განათ. + ბ/კ)',
+        '✅ დიზ. პროექტი ჩართ.',
+        '✅ ელ. ნახ. ჩართ.',
+        '✅ 3D ვიზ. ჩართ.',
+      ],
+      excludes: [],
+      design: null,
+    },
+  },
+};
+
+const SQM_RANGES = [
+  { label: '40–65 კვ.მ',  min: 40,  max: 65,  mid: 52  },
+  { label: '65–90 კვ.მ',  min: 65,  max: 90,  mid: 77  },
+  { label: '90–120 კვ.მ', min: 90,  max: 120, mid: 105 },
+  { label: '120–150 კვ.მ',min: 120, max: 150, mid: 135 },
+  { label: '150+ კვ.მ',   min: 150, max: 220, mid: 175 },
+];
+
+function GEO(n) {
+  return Math.round(n).toLocaleString('ka-GE');
+}
+
+function RenovationCalculator({ type, onSave }) {
+  const { db, dbRef, saveDB, toast, user } = useApp();
+  const [sqm, setSqm] = useState('');
+  const [selectedRange, setSelectedRange] = useState(null);
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [withDesign, setWithDesign] = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [comment, setComment] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  const tiers = RENO_TIERS[type];
+  const tierInfo = TIER_INFO[type];
+  const typeLabel = type === 'black' ? 'შავი კარკასი' : 'თეთრი კარკასი';
+  const typeIcon  = type === 'black' ? '🏗️' : '🏠';
+
+  const actualSqm = sqm ? Number(sqm) : (selectedRange ? selectedRange.mid : 0);
+
+  const calc = useMemo(() => {
+    if (!actualSqm || !selectedTier) return null;
+    const t = tiers[selectedTier];
+    const info = tierInfo[selectedTier];
+    const minTotal = actualSqm * t.min;
+    const maxTotal = actualSqm * t.max;
+    let designMin = 0, designMax = 0;
+    if (withDesign && info.design) {
+      const dp = info.design.price.replace('₾', '').split('/')[0].split('–');
+      designMin = actualSqm * Number(dp[0]);
+      designMax = actualSqm * Number(dp[1]);
+    }
+    return {
+      minTotal, maxTotal,
+      minWithDesign: minTotal + designMin,
+      maxWithDesign: maxTotal + designMax,
+      designMin, designMax,
+      hasDesign: withDesign && !!info.design,
+    };
+  }, [actualSqm, selectedTier, withDesign, tiers, tierInfo]);
+
+  const handleSaveReno = async () => {
+    if (!calc || !name.trim()) return;
+    const cur = dbRef?.current || db;
+    const estimate = {
+      id: uid(), type: 'renovation', renovationType: type,
+      client: { name, phone, sqm: actualSqm, comment },
+      tier: selectedTier, withDesign,
+      minTotal: calc.minTotal, maxTotal: calc.maxTotal,
+      minWithDesign: calc.minWithDesign, maxWithDesign: calc.maxWithDesign,
+      createdBy: user?.id, created: new Date().toISOString(),
+    };
+    const newDb = { ...cur, estimates: [...(cur.estimates || []), estimate] };
+    await saveDB(newDb);
+    toast('✅ კალკულაცია შენახულია');
+    setSaved(true);
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--accent)', marginBottom: 4 }}>
+          {typeIcon} {typeLabel} — საორიენტაციო კალკულაცია
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          ავეჯის გარეშე · ცდომილება 20–25% · ფასები მოიცავს სამუშაოს და მასალას
+        </div>
+      </div>
+
+      {/* Step 1 — SQM */}
+      <div className="card" style={{ padding: '20px 22px', marginBottom: 16 }}>
+        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>1️⃣ კვადრატულობა</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+          {SQM_RANGES.map(r => (
+            <button key={r.label}
+              onClick={() => { setSelectedRange(r); setSqm(''); setSaved(false); }}
+              style={{
+                padding: '8px 16px', border: 'none', borderRadius: 8, cursor: 'pointer',
+                fontSize: 13, fontWeight: 600,
+                background: selectedRange?.label === r.label
+                  ? 'linear-gradient(135deg, rgba(27,234,205,0.2), rgba(27,234,205,0.08))'
+                  : 'var(--bg-muted)',
+                color: selectedRange?.label === r.label ? 'var(--accent)' : 'var(--text-secondary)',
+                border: `1.5px solid ${selectedRange?.label === r.label ? 'var(--accent)' : 'var(--border)'}`,
+                transition: 'all .15s',
+              }}>
+              {r.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>ან ჩაწერეთ ზუსტი კვ.მ:</div>
+          <input className="input" type="number" min="20" max="999" value={sqm}
+            onChange={e => { setSqm(e.target.value.replace(/\D/g,'')); setSelectedRange(null); setSaved(false); }}
+            placeholder="მაგ: 87" style={{ width: 100, textAlign: 'center' }} />
+          {actualSqm > 0 && <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700 }}>{actualSqm} კვ.მ</span>}
+        </div>
+      </div>
+
+      {/* Step 2 — Tier */}
+      {actualSqm > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, padding: '0 2px' }}>2️⃣ სარემონტო კლასი</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            {Object.entries(tierInfo).map(([key, info]) => {
+              const t = tiers[key];
+              const active = selectedTier === key;
+              return (
+                <div key={key}
+                  onClick={() => { setSelectedTier(key); setWithDesign(false); setSaved(false); }}
+                  style={{
+                    border: `2px solid ${active ? t.color : 'var(--border)'}`,
+                    borderRadius: 12, padding: '16px 14px', cursor: 'pointer',
+                    background: active ? t.color + '0F' : 'var(--bg-card)',
+                    transition: 'all .18s',
+                  }}>
+                  <div style={{ fontSize: 22, marginBottom: 6 }}>{info.icon}</div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: t.color, marginBottom: 4 }}>{info.title}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.5 }}>{info.desc}</div>
+                  <div style={{ fontSize: 11, lineHeight: 1.7 }}>
+                    {info.includes.map((item, i) => (
+                      <div key={i} style={{ color: item.startsWith('✅') ? t.color : 'var(--text-secondary)' }}>
+                        {item.startsWith('✅') ? item : `✓ ${item}`}
+                      </div>
+                    ))}
+                    {info.excludes.length > 0 && (
+                      <div style={{ marginTop: 8 }}>
+                        {info.excludes.map((item, i) => (
+                          <div key={i} style={{ color: 'var(--text-muted)' }}>✗ {item}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {active && info.design && (
+                    <div onClick={e => e.stopPropagation()}
+                      style={{
+                        marginTop: 12, padding: '10px 12px',
+                        background: 'rgba(27,234,205,0.06)',
+                        border: '1px solid rgba(27,234,205,0.2)',
+                        borderRadius: 8,
+                      }}>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={withDesign}
+                          onChange={e => { setWithDesign(e.target.checked); setSaved(false); }}
+                          style={{ marginTop: 2, accentColor: 'var(--accent)' }} />
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>
+                            + {info.design.label}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{info.design.price}</div>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Result */}
+      {calc && selectedTier && (
+        <div className="card" style={{
+          padding: '20px 22px',
+          border: `1.5px solid ${tiers[selectedTier].color}44`,
+          marginBottom: 16,
+        }}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>3️⃣ საორიენტაციო ღირებულება</div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <div style={{ background: 'var(--bg-muted)', borderRadius: 10, padding: '14px 16px' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>სამუშაო + მასალა (მინ)</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: tiers[selectedTier].color }}>
+                ₾{GEO(calc.hasDesign ? calc.minWithDesign : calc.minTotal)}
+              </div>
+            </div>
+            <div style={{ background: 'var(--bg-muted)', borderRadius: 10, padding: '14px 16px' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>სამუშაო + მასალა (მაქს)</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: tiers[selectedTier].color }}>
+                ₾{GEO(calc.hasDesign ? calc.maxWithDesign : calc.maxTotal)}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, lineHeight: 1.7 }}>
+            <span style={{ color: 'var(--text-secondary)' }}>{actualSqm} კვ.მ</span>
+            {' × '}
+            <span style={{ color: tiers[selectedTier].color, fontWeight: 700 }}>
+              ₾{tiers[selectedTier].min}–{tiers[selectedTier].max}/კვ.მ
+            </span>
+            {calc.hasDesign && (
+              <span> + დიზ.: ₾{GEO(calc.designMin)}–₾{GEO(calc.designMax)}</span>
+            )}
+            {tierInfo[selectedTier].design === null && (
+              <span style={{ color: tiers[selectedTier].color }}> · დიზ. ჩართ.</span>
+            )}
+          </div>
+
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16,
+            background: 'rgba(27,234,205,0.05)', borderRadius: 8, padding: '8px 12px',
+            border: '1px solid rgba(27,234,205,0.1)' }}>
+            ⚠️ ეს საორიენტაციო ფასია. ზუსტი ფასი განისაზღვრება ობიექტის დათვალიერების შემდეგ. ცდომილება 20–25%.
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: 'var(--text-secondary)' }}>
+              💾 კალკულაციის შენახვა (სურვილისამებრ)
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label className="form-label req">სახელი გვარი</label>
+                <input className="input" value={name}
+                  onChange={e => { setName(e.target.value); setSaved(false); }}
+                  placeholder="კლიენტის სახელი" />
+              </div>
+              <div className="fg" style={{ marginBottom: 0 }}>
+                <label className="form-label">ტელეფონი</label>
+                <input className="input" value={phone} inputMode="numeric"
+                  onChange={e => { setPhone(e.target.value.replace(/\D/g,'').slice(0,9)); setSaved(false); }}
+                  placeholder="5XXXXXXXX" maxLength={9} />
+              </div>
+            </div>
+            <div className="fg" style={{ marginBottom: 10 }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                🔒 შიდა კომენტარი
+                <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 400 }}>(PDF-ში არ ჩანს)</span>
+              </label>
+              <textarea className="textarea" rows={2} value={comment}
+                onChange={e => { setComment(e.target.value); setSaved(false); }}
+                placeholder="შიდა შენიშვნა..." />
+            </div>
+            <button
+              className={`btn btn-sm ${saved ? 'btn-ghost' : 'btn-primary'}`}
+              style={{ width: '100%' }}
+              disabled={!name.trim() || saved}
+              onClick={handleSaveReno}>
+              {saved ? '✅ შენახულია' : '💾 შენახვა'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Client Info Step ───
 function ClientInfoStep({ initial, onNext }) {
   const [form, setForm] = useState(initial || {
@@ -633,35 +1013,60 @@ function EstimatesList({ onOpen }) {
             </tr>
           </thead>
           <tbody>
-            {estimates.map(est => (
-              <tr key={est.id}>
-                <td style={{ fontWeight: 600 }}>{est.client.name}</td>
-                <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                  {est.client.address}, სართ.{est.client.floor} / ბინა {est.client.apartment}
-                </td>
-                <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{est.client.sqm} მ²</td>
-                <td style={{ fontWeight: 700, color: 'var(--success)' }}>₾{GN(est.total)}</td>
-                <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {new Date(est.created).toLocaleDateString('ka-GE')}
-                </td>
-                <td style={{ fontSize: 11.5, color: 'var(--accent)', maxWidth: 160,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                  title={est.client.internalComment}>
-                  {est.client.internalComment || '—'}
-                </td>
-                <td>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button className="btn btn-ghost btn-xs" title="ნახვა"
-                      onClick={() => onOpen(est, true)}>👁️</button>
-                    <button className="btn btn-ghost btn-xs" title="რედაქტირება"
-                      onClick={() => onOpen(est, false)}>✏️</button>
-                    <button className="btn btn-ghost btn-xs" title="წაშლა"
-                      style={{ color: 'var(--danger)' }}
-                      onClick={() => setConfirmDel(est)}>🗑</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {estimates.map(est => {
+              const isReno = est.type === 'renovation';
+              return (
+                <tr key={est.id}>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{est.client.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>
+                      {isReno
+                        ? `${est.renovationType === 'black' ? '🏗️ შავი' : '🏠 თეთრი'} · ${RENO_TIERS[est.renovationType]?.[est.tier]?.label || ''}`
+                        : '⚡ ელექტრო'}
+                    </div>
+                    {(est.client.comment || est.client.internalComment) && (
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                        🔒 {est.client.comment || est.client.internalComment}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                    {isReno
+                      ? `${est.client.sqm} კვ.მ`
+                      : `${est.client.address || ''}, სართ.${est.client.floor || ''}`}
+                  </td>
+                  <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{est.client.sqm} მ²</td>
+                  <td style={{ fontWeight: 700, color: 'var(--success)' }}>
+                    {isReno
+                      ? `₾${GEO(est.minWithDesign || est.minTotal)}–₾${GEO(est.maxWithDesign || est.maxTotal)}`
+                      : `₾${GN(est.total)}`}
+                  </td>
+                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {new Date(est.created).toLocaleDateString('ka-GE')}
+                  </td>
+                  <td style={{ fontSize: 11.5, color: 'var(--accent)', maxWidth: 160,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    title={est.client.internalComment || est.client.comment}>
+                    {est.client.internalComment || est.client.comment || '—'}
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {!isReno && (
+                        <>
+                          <button className="btn btn-ghost btn-xs" title="ნახვა"
+                            onClick={() => onOpen(est, true)}>👁️</button>
+                          <button className="btn btn-ghost btn-xs" title="რედაქტირება"
+                            onClick={() => onOpen(est, false)}>✏️</button>
+                        </>
+                      )}
+                      <button className="btn btn-ghost btn-xs" title="წაშლა"
+                        style={{ color: 'var(--danger)' }}
+                        onClick={() => setConfirmDel(est)}>🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -733,9 +1138,10 @@ export default function CalculatorPage() {
   };
 
   const TABS = [
-    { key: 'points', label: '📍 წერტილებით დათვლა', sub: 'ცდომილება 10-15%' },
-    { key: 'sqm',    label: '📐 კვადრატულით დათვლა', sub: 'მალე დაემატება', disabled: true },
-    { key: 'saved',  label: `💾 დათვლილი პროექტები (${(db?.estimates || []).length})`, sub: '' },
+    { key: 'black',  label: '🏗️ შავი კარკასის რემონტი',  sub: 'ავეჯის გარეშე · ₾500–1800/კვ.მ' },
+    { key: 'white',  label: '🏠 თეთრი კარკასის რემონტი', sub: 'ავეჯის გარეშე · ₾300–1500/კვ.მ' },
+    { key: 'points', label: '⚡ ელექტრო და სუსტი დენები', sub: 'ცდომილება 10-15%' },
+    { key: 'saved',  label: `💾 შენახული პროექტები (${(db?.estimates || []).filter(e => !e.isDraft).length})`, sub: '' },
   ];
 
   return (
@@ -750,28 +1156,29 @@ export default function CalculatorPage() {
       {tab !== 'calc_view' && (
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
           {TABS.map(t => (
-            <button key={t.key} disabled={t.disabled}
+            <button key={t.key}
               onClick={() => { setTab(t.key); setStep('client'); setClientInfo(null); }}
               style={{
                 flex: 1, minWidth: 160, padding: '13px 16px', border: 'none',
-                borderRadius: 'var(--radius-md)', cursor: t.disabled ? 'not-allowed' : 'pointer',
+                borderRadius: 'var(--radius-md)', cursor: 'pointer',
                 background: tab === t.key
                   ? 'linear-gradient(135deg, rgba(27,234,205,0.15), rgba(27,234,205,0.05))'
                   : 'var(--bg-muted)',
                 border: `1.5px solid ${tab === t.key ? 'var(--accent)' : 'var(--border)'}`,
-                opacity: t.disabled ? 0.5 : 1, textAlign: 'left', transition: 'all .15s',
+                textAlign: 'left', transition: 'all .15s',
               }}>
               <div style={{ fontWeight: 700, fontSize: 13.5,
                 color: tab === t.key ? 'var(--accent)' : 'var(--text-primary)' }}>{t.label}</div>
               {t.sub && (
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {t.disabled ? '🔜 მალე' : t.sub}
-                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{t.sub}</div>
               )}
             </button>
           ))}
         </div>
       )}
+
+      {tab === 'black'  && <RenovationCalculator type="black"  onSave={handleSave} />}
+      {tab === 'white'  && <RenovationCalculator type="white"  onSave={handleSave} />}
 
       {tab === 'points' && (
         step === 'client'
@@ -781,14 +1188,6 @@ export default function CalculatorPage() {
               onSave={handleSave}
               onBack={() => setStep('client')}
             />
-      )}
-
-      {tab === 'sqm' && (
-        <div className="card" style={{ textAlign: 'center', padding: '60px 40px' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🔜</div>
-          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>მალე დაემატება</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>კვადრატულით დათვლა ამჟამად მუშავდება</div>
-        </div>
       )}
 
       {tab === 'saved' && <EstimatesList onOpen={handleOpen} />}
