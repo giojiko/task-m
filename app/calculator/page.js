@@ -1105,13 +1105,133 @@ function CalculatorStep({ client, onSave, onBack, existingEstimate, readOnly: in
   );
 }
 
+// ─── Leads List ───
+function LeadsList() {
+  const { db, dbRef, saveDB, toast } = useApp();
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const leads = useMemo(() =>
+    [...(db?.estimates || [])]
+      .filter(e => e.type === 'lead' && !e.isDraft)
+      .sort((a, b) => new Date(b.created) - new Date(a.created)),
+    [db?.estimates]
+  );
+
+  const deleteLead = async (lead) => {
+    const cur = dbRef?.current || db;
+    const newDb = { ...cur, estimates: (cur.estimates || []).filter(e => e.id !== lead.id) };
+    await saveDB(newDb);
+    toast('🗑 კლიენტი წაიშალა');
+    setConfirmDel(null);
+  };
+
+  if (!leads.length) return (
+    <div className="empty" style={{ padding: '60px 0' }}>
+      <div className="empty-icon">👥</div>
+      <div className="empty-title">კლიენტების ბაზა ცარიელია</div>
+      <div className="empty-sub">დაამატე კლიენტი "კლიენტის რეგისტრაცია" განყოფილებიდან</div>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>კლიენტი</th>
+              <th>ტელეფონი</th>
+              <th>მისამართი</th>
+              <th>ინტერესი</th>
+              <th>თარიღი</th>
+              <th style={{ width: 60 }}>მოქმ.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map(lead => (
+              <tr key={lead.id}>
+                <td>
+                  <div style={{ fontWeight: 600 }}>{lead.client.name}</div>
+                  {lead.client.internalComment && (
+                    <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>
+                      🔒 {lead.client.internalComment}
+                    </div>
+                  )}
+                </td>
+                <td style={{ fontSize: 13 }}>{lead.client.phone || '—'}</td>
+                <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                  {[lead.client.address, lead.client.floor && `სართ. ${lead.client.floor}`,
+                    lead.client.apartment && `ბინა ${lead.client.apartment}`]
+                    .filter(Boolean).join(', ') || '—'}
+                  {lead.client.sqm && (
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {lead.client.sqm} მ²
+                      {lead.client.rooms && ` · ${lead.client.rooms} ოთახი`}
+                    </div>
+                  )}
+                </td>
+                <td style={{ fontSize: 12 }}>
+                  {(lead.client.interests || []).length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {(lead.client.interests || []).map(k => {
+                        const int = INTERESTS.find(i => i.key === k);
+                        return int ? (
+                          <span key={k} style={{
+                            display: 'inline-block', padding: '2px 8px', borderRadius: 20,
+                            fontSize: 11, fontWeight: 600, background: 'rgba(27,234,205,0.08)',
+                            color: 'var(--accent)', border: '1px solid rgba(27,234,205,0.2)',
+                          }}>{int.label}</span>
+                        ) : null;
+                      })}
+                      {lead.client.otherInterest && (
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                          ✏️ {lead.client.otherInterest}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
+                  )}
+                </td>
+                <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                  {new Date(lead.created).toLocaleDateString('ka-GE')}
+                </td>
+                <td>
+                  <button className="btn btn-ghost btn-xs" title="წაშლა"
+                    style={{ color: 'var(--danger)' }}
+                    onClick={() => setConfirmDel(lead)}>🗑</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {confirmDel && (
+        <Modal open title="🗑 კლიენტის წაშლა" onClose={() => setConfirmDel(null)}
+          footer={<>
+            <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDel(null)}>გაუქმება</button>
+            <button className="btn btn-danger btn-sm" onClick={() => deleteLead(confirmDel)}>წაშლა</button>
+          </>}>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+            წაიშლება: <strong>{confirmDel.client.name}</strong><br />
+            <span style={{ fontSize: 12, color: 'var(--danger)' }}>⚠️ წაშლა შეუქცევადია</span>
+          </p>
+        </Modal>
+      )}
+    </>
+  );
+}
+
 // ─── Saved Estimates List ───
 function EstimatesList({ onOpen }) {
   const { db, dbRef, saveDB, toast } = useApp();
   const [confirmDel, setConfirmDel] = useState(null);
 
   const estimates = useMemo(() =>
-    [...(db?.estimates || [])].sort((a, b) => new Date(b.created) - new Date(a.created)),
+    [...(db?.estimates || [])]
+      .filter(e => e.type !== 'lead' && !e.isDraft)
+      .sort((a, b) => new Date(b.created) - new Date(a.created)),
     [db?.estimates]
   );
 
@@ -1289,11 +1409,17 @@ export default function CalculatorPage() {
     setTab('calc_view');
   };
 
+  const allEstimates   = (db?.estimates || []).filter(e => !e.isDraft);
+  const leadsCount     = allEstimates.filter(e => e.type === 'lead').length;
+  const projectsCount  = allEstimates.filter(e => e.type !== 'lead').length;
+
   const TABS = [
-    { key: 'black',  label: '🏗️ შავი კარკასის რემონტი',  sub: 'ავეჯის გარეშე · ₾500–1800/კვ.მ' },
-    { key: 'white',  label: '🏠 თეთრი კარკასის რემონტი', sub: 'ავეჯის გარეშე · ₾300–1500/კვ.მ' },
-    { key: 'points', label: '⚡ ელექტრო და სუსტი დენები', sub: 'ცდომილება 10-15%' },
-    { key: 'saved',  label: `💾 შენახული პროექტები (${(db?.estimates || []).filter(e => !e.isDraft).length})`, sub: '' },
+    { key: 'black',    label: '🏗️ შავი კარკასის რემონტი',               sub: 'ავეჯის გარეშე · ₾500–1800/კვ.მ' },
+    { key: 'white',    label: '🏠 თეთრი კარკასის რემონტი',              sub: 'ავეჯის გარეშე · ₾300–1500/კვ.მ' },
+    { key: 'points',   label: '⚡ ელექტრო და სუსტი დენები',              sub: 'ცდომილება 10-15%' },
+    { key: 'register', label: '👤 კლიენტის რეგისტრაცია',                 sub: 'სწრაფი დაფიქსირება' },
+    { key: 'leads',    label: `👥 კლიენტების ბაზა (${leadsCount})`,      sub: 'კალკულაციის გარეშე' },
+    { key: 'saved',    label: `💾 შენახული პროექტები (${projectsCount})`, sub: 'დათვლილი კალკულაციები' },
   ];
 
   return (
@@ -1337,7 +1463,7 @@ export default function CalculatorPage() {
           ? <ClientInfoStep
               initial={clientInfo}
               onNext={info => { setClientInfo(info); setStep('calc'); }}
-              onSaveOnly={() => setTab('saved')}
+              onSaveOnly={() => setTab('leads')}
             />
           : <CalculatorStep
               client={clientInfo}
@@ -1345,6 +1471,20 @@ export default function CalculatorPage() {
               onBack={() => setStep('client')}
             />
       )}
+
+      {tab === 'register' && (
+        <ClientInfoStep
+          initial={null}
+          onNext={info => {
+            setClientInfo(info);
+            setTab('points');
+            setStep('calc');
+          }}
+          onSaveOnly={() => setTab('leads')}
+        />
+      )}
+
+      {tab === 'leads' && <LeadsList />}
 
       {tab === 'saved' && <EstimatesList onOpen={handleOpen} />}
 
