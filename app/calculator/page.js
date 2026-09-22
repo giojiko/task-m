@@ -1363,7 +1363,8 @@ function EstimatesList({ onOpen }) {
 // ─── Main Page ───
 export default function CalculatorPage() {
   const { db, dbRef, saveDB, toast, user } = useApp();
-  const [tab, setTab] = useState('points');
+  const [tab, setTab] = useState('register');
+  const [calcTab, setCalcTab] = useState('black');
   const [step, setStep] = useState('client');
   const [clientInfo, setClientInfo] = useState(null);
   const [openEstimate, setOpenEstimate] = useState(null);
@@ -1409,74 +1410,108 @@ export default function CalculatorPage() {
     setTab('calc_view');
   };
 
-  const allEstimates   = (db?.estimates || []).filter(e => !e.isDraft);
-  const leadsCount     = allEstimates.filter(e => e.type === 'lead').length;
-  const projectsCount  = allEstimates.filter(e => e.type !== 'lead').length;
+  const allEstimates  = (db?.estimates || []).filter(e => !e.isDraft);
+  const leadsCount    = allEstimates.filter(e => e.type === 'lead').length;
+  const projectsCount = allEstimates.filter(e => e.type !== 'lead').length;
 
-  const TABS = [
-    { key: 'black',    label: '🏗️ შავი კარკასის რემონტი',               sub: 'ავეჯის გარეშე · ₾500–1800/კვ.მ' },
-    { key: 'white',    label: '🏠 თეთრი კარკასის რემონტი',              sub: 'ავეჯის გარეშე · ₾300–1500/კვ.მ' },
-    { key: 'points',   label: '⚡ ელექტრო და სუსტი დენები',              sub: 'ცდომილება 10-15%' },
-    { key: 'register', label: '👤 კლიენტის რეგისტრაცია',                 sub: 'სწრაფი დაფიქსირება' },
-    { key: 'leads',    label: `👥 კლიენტების ბაზა (${leadsCount})`,      sub: 'კალკულაციის გარეშე' },
-    { key: 'saved',    label: `💾 შენახული პროექტები (${projectsCount})`, sub: 'დათვლილი კალკულაციები' },
+  const isCalcTab = ['black', 'white', 'points'].includes(tab);
+
+  const MAIN_TABS = [
+    { key: 'register', label: '👤 კლიენტის რეგისტრაცია',                  sub: 'სწრაფი დაფიქსირება' },
+    { key: 'leads',    label: `👥 კლიენტების ბაზა (${leadsCount})`,       sub: 'კალკულაციის გარეშე' },
+    { key: 'calc',     label: '🧮 კალკულატორი',                            sub: 'შავი · თეთრი · ელექტრო' },
+    { key: 'saved',    label: `💾 შენახული პროექტები (${projectsCount})`,  sub: 'დათვლილი კალკულაციები' },
+  ];
+
+  const CALC_TABS = [
+    { key: 'black',  label: '🏗️ შავი კარკასი',            sub: '₾500–1800/კვ.მ' },
+    { key: 'white',  label: '🏠 თეთრი კარკასი',           sub: '₾300–1500/კვ.მ' },
+    { key: 'points', label: '⚡ ელექტრო და სუსტი დენები',  sub: 'ცდომილება 10-15%' },
   ];
 
   return (
     <AppShell>
       <div className="page-header" style={{ marginBottom: 20 }}>
         <div>
-          <div className="page-title">🧮 კალკულატორი</div>
-          <div className="page-subtitle">პროექტის საორიენტაციო ღირებულების გაანგარიშება</div>
+          <div className="page-title">👤 ახალი კლიენტი</div>
+          <div className="page-subtitle">კლიენტების ბაზა და პროექტების კალკულაცია</div>
         </div>
       </div>
 
+      {/* ─── მთავარი tab-ები ─── */}
       {tab !== 'calc_view' && (
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          {TABS.map(t => (
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+          {MAIN_TABS.map(t => {
+            const active = t.key === 'calc' ? isCalcTab : tab === t.key;
+            return (
+              <button key={t.key}
+                onClick={() => {
+                  if (t.key === 'calc') {
+                    setTab(calcTab);
+                  } else {
+                    setTab(t.key);
+                    setStep('client');
+                    setClientInfo(null);
+                  }
+                }}
+                style={{
+                  flex: 1, minWidth: 150, padding: '12px 16px', border: 'none',
+                  borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'left',
+                  background: active
+                    ? 'linear-gradient(135deg, rgba(27,234,205,0.15), rgba(27,234,205,0.05))'
+                    : 'var(--bg-muted)',
+                  border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                  transition: 'all .15s',
+                }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5,
+                  color: active ? 'var(--accent)' : 'var(--text-primary)' }}>{t.label}</div>
+                {t.sub && (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{t.sub}</div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ─── კალკულატორის ქვე-tab-ები ─── */}
+      {isCalcTab && tab !== 'calc_view' && (
+        <div style={{
+          display: 'flex', gap: 8, marginBottom: 20,
+          padding: '10px 12px', borderRadius: 12,
+          background: 'var(--bg-muted)', border: '1px solid var(--border)',
+        }}>
+          {CALC_TABS.map(t => (
             <button key={t.key}
-              onClick={() => { setTab(t.key); setStep('client'); setClientInfo(null); }}
+              onClick={() => {
+                setCalcTab(t.key);
+                setTab(t.key);
+                setStep('client');
+                setClientInfo(null);
+              }}
               style={{
-                flex: 1, minWidth: 160, padding: '13px 16px', border: 'none',
-                borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                background: tab === t.key
-                  ? 'linear-gradient(135deg, rgba(27,234,205,0.15), rgba(27,234,205,0.05))'
-                  : 'var(--bg-muted)',
-                border: `1.5px solid ${tab === t.key ? 'var(--accent)' : 'var(--border)'}`,
-                textAlign: 'left', transition: 'all .15s',
+                flex: 1, padding: '9px 14px', cursor: 'pointer', textAlign: 'left',
+                borderRadius: 8,
+                background: tab === t.key ? 'var(--bg-card)' : 'transparent',
+                border: `1.5px solid ${tab === t.key ? 'var(--accent)' : 'transparent'}`,
+                transition: 'all .15s',
               }}>
-              <div style={{ fontWeight: 700, fontSize: 13.5,
-                color: tab === t.key ? 'var(--accent)' : 'var(--text-primary)' }}>{t.label}</div>
-              {t.sub && (
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{t.sub}</div>
-              )}
+              <div style={{ fontWeight: 700, fontSize: 13,
+                color: tab === t.key ? 'var(--accent)' : 'var(--text-secondary)' }}>{t.label}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>{t.sub}</div>
             </button>
           ))}
         </div>
       )}
 
-      {tab === 'black'  && <RenovationCalculator type="black"  onSave={handleSave} />}
-      {tab === 'white'  && <RenovationCalculator type="white"  onSave={handleSave} />}
-
-      {tab === 'points' && (
-        step === 'client'
-          ? <ClientInfoStep
-              initial={clientInfo}
-              onNext={info => { setClientInfo(info); setStep('calc'); }}
-              onSaveOnly={() => setTab('leads')}
-            />
-          : <CalculatorStep
-              client={clientInfo}
-              onSave={handleSave}
-              onBack={() => setStep('client')}
-            />
-      )}
+      {/* ─── შიგთავსი ─── */}
 
       {tab === 'register' && (
         <ClientInfoStep
           initial={null}
           onNext={info => {
             setClientInfo(info);
+            setCalcTab('points');
             setTab('points');
             setStep('calc');
           }}
@@ -1486,13 +1521,30 @@ export default function CalculatorPage() {
 
       {tab === 'leads' && <LeadsList />}
 
+      {tab === 'black' && <RenovationCalculator type="black" onSave={handleSave} />}
+      {tab === 'white' && <RenovationCalculator type="white" onSave={handleSave} />}
+
+      {tab === 'points' && (
+        step === 'calc' && clientInfo
+          ? <CalculatorStep
+              client={clientInfo}
+              onSave={handleSave}
+              onBack={() => { setClientInfo(null); setStep('client'); }}
+            />
+          : <CalculatorStep
+              client={{ name: '—', phone: '', address: '', floor: '', apartment: '', sqm: '', rooms: '' }}
+              onSave={handleSave}
+              onBack={null}
+            />
+      )}
+
       {tab === 'saved' && <EstimatesList onOpen={handleOpen} />}
 
       {tab === 'calc_view' && openEstimate && (
         <div>
           <button className="btn btn-ghost btn-sm" style={{ marginBottom: 16 }}
             onClick={() => { setTab('saved'); setOpenEstimate(null); }}>
-            ← დათვლილი პროექტები
+            ← შენახული პროექტები
           </button>
           <CalculatorStep
             client={openEstimate.client}
@@ -1503,6 +1555,7 @@ export default function CalculatorPage() {
           />
         </div>
       )}
+
     </AppShell>
   );
 }
