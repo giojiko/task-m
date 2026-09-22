@@ -486,34 +486,98 @@ function RenovationCalculator({ type, onSave }) {
 }
 
 // ─── Client Info Step ───
-function ClientInfoStep({ initial, onNext }) {
+const INTERESTS = [
+  { key: 'black',   label: '🏗️ შავი კარკასის რემონტი' },
+  { key: 'white',   label: '🏠 თეთრი კარკასის რემონტი' },
+  { key: 'electro', label: '⚡ ელექტრო და სუსტი დენები' },
+  { key: 'other',   label: '✏️ სხვა (მიუთითეთ)' },
+];
+
+function ClientInfoStep({ initial, onNext, onSaveOnly }) {
+  const { db, dbRef, saveDB, toast, user } = useApp();
   const [form, setForm] = useState(initial || {
     name: '', phone: '', address: '', floor: '', apartment: '',
     sqm: '', rooms: '', internalComment: '',
+    interests: [],
+    otherInterest: '',
   });
-  const [err, setErr] = useState('');
-  const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  const [err, setErr]       = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved]   = useState(false);
 
-  const next = () => {
-    if (!form.name.trim())      return setErr('სახელი გვარი სავალდებულოა');
-    if (!form.phone.trim() || form.phone.replace(/\D/g, '').length !== 9)
-      return setErr('ტელეფონი — ზუსტად 9 ციფრი');
-    if (!form.address.trim())   return setErr('მისამართი სავალდებულოა');
-    if (!form.floor.trim())     return setErr('სართული სავალდებულოა');
-    if (!form.apartment.trim()) return setErr('ბინის ნომერი სავალდებულოა');
-    if (!form.sqm.trim())       return setErr('კვადრატულობა სავალდებულოა');
-    if (!form.rooms.trim())     return setErr('ოთახების რაოდენობა სავალდებულოა');
+  const upd = (k, v) => { setForm(p => ({ ...p, [k]: v })); setSaved(false); };
+
+  const toggleInterest = (key) => {
+    setForm(p => ({
+      ...p,
+      interests: p.interests.includes(key)
+        ? p.interests.filter(k => k !== key)
+        : [...p.interests, key],
+    }));
+    setSaved(false);
+  };
+
+  const validate = (requireAddress) => {
+    if (!form.name.trim()) { setErr('სახელი გვარი სავალდებულოა'); return false; }
+    if (form.phone.replace(/\D/g, '').length !== 9) { setErr('ტელეფონი — ზუსტად 9 ციფრი'); return false; }
+    if (requireAddress && !form.address.trim()) { setErr('მისამართი სავალდებულოა'); return false; }
+    return true;
+  };
+
+  const handleSaveOnly = async () => {
+    if (!validate(false)) return;
+    setSaving(true);
+    const cur = dbRef?.current || db;
+    const lead = {
+      id: uid(), type: 'lead',
+      client: {
+        name:            form.name.trim(),
+        phone:           form.phone,
+        address:         form.address.trim(),
+        floor:           form.floor,
+        apartment:       form.apartment,
+        sqm:             form.sqm,
+        rooms:           form.rooms,
+        internalComment: form.internalComment,
+        interests:       form.interests,
+        otherInterest:   form.otherInterest,
+      },
+      createdBy: user?.id,
+      created: new Date().toISOString(),
+    };
+    const newDb = { ...cur, estimates: [...(cur.estimates || []), lead] };
+    await saveDB(newDb);
+    toast('✅ კლიენტი დაფიქსირებული');
+    setSaved(true);
+    setSaving(false);
+    if (onSaveOnly) onSaveOnly();
+  };
+
+  const handleNext = () => {
+    if (!validate(true)) return;
+    if (!form.sqm.trim())   { setErr('კვადრატულობა სავალდებულოა'); return; }
+    if (!form.rooms.trim()) { setErr('ოთახების რაოდენობა სავალდებულოა'); return; }
     onNext(form);
   };
 
   const inputSm = { padding: '8px 8px', fontSize: 13, textAlign: 'center' };
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }}>
+    <div style={{ maxWidth: 580, margin: '0 auto' }}>
       <div className="card" style={{ padding: '24px 28px' }}>
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>👤 კლიენტის ინფორმაცია</div>
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>ყველა ველი სავალდებულოა</div>
+
+        <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>👤 კლიენტის რეგისტრაცია</div>
+        <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 22 }}>
+          სახელი და ტელეფონი სავალდებულოა. დანარჩენი — სურვილისამებრ.
+        </div>
+
         {err && <div className="err-box" style={{ marginBottom: 14 }}>{err}</div>}
+
+        {/* სავალდებულო */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)',
+          textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
+          სავალდებულო
+        </div>
 
         <div className="fg">
           <label className="form-label req">სახელი გვარი</label>
@@ -525,53 +589,92 @@ function ClientInfoStep({ initial, onNext }) {
           <label className="form-label req">ტელეფონის ნომერი</label>
           <input className="input" value={form.phone}
             onChange={e => upd('phone', e.target.value.replace(/\D/g, '').slice(0, 9))}
-            placeholder="5XXXXXXXX" maxLength={9}
-            style={{ letterSpacing: '.05em' }} />
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
-            ციფრების გარდა სხვა სიმბოლოები ავტომატურად მოიხსნება
-          </div>
+            placeholder="5XXXXXXXX" maxLength={9} style={{ letterSpacing: '.05em' }} />
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 14 }}>
+        {/* ინტერესები */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)',
+          textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10, marginTop: 6 }}>
+          ინტერესი / სამომავლო სამუშაო
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          {INTERESTS.map(int => (
+            <label key={int.key} style={{
+              display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+              padding: '10px 14px', borderRadius: 10, transition: 'all .15s',
+              background: form.interests.includes(int.key)
+                ? 'rgba(27,234,205,0.08)' : 'var(--bg-muted)',
+              border: `1.5px solid ${form.interests.includes(int.key)
+                ? 'var(--accent)' : 'var(--border)'}`,
+            }}>
+              <input type="checkbox"
+                checked={form.interests.includes(int.key)}
+                onChange={() => toggleInterest(int.key)}
+                style={{ width: 16, height: 16, accentColor: 'var(--accent)', cursor: 'pointer' }} />
+              <span style={{ fontSize: 14, fontWeight: form.interests.includes(int.key) ? 600 : 400,
+                color: form.interests.includes(int.key) ? 'var(--accent)' : 'var(--text-secondary)' }}>
+                {int.label}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        {form.interests.includes('other') && (
+          <div className="fg" style={{ marginBottom: 14 }}>
+            <label className="form-label">სხვა ინტერესი — მიუთითეთ</label>
+            <input className="input" value={form.otherInterest}
+              onChange={e => upd('otherInterest', e.target.value)}
+              placeholder="მაგ: სახანძრო სიგნალიზაცია, გარე განათება..." />
+          </div>
+        )}
+
+        {/* სურვილისამებრ */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+          textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12, marginTop: 6 }}>
+          სურვილისამებრ (კალკულაციისთვის)
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 12 }}>
           <div className="fg" style={{ flex: 1, marginBottom: 0 }}>
-            <label className="form-label req">ქუჩა / მისამართი</label>
+            <label className="form-label">ქუჩა / მისამართი</label>
             <input className="input" value={form.address}
               onChange={e => upd('address', e.target.value)} placeholder="ქუჩა, №" />
           </div>
           <div style={{ marginBottom: 0, width: 72 }}>
-            <label className="form-label req" style={{ display: 'block', marginBottom: 5 }}>სართ.</label>
+            <label className="form-label" style={{ display: 'block', marginBottom: 5 }}>სართ.</label>
             <input className="input" value={form.floor} maxLength={4}
               onChange={e => upd('floor', e.target.value.replace(/\D/g, '').slice(0, 4))}
               placeholder="5" style={inputSm} />
           </div>
           <div style={{ marginBottom: 0, width: 72 }}>
-            <label className="form-label req" style={{ display: 'block', marginBottom: 5 }}>ბინა №</label>
+            <label className="form-label" style={{ display: 'block', marginBottom: 5 }}>ბინა №</label>
             <input className="input" value={form.apartment} maxLength={4}
               onChange={e => upd('apartment', e.target.value.replace(/\D/g, '').slice(0, 4))}
               placeholder="14" style={inputSm} />
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
           <div className="fg" style={{ marginBottom: 0 }}>
-            <label className="form-label req">ბინის კვადრატულობა (მ²)</label>
+            <label className="form-label">კვადრატულობა (მ²)</label>
             <input className="input" value={form.sqm}
               onChange={e => upd('sqm', e.target.value.replace(/\D/g, ''))}
               placeholder="85" />
           </div>
           <div className="fg" style={{ marginBottom: 0 }}>
-            <label className="form-label req">ოთახების რაოდენობა</label>
+            <label className="form-label">ოთახების რაოდენობა</label>
             <input className="input" value={form.rooms}
               onChange={e => upd('rooms', e.target.value.replace(/\D/g, ''))}
               placeholder="3" />
           </div>
         </div>
 
-        <div className="fg" style={{ marginBottom: 18 }}>
+        <div className="fg" style={{ marginBottom: 20 }}>
           <label className="form-label">
             🔒 შიდა კომენტარი
-            <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 6, fontWeight: 400 }}>
-              (მხოლოდ ადმინ პანელში ჩანს, PDF-ში არ გამოჩნდება)
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 6, fontWeight: 400 }}>
+              (PDF-ში არ გამოჩნდება)
             </span>
           </label>
           <textarea className="textarea" rows={2} value={form.internalComment}
@@ -579,9 +682,20 @@ function ClientInfoStep({ initial, onNext }) {
             placeholder="შიდა შენიშვნები, კლიენტის სპეციფიკა..." />
         </div>
 
-        <button className="btn btn-primary" style={{ width: '100%' }} onClick={next}>
-          შემდეგი →
-        </button>
+        {/* ღილაკები */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            className={`btn btn-sm ${saved ? 'btn-ghost' : 'btn-secondary'}`}
+            style={{ flex: 1 }}
+            onClick={handleSaveOnly}
+            disabled={saving || saved}>
+            {saved ? '✅ შენახულია' : saving ? '⏳...' : '💾 დაფიქსირება (კალკ. გარეშე)'}
+          </button>
+          <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={handleNext}>
+            🧮 კალკულაციაზე გადასვლა →
+          </button>
+        </div>
+
       </div>
     </div>
   );
@@ -1037,15 +1151,25 @@ function EstimatesList({ onOpen }) {
           <tbody>
             {estimates.map(est => {
               const isReno = est.type === 'renovation';
+              const isLead = est.type === 'lead';
               return (
                 <tr key={est.id}>
                   <td>
                     <div style={{ fontWeight: 600 }}>{est.client.name}</div>
                     <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>
-                      {isReno
-                        ? `${est.renovationType === 'black' ? '🏗️ შავი' : '🏠 თეთრი'} · ${RENO_TIERS[est.renovationType]?.[est.tier]?.label || ''}`
-                        : '⚡ ელექტრო'}
+                      {isLead
+                        ? (est.client.interests?.length
+                          ? est.client.interests.map(k => INTERESTS.find(i => i.key === k)?.label).filter(Boolean).join(' · ')
+                          : '👤 ლიდი')
+                        : isReno
+                          ? `${est.renovationType === 'black' ? '🏗️ შავი' : '🏠 თეთრი'} · ${RENO_TIERS[est.renovationType]?.[est.tier]?.label || ''}`
+                          : '⚡ ელექტრო'}
                     </div>
+                    {isLead && est.client.otherInterest && (
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                        ✏️ {est.client.otherInterest}
+                      </div>
+                    )}
                     {(est.client.comment || est.client.internalComment) && (
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
                         🔒 {est.client.comment || est.client.internalComment}
@@ -1053,15 +1177,21 @@ function EstimatesList({ onOpen }) {
                     )}
                   </td>
                   <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                    {isReno
-                      ? `${est.client.sqm} კვ.მ`
-                      : `${est.client.address || ''}, სართ.${est.client.floor || ''}`}
+                    {isLead
+                      ? (est.client.address ? est.client.address : '—')
+                      : isReno
+                        ? `${est.client.sqm} კვ.მ`
+                        : `${est.client.address || ''}, სართ.${est.client.floor || ''}`}
                   </td>
-                  <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{est.client.sqm} მ²</td>
-                  <td style={{ fontWeight: 700, color: 'var(--success)' }}>
-                    {isReno
-                      ? `₾${GEO(est.minWithDesign || est.minTotal)}–₾${GEO(est.maxWithDesign || est.maxTotal)}`
-                      : `₾${GN(est.total)}`}
+                  <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                    {isLead ? (est.client.sqm ? `${est.client.sqm} მ²` : '—') : `${est.client.sqm} მ²`}
+                  </td>
+                  <td style={{ fontWeight: 700, color: isLead ? 'var(--text-muted)' : 'var(--success)' }}>
+                    {isLead
+                      ? '—'
+                      : isReno
+                        ? `₾${GEO(est.minWithDesign || est.minTotal)}–₾${GEO(est.maxWithDesign || est.maxTotal)}`
+                        : `₾${GN(est.total)}`}
                   </td>
                   <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                     {new Date(est.created).toLocaleDateString('ka-GE')}
@@ -1073,7 +1203,7 @@ function EstimatesList({ onOpen }) {
                   </td>
                   <td>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      {!isReno && (
+                      {!isReno && !isLead && (
                         <>
                           <button className="btn btn-ghost btn-xs" title="ნახვა"
                             onClick={() => onOpen(est, true)}>👁️</button>
@@ -1204,7 +1334,11 @@ export default function CalculatorPage() {
 
       {tab === 'points' && (
         step === 'client'
-          ? <ClientInfoStep initial={clientInfo} onNext={info => { setClientInfo(info); setStep('calc'); }} />
+          ? <ClientInfoStep
+              initial={clientInfo}
+              onNext={info => { setClientInfo(info); setStep('calc'); }}
+              onSaveOnly={() => setTab('saved')}
+            />
           : <CalculatorStep
               client={clientInfo}
               onSave={handleSave}
