@@ -318,15 +318,15 @@ export default function EmployeesPage() {
     refreshUser(newDb);
     toast(t('toast_emp_saved'));
 
-    if (isNew && tempPassword) {
+    if (tempPassword) {
       try {
         await fetch('/api/email/welcome', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ employeeId: data.id, tempPassword }),
+          body: JSON.stringify({ employeeId: data.id, tempPassword, type: isNew ? 'welcome' : 'reset' }),
         });
-      } catch (e) { console.warn('welcome email failed', e); }
+      } catch (e) { console.warn('email failed', e); }
     }
   };
 
