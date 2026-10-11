@@ -143,6 +143,16 @@ table.pt input.c{width:72px}
 table.pt tr.has td.code{color:var(--good)}
 table.pt .cost{font-family:var(--f-num);text-align:right;white-space:nowrap}
 table.pt .sale{font-weight:600;color:var(--accent)}
+.line.lv-bad{background:color-mix(in srgb,var(--bad) 12%,transparent);box-shadow:inset 3px 0 0 var(--bad)}
+.line.lv-bad input.sale{border-color:var(--bad);color:var(--bad)}
+.line.lv-warn{background:color-mix(in srgb,#e0b400 16%,transparent);box-shadow:inset 3px 0 0 #d4a800}
+.line.lv-warn input.sale{border-color:#d4a800}
+.lvmsg{font-size:11.5px;font-weight:600;grid-column:1/-1}.lvmsg:empty{display:none}
+.line.lv-bad .lvmsg{color:var(--bad)}.line.lv-warn .lvmsg{color:var(--warn)}
+tr.lv-warn td{background:color-mix(in srgb,#e0b400 12%,transparent)}tr.lv-bad td{background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:10px;white-space:nowrap}
+.badge.warn{background:#f6e7a8;color:#6b4e00}.badge.ok{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}.badge.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.smkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
 table.qt td{vertical-align:middle}table.qt .btn{padding:5px 10px;font-size:12px}
 .saved{font-size:12px;color:var(--good);min-height:16px}
 /* settings */
@@ -210,7 +220,7 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const LS={get(k,d){try{const v=localStorage.getItem("sp_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("sp_"+k,JSON.stringify(v))}catch(e){}}};
 
 const DEFAULTS={currency:"USD",usd:2.70,cny:0.38,freight:3,customs:0,bank:1,other:0,vat:false,markup:80,round:0,autoRate:true,rateType:"sell",rateAt:null,rateErr:null,
-  company:"შპს სმარტპრო ჯორჯია",phone:"+995 591 011 805",email:"akaki.i@smartpro.ge",address:"აკაკი წერეთლის ქუჩა 56, თბილისი",web:"smartpro.ge",validity:7,otherFix:0,shipFix:0,shipQty:1000,
+  company:"შპს სმარტპრო ჯორჯია",phone:"+995 591 011 805",email:"akaki.i@smartpro.ge",address:"აკაკი წერეთლის ქუჩა 56, თბილისი",web:"smartpro.ge",validity:7,minMk:30,okMk:80,otherFix:0,shipFix:0,shipQty:1000,
   footer:"ფასები მოიცავს დღგ-ს. მონტაჟის ღირებულება გამოითვლება ცალკე."};
 const KIND={ready:"მზა (ჩარჩოთი)",module:"მოდული",frame:"ჩარჩო"};
 const CAT={switch:"ჩამრთველები და რეგულატორები",socket:"როზეტები",weak:"ტელევიზია, ინტერნეტი, ტელეფონი",other:"სხვა",frame:"ჩარჩოები"};
@@ -288,12 +298,29 @@ function costParts(it,color){
   return{price,wg,goods,bank,freight,customs,other,fixed,vat,total:pre+vat}}
 function fixedPerUnit(){const S=settings;const q=N(S.shipQty)||0;return (N(S.otherFix)||0)+(q>0?(N(S.shipFix)||0)/q:0)}
 function roundUp(v){const r=N(settings.round)||0;return r>0?Math.ceil(v/r-1e-9)*r:Math.round(v*100)/100}
-function pmk(it){const v=N(prices[it.id]?.markup);return v!=null?v:(N(settings.markup)||0)}
+function smk(sid){const v=N(settings.seriesMk?.[sid]);return v!=null?v:(N(settings.markup)||0)}
+function pmk(it){const v=N(prices[it.id]?.markup);return v!=null?v:smk(it.sid||byId[it.id]?.sid)}
 function mkOf(line){const v=N(line.mk);return v!=null?v:pmk(byId[line.id])}
 function saleOf(line){const it=byId[line.id];if(N(line.sale)!=null)return N(line.sale);const c=costOf(it,line.color);if(c==null)return null;return roundUp(c*(1+mkOf(line)/100))}
 const fmt=v=>v==null?"":(Math.round(v*100)/100).toString();
 function lineCalc(l){const it=byId[l.id];const c=costOf(it,l.color),sale=saleOf(l);const man=N(l.sale)!=null;
-  const eff=c&&sale!=null?(sale/c-1)*100:null;return{c,sale,man,eff,pu:c!=null&&sale!=null?sale-c:null}}
+  const eff=c&&sale!=null?(sale/c-1)*100:null;return{c,sale,man,eff,amk:man?null:mkOf(l),pu:c!=null&&sale!=null?sale-c:null}}
+function lvl(k){if(k.c==null||k.sale==null||!(k.c>0))return"";const e=k.amk!=null?k.amk:(k.sale/k.c-1)*100+0.05;const mn=N(settings.minMk)??30,ok=N(settings.okMk)??80;
+  if(e<mn-1e-9)return"bad";if(e<ok-1e-9)return"warn";return""}
+const LVMSG={get bad(){return isSuper()?"ფასი დასაშვებ მინიმუმზე დაბალია — დაშვებულია, რადგან სუპერ ადმინი ხართ":canRed()?"ფასი დასაშვებ მინიმუმზე დაბალია — შეინახება, მაგრამ კლიენტის ვერსია დაიბეჭდება სუპერ ადმინის დადასტურების შემდეგ":"ფასი დასაშვებ მინიმუმზე დაბალია — ასეთი ფასით შეთავაზება არ შეინახება"},warn:"ექსტრა ფასდაკლება"};
+const role=()=>window.SP_ROLE||(window.parent===window?"super_admin":"specialist");
+const isSuper=()=>role()==="super_admin";
+const canRed=()=>role()==="super_admin"||role()==="admin";
+function badCount(){return canRed()?0:cart.filter(l=>lvl(lineCalc(l))==="bad").length}
+function redSig(lines){return lines.filter(l=>byId[l.id]&&lvl(lineCalc(l))==="bad").map(l=>l.id+"|"+l.color+"|"+(l.sale??"")+"|"+(l.mk??"")).sort().join(";")}
+function approvalFor(lines,prev){const sig=redSig(lines);if(!sig)return null;
+  if(isSuper())return{state:"approved",sig,at:new Date().toISOString()};
+  if(prev?.approval?.state==="approved"&&prev.approval.sig===sig)return prev.approval;
+  return{state:"pending",sig,at:new Date().toISOString()}}
+const isPending=q=>q?.approval?.state==="pending";
+const NEEDOK="ამ შეთავაზებაში ფასი მინიმუმზე დაბალია — კლიენტის ვერსია დაიბეჭდება სუპერ ადმინის დადასტურების შემდეგ";
+function approvalBadge(q){return isPending(q)?'<span class="badge bad">ელოდება სუპერ ადმინის დადასტურებას</span>':q?.approval?.state==="approved"?'<span class="badge ok">დადასტურებულია</span>':""}
+function syncLv(){const b=badCount(),r=!isSuper()&&cart.some(l=>lvl(lineCalc(l))==="bad")&&redSig(cart)!==(quotes.find(q=>curQ&&q.id===curQ.id)?.approval?.state==="approved"?quotes.find(q=>q.id===curQ.id).approval.sig:null);const sv=$("#saveq");if(sv)sv.disabled=!cart.length||b>0;["#preview","#download"].forEach(id=>{const el=$(id);if(el)el.disabled=!cart.length||b>0||r})}
 function profitHtml(l,k){if(k.pu==null)return`<span class="missing">თვითღირებულება უცნობია — შეიყვანეთ ფასი</span>`;
   const cls=k.pu<0?"neg":"";return`<span class="${cls}">მოგება 1 ცალზე: <b class="num">${gel(k.pu)}</b></span><span class="${cls}">სულ ${l.qty} ცალზე: <b class="num">${gel(k.pu*l.qty)}</b></span><span>ნამატი ${k.eff==null?"—":k.eff.toFixed(1)+"%"}</span>`}
 function totalsHtml(){let saleT=0,miss=0;cart.forEach(l=>{const k=lineCalc(l);if(k.sale==null)miss++;else saleT+=k.sale*l.qty});
@@ -303,7 +330,7 @@ function patchLine(i){const l=cart[i];const el=document.querySelector(`.line[dat
   const si=el.querySelector("[data-sale]"),mi=el.querySelector("[data-lmk]");
   if(si!==a)si.value=k.sale==null?"":k.sale.toFixed(2);si.classList.toggle("man",k.man);
   if(mi&&mi!==a)mi.value=k.man?(k.eff==null?"":k.eff.toFixed(1)):fmt(mkOf(l));
-  el.querySelector(".sum").textContent=k.sale==null?"—":gel(k.sale*l.qty);
+  el.querySelector(".sum").textContent=k.sale==null?"—":gel(k.sale*l.qty);const lv=lvl(k);el.classList.toggle("lv-bad",lv==="bad");el.classList.toggle("lv-warn",lv==="warn");const lm=el.querySelector(".lvmsg");if(lm)lm.textContent=lv?LVMSG[lv]:"";syncLv();
   const t=$("#totals");if(t)t.innerHTML=totalsHtml();saveCart()}
 
 /* ---------- data layer ---------- */
@@ -409,7 +436,7 @@ function renderQuote(){
           <input type="checkbox" id="ck-${it.id}" ${l?"checked":""} aria-label="${esc(it.code)}">
           <label class="ic" for="ck-${it.id}">${icon(it.icon,col.hex)}</label>
           <label class="nm" for="ck-${it.id}"><b>${esc(it.code)}</b><span>${esc(it.ka)}</span></label>
-          <div class="pr num">${cst==null?`<span class="missing">ფასი არ არის</span>`:`${gel(cst)}<small>გასაყიდი ≈ ${gel(sale)}</small>`}</div>
+          <div class="pr num">${cst==null?`<span class="missing">ფასი არ არის</span>`:`${gel(sale)}<small>ფასი 1 ცალზე</small>`}</div>
           <div class="qty"><button data-d="-1" aria-label="შემცირება">−</button><input id="q-${it.id}" inputmode="numeric" value="${l?l.qty:0}" aria-label="რაოდენობა"><button data-d="1" aria-label="გაზრდა">+</button></div>
         </div>`}).join("");
     }
@@ -433,9 +460,10 @@ function renderQuote(){
   </div>`;
 }
 function ledgerHtml(){
+  setTimeout(syncLv,0);
   const lines=cart.map((l,i)=>{const it=byId[l.id];const s=catalog.series.find(x=>x.id===it.sid);const col=s.colors.find(c=>c.id===l.color)||s.colors[0];const k=lineCalc(l);
-    return`<div class="line" data-i="${i}"><div class="t">${esc(it.ka)}<br><i>${esc(s.ka)} · ${esc(col.ka)} · <b>${esc(it.code)}</b></i></div><button class="x" data-rm="${i}" aria-label="წაშლა">×</button>
-      <div class="m"><label>რაოდენობა <input class="lq" data-lq="${i}" inputmode="numeric" value="${l.qty}"></label><label>ფასი <input class="sale${k.man?" man":""}" data-sale="${i}" inputmode="decimal" value="${k.sale==null?"":k.sale.toFixed(2)}" title="ფასი დათვლილია სტანდარტული ნამატით; შეგიძლიათ შეცვალოთ. გასუფთავებით დაბრუნდება დათვლილზე"> ₾</label><span class="sum num">${k.sale==null?"—":gel(k.sale*l.qty)}</span></div></div>`}).join("");
+    const lv=lvl(k);return`<div class="line${lv?" lv-"+lv:""}" data-i="${i}"><div class="t">${esc(it.ka)}<br><i>${esc(s.ka)} · ${esc(col.ka)} · <b>${esc(it.code)}</b></i></div><button class="x" data-rm="${i}" aria-label="წაშლა">×</button>
+      <div class="m"><label>რაოდენობა <input class="lq" data-lq="${i}" inputmode="numeric" value="${l.qty}"></label><label>ფასი <input class="sale${k.man?" man":""}" data-sale="${i}" inputmode="decimal" ${role()==="specialist"?"readonly":""} value="${k.sale==null?"":k.sale.toFixed(2)}" title="ფასი დათვლილია სტანდარტული ნამატით; შეგიძლიათ შეცვალოთ. გასუფთავებით დაბრუნდება დათვლილზე"> ₾</label><span class="sum num">${k.sale==null?"—":gel(k.sale*l.qty)}</span></div><div class="lvmsg">${lv?LVMSG[lv]:""}</div></div>`}).join("");
   return`<aside class="panel ledger">
     <div class="phead"><h3>შეთავაზება კლიენტისთვის</h3><span class="status">${curQ?`რედაქტირდება № ${esc(curQ.no)} — ცვლილების შემდეგ დააჭირეთ „შენახვა“`:"ახალი შეთავაზება"}</span><span class="status" id="saved"></span></div>
     <div class="fields">
@@ -443,12 +471,12 @@ function ledgerHtml(){
       <label>ობიექტი<input id="cl-project" value="${esc(client.project)}" placeholder="მაგალითად: ბინა, ვაკე"></label>
       <label class="full">შენიშვნა შეთავაზებაში<input id="cl-note" value="${esc(client.note)}" placeholder="არასავალდებულო"></label>
     </div>
-    <div class="lines">${lines||`<div class="empty">მონიშნეთ პროდუქტები მარცხენა ჩამონათვალში — აქ გამოჩნდება თვითღირებულება და გასაყიდი ფასი.</div>`}</div>
+    <div class="lines">${lines||`<div class="empty">მონიშნეთ პროდუქტები მარცხენა ჩამონათვალში — აქ გამოჩნდება ფასი.</div>`}</div>
     <div class="totals" id="totals">${totalsHtml()}</div>
     <div class="actions">
-      <button class="btn primary" id="saveq" ${cart.length?"":"disabled"}>შენახვა</button>
-      <button class="btn" id="preview" ${cart.length?"":"disabled"}>კლიენტის ვერსია</button>
-      <button class="btn" id="download" ${cart.length?"":"disabled"}>ჩამოტვირთვა დასაბეჭდად</button>
+      <button class="btn primary" id="saveq" ${cart.length&&!badCount()?"":"disabled"}>შენახვა</button>
+      <button class="btn" id="preview" ${cart.length&&!badCount()?"":"disabled"}>კლიენტის ვერსია</button>
+      <button class="btn" id="download" ${cart.length&&!badCount()?"":"disabled"}>ჩამოტვირთვა დასაბეჭდად</button>
       <button class="btn ghost" id="clear" ${cart.length||curQ?"":"disabled"}>ახალი შეთავაზება</button>
     </div>
     <p class="note">ფასი დათვლილია სტანდარტული ნამატით და ხელითაც იცვლება. მოგება ჩანს „შეთავაზებების“ ცხრილში. დაბეჭდვისას ან ჩამოტვირთვისას შეთავაზება ავტომატურად ინახება „შეთავაზებების“ ცხრილში.</p>
@@ -464,7 +492,7 @@ function renderPrices(){
     return`<tr class="${has?"has":""}" data-id="${it.id}"><td>${icon(it.icon,s.colors[0].hex)}</td><td class="code">${esc(it.code)}</td><td>${esc(it.ka)}<br><span style="color:var(--muted);font-size:11.5px">${KIND[it.kind]} · ${esc(it.en)}</span></td>
       <td><input id="p-${it.id}" data-f="price" inputmode="decimal" value="${esc(p.price??"")}" placeholder="0.00"></td>
       <td><input id="w-${it.id}" data-f="weight" inputmode="decimal" value="${esc(p.weight??"")}" placeholder="გრამი"></td>
-      <td><input class="c" id="m-${it.id}" data-f="markup" inputmode="decimal" value="${esc(p.markup??"")}" placeholder="${esc(settings.markup)}"></td>
+      <td><input class="c" id="m-${it.id}" data-f="markup" inputmode="decimal" value="${esc(p.markup??"")}" placeholder="${esc(smk(s.id))}"></td>
       <td class="cost sale" id="sale-${it.id}">${saleCell(it,c0)}</td>
       ${ui.pcolors?s.colors.map(c=>`<td><input class="c" id="c-${it.id}-${c.id}" data-color="${c.id}" inputmode="decimal" value="${esc(p.colors?.[c.id]??"")}" placeholder="—"></td>`).join(""):""}
       <td class="cost" id="cost-${it.id}">${gel(costOf(it,c0))}</td></tr>`}).join("");
@@ -500,6 +528,10 @@ function renderSettings(){setTimeout(()=>{["s-usd","s-cny"].forEach(id=>{const e
         <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="s-vat" data-s="vat" ${settings.vat?"checked":""}> დღგ 18% ჩავთვალოთ თვითღირებულებაში</label></fieldset>
       <fieldset><legend>გასაყიდი ფასი</legend>
         ${f("markup","ნამატი თვითღირებულებაზე, ნაგულისხმევი (%)")}
+        ${f("minMk","მინიმალური ნამატი — ამაზე დაბალი ფასით შეთავაზება არ შეინახება (%)")}
+        ${f("okMk","ამ ნამატის ქვემოთ ფასი ითვლება ექსტრა ფასდაკლებად (%)")}
+        <div style="font-weight:600;font-size:12.5px;color:var(--ink);margin-top:4px">ნამატი სერიების მიხედვით (%) — ცარიელი ნიშნავს ნაგულისხმევს</div>
+        <div class="smkgrid">${catalog.series.map(x=>`<label>${esc(x.ka)}<input data-smk="${x.id}" inputmode="decimal" value="${esc(settings.seriesMk?.[x.id]??"")}" placeholder="${esc(settings.markup)}"></label>`).join("")}</div>
         ${f("round","ავტომატური დამრგვალება ზემოთ, ლარი (0 — არ დამრგვალდეს; მაგალითად 0.1 ან 1)")}
         ${f("validity","შეთავაზება მოქმედებს (დღე)","number","1")}</fieldset>
       <fieldset><legend>შეთავაზების ფორმა</legend>
@@ -538,17 +570,17 @@ function persistQuotes(doc,del){
   LS.set("quotes",quotes);
 }
 function saveQuote(silent){
-  if(!cart.length)return;const now=new Date();
+  if(!cart.length)return false;if(badCount()){toast("წითლად მონიშნულ პროდუქტს ფასი ძალიან დაბალი აქვს — შეასწორეთ და შემდეგ შეინახეთ");return false}const now=new Date();
   if(!curQ){const no="SP-"+now.toISOString().slice(2,10).replace(/-/g,"")+"-"+String(now.getHours()).padStart(2,"0")+String(now.getMinutes()).padStart(2,"0")+String(now.getSeconds()).padStart(2,"0");curQ={id:"q"+now.getTime(),no,created:now.toISOString()}}
   let cost=0,total=0;
   const lines=cart.map(l=>{const it=byId[l.id];const s=catalog.series.find(x=>x.id===it.sid);const col=s.colors.find(c=>c.id===l.color)||s.colors[0];const k=lineCalc(l);
     if(k.c!=null&&k.sale!=null){cost+=k.c*l.qty;total+=k.sale*l.qty}
     return{id:l.id,color:l.color,qty:l.qty,sale:l.sale??null,mk:l.mk??null,code:it.code,ka:it.ka,series:s.ka,colorKa:col.ka,cost:k.c,price:k.sale}});
-  const doc={id:curQ.id,no:curQ.no,created:curQ.created||now.toISOString(),updated:now.toISOString(),client:{...client},lines,cost:Math.round(cost*100)/100,total:Math.round(total*100)/100,profit:Math.round((total-cost)*100)/100};
+  const prevQ=quotes.find(q=>q.id===curQ.id);const doc={id:curQ.id,no:curQ.no,created:curQ.created||now.toISOString(),updated:now.toISOString(),client:{...client},approval:approvalFor(cart,prevQ),lines,cost:Math.round(cost*100)/100,total:Math.round(total*100)/100,profit:Math.round((total-cost)*100)/100};
   const i=quotes.findIndex(q=>q.id===doc.id);if(i>-1)quotes[i]=doc;else quotes.unshift(doc);
-  LS.set("curq",curQ);persistQuotes(doc);if(!silent){toast("შეთავაზება № "+doc.no+" შენახულია. ფორმა მზადაა ახალი შეთავაზებისთვის");cart=[];client={name:"",project:"",phone:"",note:""};curQ=null;LS.set("curq",null);saveCart();render()}
+  LS.set("curq",curQ);persistQuotes(doc);saveQuote.last=doc;if(!silent){toast("შეთავაზება № "+doc.no+" შენახულია"+(isPending(doc)?" — გადაეგზავნა სუპერ ადმინს დასადასტურებლად":"")+". ფორმა მზადაა ახალი შეთავაზებისთვის");cart=[];client={name:"",project:"",phone:"",note:""};curQ=null;LS.set("curq",null);saveCart();render()}
 }
-function openQuote(id,print){const q=quotes.find(x=>x.id===id);if(!q)return;
+function openQuote(id,print){const q=quotes.find(x=>x.id===id);if(!q)return;if(print&&isPending(q)){toast(NEEDOK);return}
   cart=q.lines.filter(l=>byId[l.id]).map(l=>({id:l.id,color:l.color,qty:l.qty,sale:l.sale,mk:l.mk}));client={name:"",project:"",phone:"",note:"",...q.client};
   curQ={id:q.id,no:q.no,created:q.created};LS.set("curq",curQ);saveCart();ui.tab=openQuote.toTab||"quote";openQuote.toTab=null;saveUi();render();if(print)showPreview()}
 function deleteQuote(id){const i=quotes.findIndex(q=>q.id===id);if(i<0)return;const [d]=quotes.splice(i,1);if(curQ&&curQ.id===id){curQ=null;LS.set("curq",null)}persistQuotes(d,true);render();toast("შეთავაზება წაიშალა")}
@@ -558,10 +590,10 @@ function renderQuotes(){
   let T=0,P=0;list.forEach(x=>{T+=x.total||0;P+=x.profit||0});
   const d=v=>{const t=new Date(v);return t.toLocaleDateString("ka-GE")+" "+t.toLocaleTimeString("ka-GE",{hour:"2-digit",minute:"2-digit"})};
   $("#view").innerHTML=`<section class="panel"><div class="phead"><h3 style="margin:0;font-size:15px">შედგენილი შეთავაზებები</h3><span class="status">${quotes.length} შეთავაზება</span><input class="search" id="qsearch" placeholder="ძებნა: კლიენტი, ობიექტი, ნომერი" value="${esc(ui.qq||"")}"></div>
-  ${list.length?`<div class="tblwrap"><table class="pt qt"><thead><tr><th>ნომერი</th><th>თარიღი</th><th>კლიენტი</th><th>ობიექტი</th><th style="text-align:right">რაოდენობა (პოზიცია)</th><th style="text-align:right">თვითღირებულება</th><th style="text-align:right">კლიენტის ფასი</th><th style="text-align:right">მოგება</th><th></th></tr></thead><tbody>
-  ${list.map(x=>`<tr${curQ&&curQ.id===x.id?' class="has"':""}><td class="code">${esc(x.no)}</td><td style="white-space:nowrap">${d(x.updated||x.created)}</td><td>${esc(x.client?.name||"—")}</td><td>${esc(x.client?.project||"—")}</td><td class="cost">${x.lines.reduce((a,l)=>a+l.qty,0)} ცალი (${x.lines.length})</td><td class="cost">${gel(x.cost)}</td><td class="cost"><b>${gel(x.total)}</b></td><td class="cost" style="color:var(--good)">${gel(x.profit)}</td>
-  <td style="white-space:nowrap"><button class="btn" data-qopen="${x.id}">რედაქტირება</button> <button class="btn" data-qprint="${x.id}">დაბეჭდვა</button> <button class="btn ghost" data-qdel="${x.id}">წაშლა</button></td></tr>`).join("")}
-  <tr><td colspan="6" style="text-align:right;color:var(--muted)">სულ ${list.length} შეთავაზება</td><td class="cost"><b>${gel(T)}</b></td><td class="cost" style="color:var(--good)"><b>${gel(P)}</b></td><td></td></tr></tbody></table></div>`
+  ${list.length?`<div class="tblwrap"><table class="pt qt"><thead><tr><th>ნომერი</th><th>თარიღი</th><th>კლიენტი</th><th>ობიექტი</th><th style="text-align:right">რაოდენობა (პოზიცია)</th><th style="text-align:right">კლიენტის ფასი</th><th></th></tr></thead><tbody>
+  ${list.map(x=>`<tr${curQ&&curQ.id===x.id?' class="has"':""}><td class="code">${esc(x.no)}</td><td style="white-space:nowrap">${d(x.updated||x.created)}</td><td>${esc(x.client?.name||"—")}</td><td>${esc(x.client?.project||"—")}</td><td class="cost">${x.lines.reduce((a,l)=>a+l.qty,0)} ცალი (${x.lines.length})</td><td class="cost"><b>${gel(x.total)}</b></td>
+  <td style="white-space:nowrap">${approvalBadge(x)} ${isPending(x)&&isSuper()?`<button class="btn primary" data-qok="${x.id}">დადასტურება</button> `:""}<button class="btn" data-qopen="${x.id}">რედაქტირება</button> <button class="btn" data-qprint="${x.id}" ${isPending(x)?"disabled":""}>დაბეჭდვა</button> <button class="btn ghost" data-qdel="${x.id}">წაშლა</button></td></tr>`).join("")}
+  <tr><td colspan="5" style="text-align:right;color:var(--muted)">სულ ${list.length} შეთავაზება</td><td class="cost"><b>${gel(T)}</b></td><td></td></tr></tbody></table></div>`
   :`<div class="empty">${quotes.length?"ძებნით ვერაფერი მოიძებნა.":"ჯერ არცერთი შეთავაზება არ არის შენახული. „შეთავაზების შედგენა“ გვერდზე დააჭირეთ „შენახვა“ ან დაბეჭდეთ — შეთავაზება აქ გამოჩნდება."}</div>`}</section>`;
 }
 
@@ -569,13 +601,14 @@ function renderQuotes(){
 function recomputeQuote(q){let cost=0,total=0;q.lines.forEach(l=>{const k=lineCalc(l);if(k.c!=null&&k.sale!=null){cost+=k.c*l.qty;total+=k.sale*l.qty};l.cost=k.c;l.price=k.sale});
   q.cost=Math.round(cost*100)/100;q.total=Math.round(total*100)/100;q.profit=Math.round((total-cost)*100)/100;q.updated=new Date().toISOString()}
 function renderInternal(){
-  const q=ui.iq&&quotes.find(x=>x.id===ui.iq);
-  if(!q){ui.iq=null;
+  if(ui.iq&&(!ui.idraft||ui.idraft.id!==ui.iq)){const o=quotes.find(x=>x.id===ui.iq);ui.idraft=o?JSON.parse(JSON.stringify(o)):null;ui.idirty=false}
+  const q=ui.iq&&ui.idraft;
+  if(!q){ui.iq=null;ui.idraft=null;ui.idirty=false;
     const list=[...quotes].sort((a,b)=>(b.updated||"").localeCompare(a.updated||""));
     const d=v=>{const t=new Date(v);return t.toLocaleDateString("ka-GE")+" "+t.toLocaleTimeString("ka-GE",{hour:"2-digit",minute:"2-digit"})};
     $("#view").innerHTML=`<section class="panel"><div class="phead"><h3 style="margin:0;font-size:15px">შიდა კალკულატორი</h3><span class="status">მხოლოდ კომპანიისთვის — აირჩიეთ შეთავაზება დეტალური ანალიზისთვის</span></div>
-    ${list.length?`<div class="tblwrap"><table class="pt qt"><thead><tr><th>ნომერი</th><th>თარიღი</th><th>კლიენტი</th><th>ობიექტი</th><th style="text-align:right">პოზიცია</th><th style="text-align:right">კლიენტის ფასი</th><th></th></tr></thead><tbody>
-    ${list.map(x=>`<tr><td class="code">${esc(x.no)}</td><td style="white-space:nowrap">${d(x.updated||x.created)}</td><td>${esc(x.client?.name||"—")}</td><td>${esc(x.client?.project||"—")}</td><td class="cost">${x.lines.length}</td><td class="cost"><b>${gel(x.total)}</b></td><td><button class="btn primary" data-iopen="${x.id}">გახსნა</button></td></tr>`).join("")}</tbody></table></div>`
+    ${list.length?`<div class="tblwrap"><table class="pt qt"><thead><tr><th>ნომერი</th><th>თარიღი</th><th>კლიენტი</th><th>ობიექტი</th><th style="text-align:right">პოზიცია</th><th style="text-align:right">თვითღირებულება</th><th style="text-align:right">კლიენტის ფასი</th><th style="text-align:right">მოგება</th><th></th></tr></thead><tbody>
+    ${list.map(x=>`<tr><td class="code">${esc(x.no)}</td><td style="white-space:nowrap">${d(x.updated||x.created)}</td><td>${esc(x.client?.name||"—")}</td><td>${esc(x.client?.project||"—")}</td><td class="cost">${x.lines.length}${(()=>{const n=x.lines.filter(l=>byId[l.id]&&lvl(lineCalc(l))).length;return (n?`<div><span class="badge warn">ექსტრა ფასდაკლება: ${n}</span></div>`:"")+(approvalBadge(x)?`<div>${approvalBadge(x)}</div>`:"")})()}</td><td class="cost">${gel(x.cost)}</td><td class="cost"><b>${gel(x.total)}</b></td><td class="cost" style="color:var(--good)">${gel(x.profit)}</td><td><button class="btn primary" data-iopen="${x.id}">გახსნა</button></td></tr>`).join("")}</tbody></table></div>`
     :`<div class="empty">შენახული შეთავაზება ჯერ არ არის.</div>`}</section>`;return}
   const S=settings;const g=v=>v==null?"—":(Math.round(v*100)/100).toFixed(2);
   let T={goods:0,bank:0,freight:0,cust:0,fixed:0,vat:0,cost:0,sale:0};
@@ -583,7 +616,7 @@ function renderInternal(){
     const cp=costParts(it,l.color);const k=lineCalc(l);const qty=l.qty;
     if(cp&&k.sale!=null){T.goods+=cp.goods*qty;T.bank+=cp.bank*qty;T.freight+=cp.freight*qty;T.cust+=(cp.customs+cp.other)*qty;T.fixed+=cp.fixed*qty;T.vat+=cp.vat*qty;T.cost+=cp.total*qty;T.sale+=k.sale*qty}
     const mk=k.man?k.eff:mkOf(l);const marg=k.sale&&k.pu!=null?k.pu/k.sale*100:null;
-    return`<tr class="${k.pu!=null&&k.pu<0?"negrow":""}"><td><b>${esc(it.ka)}</b><div class="sub">${esc(sc.ka)} · ${esc(col.ka)} · ${esc(it.code)}</div></td>
+    const lv=lvl(k);return`<tr class="${k.pu!=null&&k.pu<0?"negrow":""}${lv?" lv-"+lv:""}"><td><b>${esc(it.ka)}</b>${lv==="warn"?' <span class="badge warn">ექსტრა ფასდაკლება</span>':lv==="bad"?' <span class="badge bad">მინიმუმზე დაბალი ფასი</span>':""}<div class="sub">${esc(sc.ka)} · ${esc(col.ka)} · ${esc(it.code)}</div></td>
       <td><input class="iq" id="iq-${i}" data-iq="${i}" inputmode="numeric" value="${qty}"></td>
       <td class="cost">${cp?esc(g(cp.price))+" "+cur():"—"}<div class="sub">${cp&&cp.wg?cp.wg+" გრამი":"წონა არ არის"}</div></td>
       <td class="cost">${cp?g(cp.goods+cp.bank):"—"}</td><td class="cost">${cp?g(cp.freight):"—"}</td><td class="cost">${cp?g(cp.customs+cp.other):"—"}</td><td class="cost">${cp?g(cp.fixed+cp.vat):"—"}</td>
@@ -593,7 +626,7 @@ function renderInternal(){
       <td class="cost profit">${k.pu==null?"—":g(k.pu)}</td><td class="cost profit strong">${k.pu==null?"—":g(k.pu*qty)}</td><td class="cost">${marg==null?"—":marg.toFixed(1)+"%"}</td></tr>`}).join("");
   const P=T.sale-T.cost;
   $("#view").innerHTML=`<section class="panel">
-    <div class="phead"><button class="btn" id="iback">← ყველა შეთავაზება</button><h3 style="margin:0;font-size:15px">№ ${esc(q.no)}${q.client?.name?" · "+esc(q.client.name):""}${q.client?.project?" · "+esc(q.client.project):""}</h3><span class="status">მხოლოდ კომპანიისთვის</span><span class="saved" id="saved"></span></div>
+    <div class="phead"><button class="btn" id="iback">← ყველა შეთავაზება</button><button class="btn primary" id="isave" ${ui.idirty?"":"disabled"}>შენახვა</button><button class="btn" id="icancel" ${ui.idirty?"":"disabled"}>ცვლილებების გაუქმება</button>${approvalBadge(q)}${isPending(q)&&isSuper()&&!ui.idirty?`<button class="btn primary" data-qok="${q.id}">დადასტურება</button>`:""}<span class="status" style="color:var(--warn);font-weight:600">${ui.idirty?"ცვლილებები ჯერ არ არის შენახული":""}</span><h3 style="margin:0;font-size:15px">№ ${esc(q.no)}${q.client?.name?" · "+esc(q.client.name):""}${q.client?.project?" · "+esc(q.client.project):""}</h3><span class="status">მხოლოდ კომპანიისთვის</span><span class="saved" id="saved"></span></div>
     <div class="kpis">
       <div><span>თვითღირებულება სულ</span><b>${gel(T.cost)}</b></div>
       <div><span>კლიენტის ფასი სულ</span><b>${gel(T.sale)}</b></div>
@@ -602,7 +635,7 @@ function renderInternal(){
       <div><span>მოგების წილი ფასში</span><b>${T.sale?(P/T.sale*100).toFixed(1):"0.0"}%</b></div></div>
     <div class="tblwrap"><table class="pt it"><thead><tr><th>პროდუქტი</th><th>რაოდენობა</th><th style="text-align:right">ქარხნის ფასი</th><th style="text-align:right">საქონელი + ბანკი (₾)</th><th style="text-align:right">გადაზიდვა (₾)</th><th style="text-align:right">საბაჟო და სხვა % (₾)</th><th style="text-align:right">ფიქსირებული${S.vat?" და დღგ":""} (₾)</th><th style="text-align:right">თვითღირებულება 1 ცალი (₾)</th><th>ნამატი</th><th>ფასი 1 ცალი (₾)</th><th style="text-align:right">მოგება 1 ცალი (₾)</th><th style="text-align:right">მოგება სულ (₾)</th><th style="text-align:right">მოგების წილი ფასში</th></tr></thead>
     <tbody>${rows}<tr class="tot"><td>სულ (ყველა ცალი)</td><td></td><td></td><td class="cost">${g(T.goods+T.bank)}</td><td class="cost">${g(T.freight)}</td><td class="cost">${g(T.cust)}</td><td class="cost">${g(T.fixed+T.vat)}</td><td class="cost strong">${g(T.cost)}</td><td></td><td class="cost strong">${g(T.sale)}</td><td></td><td class="cost profit strong">${g(P)}</td><td class="cost">${T.sale?(P/T.sale*100).toFixed(1)+"%":"—"}</td></tr></tbody></table></div>
-    <div class="formula" style="margin-top:14px">გამოყენებული პარამეტრები: 1 დოლარი = ${esc(S.usd)} ₾, 1 იუანი = ${esc(S.cny)} ₾ · ბანკი ${esc(S.bank)}% · გადაზიდვა ${esc(S.freight)} დოლარი 1 კილოგრამზე · საბაჟო ${esc(S.customs)}% · სხვა ${esc(S.other)}% · ფიქსირებული ${gel(fixedPerUnit())} ერთ ცალზე${S.vat?" · დღგ 18%":""}.<br>რაოდენობის, ნამატის ან ფასის შეცვლა აქვე ინახება შეთავაზებაში. ცარიელი ფასი — დაბრუნდება ნამატით დათვლილზე.</div>
+    <div class="formula" style="margin-top:14px">გამოყენებული პარამეტრები: 1 დოლარი = ${esc(S.usd)} ₾, 1 იუანი = ${esc(S.cny)} ₾ · ბანკი ${esc(S.bank)}% · გადაზიდვა ${esc(S.freight)} დოლარი 1 კილოგრამზე · საბაჟო ${esc(S.customs)}% · სხვა ${esc(S.other)}% · ფიქსირებული ${gel(fixedPerUnit())} ერთ ცალზე${S.vat?" · დღგ 18%":""}.<br>რაოდენობის, ნამატის ან ფასის შეცვლა შეთავაზებაში ჩაიწერება მხოლოდ „შენახვაზე“ დაჭერის შემდეგ. ცარიელი ფასი — დაბრუნდება ნამატით დათვლილზე.</div>
   </section>`;
 }
 /* ---------- client document ---------- */
@@ -640,11 +673,11 @@ let PAGES=null;function pageSrc(n){if(PAGES===null){try{PAGES=JSON.parse(documen
 function showGallery(sid){const s=catalog.series.find(x=>x.id===sid);
   $("#modal").innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-label="ფოტო კატალოგი"><div class="box gallery"><div class="bar"><strong>${esc(s.ka)} — ფოტო კატალოგი</strong><span style="font-size:12px;color:var(--muted)">დააჭირეთ გვერდს გასადიდებლად</span><button class="btn" id="m-close">დახურვა</button></div>
   <div class="gscroll">${s.pages.map((n,i)=>`<button class="gimg" aria-label="გვერდი ${i+1}"><img src="${pageSrc(n)}" alt="${esc(s.ka)}, გვერდი ${i+1}" loading="lazy"></button>`).join("")}</div></div></div>`}
-function showPreview(){saveQuote(true);
+function showPreview(){if(saveQuote(true)===false)return;if(isPending(saveQuote.last)){toast(NEEDOK);render();return}
   $("#modal").innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-label="კლიენტის ვერსია"><div class="box"><div class="bar"><strong>კლიენტის ვერსია (ასე დაიბეჭდება)</strong><button class="btn primary" id="m-print">დაბეჭდვა</button><button class="btn" id="m-dl">ჩამოტვირთვა</button><button class="btn" id="m-close">დახურვა</button></div><iframe id="m-frame" title="შეთავაზება"></iframe></div></div>`;
   $("#m-frame").srcdoc=offerHtml();
 }
-async function download(){saveQuote(true);
+async function download(){if(saveQuote(true)===false)return;if(isPending(saveQuote.last)){toast(NEEDOK);render();return}
   const name="SmartPro-შეთავაზება-"+(client.name?client.name.replace(/[\\/:*?"<>|]+/g,"").slice(0,40)+"-":"")+new Date().toISOString().slice(0,10)+".html";
   if(!dl){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([offerHtml()],{type:"text/html"}));a.download=name;document.body.appendChild(a);a.click();a.remove();toast("ფაილი ჩამოიტვირთა");return}
   try{await dl.save({filename:name,data:offerHtml()});toast("ფაილი შენახულია — გახსენით და დაბეჭდვის ფანჯარა თავად გაიხსნება")}
@@ -654,7 +687,7 @@ async function download(){saveQuote(true);
 /* ---------- events ---------- */
 document.addEventListener("click",e=>{
   const t=e.target.closest("button,input[type=checkbox]");if(!t)return;
-  if(t.dataset.tab){ui.tab=t.dataset.tab;if(ui.tab==="internal")ui.iq=null;saveUi();render();return}
+  if(t.dataset.tab){if(ui.tab==="internal"&&ui.idirty){toast("შიდა კალკულატორის ცვლილებები არ შეინახა");ui.idirty=false;ui.idraft=null}ui.tab=t.dataset.tab;if(ui.tab==="internal")ui.iq=null;saveUi();render();return}
   if(t.dataset.sid){ui.sid=t.dataset.sid;ui.kind="all";ui.cat="all";saveUi();render();return}
   if(t.dataset.psid){ui.psid=t.dataset.psid;saveUi();render();return}
   if(t.dataset.color&&t.classList.contains("cbtn")){ui.color=t.dataset.color;saveUi();render();return}
@@ -672,8 +705,15 @@ document.addEventListener("click",e=>{
   if(t.id==="saveq"){saveQuote(false);return}
   if(t.id==="refreshrate"){fetchRates(true);return}
   if(t.dataset.qopen){openQuote(t.dataset.qopen,false);return}
-  if(t.dataset.iopen){ui.iq=t.dataset.iopen;render();window.scrollTo(0,0);return}
-  if(t.id==="iback"){ui.iq=null;render();return}
+  if(t.dataset.iopen){ui.iq=t.dataset.iopen;ui.idraft=null;render();window.scrollTo(0,0);return}
+  if(t.id==="iback"){if(ui.idirty)toast("ცვლილებები არ შეინახა");ui.iq=null;ui.idraft=null;ui.idirty=false;render();return}
+  if(t.id==="icancel"){ui.idraft=null;ui.idirty=false;render();toast("ცვლილებები გაუქმდა");return}
+  if(t.id==="isave"){const Q=ui.idraft;if(!Q)return;
+    if(!canRed()&&Q.lines.some(l=>byId[l.id]&&lvl(lineCalc(l))==="bad")){toast("წითლად მონიშნულ პროდუქტს ფასი მინიმუმზე დაბალი აქვს");return}
+    const doc=JSON.parse(JSON.stringify(Q));doc.approval=approvalFor(doc.lines,quotes.find(x=>x.id===doc.id));const i=quotes.findIndex(x=>x.id===doc.id);if(i>-1)quotes[i]=doc;else quotes.unshift(doc);persistQuotes(doc);
+    if(curQ&&curQ.id===doc.id){cart=doc.lines.map(l=>({id:l.id,color:l.color,qty:l.qty,sale:l.sale,mk:l.mk}));saveCart()}
+    ui.idirty=false;ui.idraft=null;render();toast("შეთავაზება № "+doc.no+" შენახულია"+(isPending(doc)?" — ელოდება სუპერ ადმინის დადასტურებას":""));return}
+  if(t.dataset.qok){if(!isSuper())return;const q=quotes.find(x=>x.id===t.dataset.qok);if(!q)return;q.approval={state:"approved",sig:redSig(q.lines),at:new Date().toISOString()};persistQuotes(q);ui.idraft=null;render();toast("შეთავაზება № "+q.no+" დადასტურებულია — ახლა შეიძლება დაბეჭდვა");return}
   if(t.dataset.qprint){openQuote(t.dataset.qprint,true);return}
   if(t.dataset.qdel){if(t.dataset.sure){deleteQuote(t.dataset.qdel)}else{t.dataset.sure="1";t.textContent="დარწმუნებული ხართ?";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent="წაშლა"}},3000)}return}
   if(t.id==="s-autoRate"){settings.autoRate=t.checked;saveSettings();if(t.checked)fetchRates(true);else render();return}
@@ -689,19 +729,20 @@ function setQty(id,q){
 }
 document.addEventListener("input",e=>{
   const t=e.target;
+  if(t.dataset.smk){const v=t.value.trim().replace(",",".");settings.seriesMk={...(settings.seriesMk||{}),[t.dataset.smk]:v===""?null:v};saveSettings();const ex=$("#example");if(ex)ex.innerHTML=exampleHtml();return}
   if(t.id==="qsearch"){ui.qq=t.value;const pos=t.selectionStart;render();const s=$("#qsearch");s.focus();s.setSelectionRange(pos,pos);return}
   if(t.id==="search"){ui.q=t.value;const pos=t.selectionStart;render();const s=$("#search");s.focus();s.setSelectionRange(pos,pos);return}
   if(t.id.startsWith("cl-")){client[t.id.slice(3)]=t.value;saveCart();return}
   if(t.id==="markup"){settings.markup=t.value;saveSettings();refreshLedgerKeepFocus(t.id);return}
   if(t.dataset.isale!=null||t.dataset.imk!=null||t.dataset.iq!=null){const i=+(t.dataset.isale??t.dataset.imk??t.dataset.iq);const v=t.value.trim().replace(",",".");
-    const Q=quotes.find(x=>x.id===ui.iq);if(!Q)return;const L=Q.lines;
+    const Q=ui.idraft;if(!Q)return;const L=Q.lines;
     if(t.dataset.isale!=null)L[i].sale=v===""?null:v;else if(t.dataset.imk!=null){L[i].mk=v===""?null:v;L[i].sale=null}else{const qq=Math.round(N(v)||0);if(qq>0)L[i].qty=qq;else return}
-    recomputeQuote(Q);clearTimeout(persistQuotes.t);persistQuotes.t=setTimeout(()=>{persistQuotes(Q);flash("შენახულია")},400);
-    if(curQ&&curQ.id===Q.id){cart=L.map(l=>({id:l.id,color:l.color,qty:l.qty,sale:l.sale,mk:l.mk}));saveCart()}const id=t.id,pos=t.selectionStart;renderInternal();const el=$("#"+id);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}return}
+    recomputeQuote(Q);ui.idirty=true;
+    const id=t.id,pos=t.selectionStart;renderInternal();const el=$("#"+id);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}return}
   if(t.dataset.sale!=null){const i=+t.dataset.sale;const v=t.value.trim().replace(",",".");cart[i].sale=v===""?null:v;patchLine(i);return}
   if(t.dataset.lmk!=null){const i=+t.dataset.lmk;const v=t.value.trim().replace(",",".");cart[i].mk=v===""?null:v;cart[i].sale=null;patchLine(i);return}
   if(t.dataset.lq!=null){const i=+t.dataset.lq;const q=Math.round(N(t.value)||0);if(q>0){cart[i].qty=q;patchLine(i)}return}
-  if(t.dataset.s){const k=t.dataset.s;settings[k]=t.value;saveSettings();document.querySelectorAll("[id^='sale-']").forEach(el=>{const it=byId[el.id.slice(5)];if(it)el.textContent=saleCell(it,catalog.series.find(x=>x.id===it.sid).colors[0].id)});const ex=$("#example");if(ex)ex.innerHTML=exampleHtml();const fx=$("#fixpu");if(fx)fx.textContent=gel(fixedPerUnit());showRate();return}
+  if(t.dataset.s){const k=t.dataset.s;settings[k]=t.value;saveSettings();if(k==="markup")document.querySelectorAll("[data-smk]").forEach(el=>el.placeholder=t.value);document.querySelectorAll("[id^='sale-']").forEach(el=>{const it=byId[el.id.slice(5)];if(it)el.textContent=saleCell(it,catalog.series.find(x=>x.id===it.sid).colors[0].id)});const ex=$("#example");if(ex)ex.innerHTML=exampleHtml();const fx=$("#fixpu");if(fx)fx.textContent=gel(fixedPerUnit());showRate();return}
   const tr=t.closest("tr[data-id]");
   if(tr){const id=tr.dataset.id;if(t.dataset.f)savePrice(id,{[t.dataset.f]:t.value.trim()===""?null:t.value.trim().replace(",",".")});
     else if(t.dataset.color){const c={...(prices[id]?.colors||{})};c[t.dataset.color]=t.value.trim().replace(",",".");savePrice(id,{colors:c})}
@@ -715,7 +756,7 @@ document.addEventListener("change",e=>{
   if(t.dataset.s){if(t.id==="s-currency"){settings.currency=t.value;saveSettings()}if(t.id==="s-rateType"){settings.rateType=t.value;saveSettings();if(settings.autoRate){fetchRates(true);return}}render();return}
 });
 function refreshLedgerKeepFocus(id){const l=$(".ledger");if(!l)return;const pos=$("#"+id)?.selectionStart;l.outerHTML=ledgerHtml();const el=$("#"+id);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}
-  document.querySelectorAll(".row").forEach(r=>{const it=byId[r.dataset.id];const c=costOf(it,ui.color);const pr=r.querySelector(".pr");if(pr&&c!=null)pr.innerHTML=`${gel(c)}<small>გასაყიდი ≈ ${gel(roundUp(c*(1+pmk(it)/100)))}</small>`})}
+  document.querySelectorAll(".row").forEach(r=>{const it=byId[r.dataset.id];const c=costOf(it,ui.color);const pr=r.querySelector(".pr");if(pr&&c!=null)pr.innerHTML=`${gel(roundUp(c*(1+pmk(it)/100)))}<small>ფასი 1 ცალზე</small>`})}
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#modal").innerHTML){$("#modal").innerHTML=""}});
 
 initData();
