@@ -142,6 +142,7 @@ table.pt input{width:86px;border:1px solid var(--line);border-radius:6px;padding
 table.pt input.c{width:72px}
 table.pt tr.has td.code{color:var(--good)}
 table.pt .cost{font-family:var(--f-num);text-align:right;white-space:nowrap}
+table.pt .sale{font-weight:600;color:var(--accent)}
 table.qt td{vertical-align:middle}table.qt .btn{padding:5px 10px;font-size:12px}
 .saved{font-size:12px;color:var(--good);min-height:16px}
 /* settings */
@@ -455,6 +456,7 @@ function ledgerHtml(){
 }
 function refreshNumbers(){ /* light refresh of ledger only when typing elsewhere */ const l=$(".ledger");if(l&&!l.contains(document.activeElement)){l.outerHTML=ledgerHtml()} }
 
+function saleCell(it,c){const k=costOf(it,c);return k==null?"—":gel(roundUp(k*(1+pmk(it)/100)))}
 function renderPrices(){
   const s=catalog.series.find(x=>x.id===ui.psid)||catalog.series[0];
   const c0=s.colors[0].id;
@@ -463,6 +465,7 @@ function renderPrices(){
       <td><input id="p-${it.id}" data-f="price" inputmode="decimal" value="${esc(p.price??"")}" placeholder="0.00"></td>
       <td><input id="w-${it.id}" data-f="weight" inputmode="decimal" value="${esc(p.weight??"")}" placeholder="გრამი"></td>
       <td><input class="c" id="m-${it.id}" data-f="markup" inputmode="decimal" value="${esc(p.markup??"")}" placeholder="${esc(settings.markup)}"></td>
+      <td class="cost sale" id="sale-${it.id}">${saleCell(it,c0)}</td>
       ${ui.pcolors?s.colors.map(c=>`<td><input class="c" id="c-${it.id}-${c.id}" data-color="${c.id}" inputmode="decimal" value="${esc(p.colors?.[c.id]??"")}" placeholder="—"></td>`).join(""):""}
       <td class="cost" id="cost-${it.id}">${gel(costOf(it,c0))}</td></tr>`}).join("");
   const done=s.items.filter(it=>N(prices[it.id]?.price)!=null).length;
@@ -471,7 +474,7 @@ function renderPrices(){
     <div class="phead"><div class="sinfo"><img src="${s.img}" alt=""><div><h3>${esc(s.ka)} — მომწოდებლის ფასები</h3><p>შევსებულია ${done} / ${s.items.length}. ფასი ჩაწერეთ ${settings.currency==="CNY"?"იუანში (¥)":"დოლარში ($)"} ერთ ცალზე, წონა — გრამებში ერთ ცალზე. ცვლილება ავტომატურად ინახება.</p></div></div>
       <label class="cbtn" style="padding:5px 10px"><input type="checkbox" id="pcolors" ${ui.pcolors?"checked":""}> ფერის მიხედვით სხვა ფასი</label>
       <span class="saved" id="saved"></span></div>
-    <div class="tblwrap"><table class="pt"><thead><tr><th></th><th>კოდი</th><th>დასახელება</th><th>ფასი (${cur()})</th><th>წონა (გრამი)</th><th>ნამატი (%)</th>${ui.pcolors?s.colors.map(c=>`<th>${esc(c.ka)} (${cur()})</th>`).join(""):""}<th style="text-align:right">თვითღირებულება (${esc(s.colors[0].ka)})</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="tblwrap"><table class="pt"><thead><tr><th></th><th>კოდი</th><th>დასახელება</th><th>ფასი (${cur()})</th><th>წონა (გრამი)</th><th>ნამატი (%)</th><th style="text-align:right">გასაყიდი ფასი</th>${ui.pcolors?s.colors.map(c=>`<th>${esc(c.ka)} (${cur()})</th>`).join(""):""}<th style="text-align:right">თვითღირებულება (${esc(s.colors[0].ka)})</th></tr></thead><tbody>${rows}</tbody></table></div>
   </section>`;
 }
 function renderSettings(){setTimeout(()=>{["s-usd","s-cny"].forEach(id=>{const el=$("#"+id);if(el)el.readOnly=!!settings.autoRate})},0);
@@ -698,11 +701,11 @@ document.addEventListener("input",e=>{
   if(t.dataset.sale!=null){const i=+t.dataset.sale;const v=t.value.trim().replace(",",".");cart[i].sale=v===""?null:v;patchLine(i);return}
   if(t.dataset.lmk!=null){const i=+t.dataset.lmk;const v=t.value.trim().replace(",",".");cart[i].mk=v===""?null:v;cart[i].sale=null;patchLine(i);return}
   if(t.dataset.lq!=null){const i=+t.dataset.lq;const q=Math.round(N(t.value)||0);if(q>0){cart[i].qty=q;patchLine(i)}return}
-  if(t.dataset.s){const k=t.dataset.s;settings[k]=t.value;saveSettings();const ex=$("#example");if(ex)ex.innerHTML=exampleHtml();const fx=$("#fixpu");if(fx)fx.textContent=gel(fixedPerUnit());showRate();return}
+  if(t.dataset.s){const k=t.dataset.s;settings[k]=t.value;saveSettings();document.querySelectorAll("[id^='sale-']").forEach(el=>{const it=byId[el.id.slice(5)];if(it)el.textContent=saleCell(it,catalog.series.find(x=>x.id===it.sid).colors[0].id)});const ex=$("#example");if(ex)ex.innerHTML=exampleHtml();const fx=$("#fixpu");if(fx)fx.textContent=gel(fixedPerUnit());showRate();return}
   const tr=t.closest("tr[data-id]");
   if(tr){const id=tr.dataset.id;if(t.dataset.f)savePrice(id,{[t.dataset.f]:t.value.trim()===""?null:t.value.trim().replace(",",".")});
     else if(t.dataset.color){const c={...(prices[id]?.colors||{})};c[t.dataset.color]=t.value.trim().replace(",",".");savePrice(id,{colors:c})}
-    const s=catalog.series.find(x=>x.id===ui.psid);$("#cost-"+CSS.escape(id)).textContent=gel(costOf(byId[id],s.colors[0].id));}
+    const s=catalog.series.find(x=>x.id===ui.psid);$("#cost-"+CSS.escape(id)).textContent=gel(costOf(byId[id],s.colors[0].id));const se=$("#sale-"+CSS.escape(id));if(se)se.textContent=saleCell(byId[id],s.colors[0].id);}
 });
 document.addEventListener("change",e=>{
   const t=e.target;
