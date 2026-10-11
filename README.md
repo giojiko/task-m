@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ჩამრთველების კალკულატორი — იდენტური ვერსია office.smartpro.ge-სთვის
 
-## Getting Started
+ეს ვერსია სისტემაში აჩვენებს ზუსტად იმავე კალკულატორს, რომელიც ცალკე ფაილად მუშაობდა: იგივე დიზაინი, იგივე ჩანართები, იგივე ფოტო კატალოგი.
+განსხვავება მხოლოდ ერთია: ფასები, პარამეტრები და შეთავაზებები ინახება სისტემის ბაზაში (`db.switchPrices`, `db.switchSettings`, `db.switchQuotes`) და ყველა თანამშრომელი ერთსა და იმავეს ხედავს.
 
-First, run the development server:
+## როგორ ჩავსვათ (3 ნაბიჯი)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. ფაილი `public/switches-app/index.html` ჩადეთ რეპოზიტორიის `public/switches-app/` საქაღალდეში (ახალი საქაღალდე).
+2. ფაილით `lib/switch-prices-seed.json` შეცვალეთ არსებული (ახალი შუალედური ჩამრთველების წონით).
+3. ფაილით `app/switches/page.js` შეცვალეთ არსებული `app/switches/page.js` (ძველი ვერსია git-ის ისტორიაში რჩება).
+4. გააკეთეთ commit და push — Vercel თავად განაახლებს საიტს.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+სხვა არაფერი იცვლება: `public/switch-catalog/`, `lib/switch-prices-seed.json`, `app/api/rates/route.js`, მენიუს პუნქტი და თარგმანები უკვე რეპოზიტორიაშია.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## ვის რა ჩანს
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| როლი | ჩანართები |
+|---|---|
+| super_admin | ყველა: შეთავაზების შედგენა, ფასები და წონა, შეთავაზებები, შიდა კალკულატორი, ხარჯების პარამეტრები |
+| admin | ყველა, გარდა ხარჯების პარამეტრებისა |
+| specialist | შეთავაზების შედგენა და შეთავაზებები |
 
-## Learn More
+- ფასებს ცვლის მხოლოდ super_admin და admin; პარამეტრებს — მხოლოდ super_admin (კურსის ავტომატური განახლება ყველასთვის მუშაობს).
+- ყოველ შეთავაზებას ავტომატურად ეწერება ვინ შეადგინა (`createdBy`, `createdByName`).
+- დოლარის კურსი მოდის `/api/rates`-იდან (kursi.ge).
 
-To learn more about Next.js, take a look at the following resources:
+## შემოწმება
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. გახსენით office.smartpro.ge/switches — უნდა ჩანდეს ზუსტად ის კალკულატორი, რაც ცალკე ფაილში.
+2. ზედა მარცხნივ წარწერა: „ფასები ინახება office.smartpro.ge ბაზაში“ (მწვანე წერტილით).
+3. სერიის ბარათზე „ფოტო კატალოგი“ — უნდა გაიხსნას მკვეთრი გვერდები.
+4. B1-10 როზეტი დამიწებით: თვითღირებულება 4.59 ₾, ფასი 8.27 ₾ (დოლარის კურსით 2.6025).
