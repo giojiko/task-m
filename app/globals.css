@@ -61,7 +61,7 @@ a { color:inherit; text-decoration:none; }
 /* Layout */
 .app-shell { display:flex; min-height:100vh; }
 .main-content { flex:1; margin-left:var(--sidebar-w); padding-top:var(--topbar-h); min-height:100vh; display:flex; flex-direction:column; }
-.page-body { padding:24px; width:100%; max-width:1400px; margin:0 auto; flex:1; }
+.page-body { padding:24px; width:100%; flex:1; }
 .loading-page { position:fixed; inset:0; background:var(--bg-base); display:flex; flex-direction:column; gap:16px; align-items:center; justify-content:center; z-index:200; }
 
 /* Sidebar */
