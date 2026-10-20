@@ -6,7 +6,7 @@ import Topbar from './Topbar';
 import Sidebar from './Sidebar';
 import SetupModal from '@/components/SetupModal';
 
-export default function AppShell({ children }) {
+export default function AppShell({ children, fullWidth }) {
   const { user, loading } = useApp();
   const router = useRouter();
 
@@ -30,7 +30,7 @@ export default function AppShell({ children }) {
       <Sidebar />
       <div className="main-content">
         <Topbar />
-        <main className="page-body">
+        <main className="page-body" style={fullWidth ? { maxWidth: 'none' } : undefined}>
           {children}
         </main>
       </div>
