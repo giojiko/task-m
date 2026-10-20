@@ -315,6 +315,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, [key]: val } : it));
   const addRow    = () => setItems(prev => [...prev, emptyItem()]);
   const removeRow = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
+  const insertRowAfter = (idx) => setItems(prev => [...prev.slice(0, idx + 1), emptyItem(), ...prev.slice(idx + 1)]);
 
   async function handleSave(openAfter = true) {
     let newDb = { ...(dbRef?.current || db) };
@@ -440,7 +441,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                     <th style={{ width: 82 }}>ფასი (₾)</th>
                     <th style={{ width: 54 }}>დღგ</th>
                     <th style={{ width: 82 }}>ჯამი</th>
-                    <th style={{ width: 26 }}></th>
+                    <th style={{ width: 40, textAlign: 'center', fontSize: 9, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '.04em' }}>+/✕</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -595,8 +596,28 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                           ₾{(lineTotal + lineVat).toFixed(2)}
                         </td>
                         <td>
-                          <button className="btn btn-ghost btn-xs" onClick={() => removeRow(idx)}
-                            style={{ color: 'var(--danger)' }}>✕</button>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+                            <button
+                              className="btn btn-ghost btn-xs"
+                              title="ამ სტრიქონის ქვეშ ახლის ჩასმა"
+                              onClick={() => insertRowAfter(idx)}
+                              style={{
+                                color: 'var(--accent)',
+                                border: '1px solid var(--accent)',
+                                borderRadius: 4,
+                                fontSize: 13,
+                                fontWeight: 700,
+                                lineHeight: 1,
+                                padding: '2px 7px',
+                                opacity: 0.7,
+                                transition: 'opacity .15s',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                              onMouseLeave={e => e.currentTarget.style.opacity = 0.7}
+                            >+</button>
+                            <button className="btn btn-ghost btn-xs" onClick={() => removeRow(idx)}
+                              style={{ color: 'var(--danger)', fontSize: 11, padding: '2px 5px' }}>✕</button>
+                          </div>
                         </td>
                       </tr>
                     );
