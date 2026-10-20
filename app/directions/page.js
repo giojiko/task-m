@@ -212,7 +212,7 @@ function DirectionsContent() {
     const title = isOnline ? '🛒 ონლაინ გაყიდვა' : `${activeDir?.icon || ''} ${activeDir?.name || ''}`;
     const color = isOnline ? '#F59E0B' : (activeDir?.color || 'var(--accent)');
     return (
-      <AppShell fullWidth>
+      <AppShell>
         <div className="page-header">
           <div>
             <div className="page-title">{title}</div>
