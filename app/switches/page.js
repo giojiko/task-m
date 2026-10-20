@@ -107,8 +107,9 @@ export default function SwitchesPage() {
           src="/switches-app/index.html"
           title="ჩამრთველები და როზეტები"
           style={{
-            display: 'block', width: '100%', border: 0, borderRadius: 8,
-            height: 'calc(100dvh - var(--topbar-h, 52px) - 48px)', minHeight: 600, background: 'transparent',
+            display: 'block', width: 'calc(100% + 48px)', marginLeft: -24, marginRight: -24,
+            border: 0, borderRadius: 0,
+            height: 'calc(100dvh - var(--topbar-h, 52px))', minHeight: 600, background: 'transparent',
           }}
         />
       )}
