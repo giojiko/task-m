@@ -11,7 +11,7 @@ function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, discount, notes, totals }) {
+function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, discount, notes, totals, prepayPct }) {
   const validItems = items.filter(i => i.name.trim());
   const rows = validItems.map((item, i) => {
     const lineTotal = Number(item.qty) * Number(item.price);
@@ -177,7 +177,11 @@ function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, di
       <div class="totals-row"><span class="tl">ქვეჯამი (დღგ-ს გარეშე)</span><span class="tv">₾ ${totals.subtotal.toFixed(2)}</span></div>
       <div class="totals-row"><span class="tl">დღგ ჯამი</span><span class="tv">₾ ${totals.vatAmount.toFixed(2)}</span></div>
       <div class="totals-row"><span class="tl">ფასდაკლება</span><span class="tv">₾ ${Number(discount).toFixed(2)}</span></div>
-      <div class="totals-row grand"><span class="tl">სულ გადასახდელი</span><span class="tv">₾ ${totals.total.toFixed(2)}</span></div>
+      ${Number(prepayPct) > 0
+  ? `<div class="totals-row grand"><span class="tl">სრული თანხა</span><span class="tv" style="color:#6b7a99;font-size:15px">₾ ${totals.total.toFixed(2)}</span></div>
+     <div class="totals-row" style="border-top:2px solid #0077cc;padding-top:8px"><span class="tl" style="color:#0077cc;font-weight:700">წინასწარი ჩარიცხვა (${prepayPct}%)</span><span class="tv" style="color:#0077cc">₾ ${(totals.total * Number(prepayPct) / 100).toFixed(2)}</span></div>
+     <div class="totals-row" style="border-top:none;padding-top:4px"><span class="tl" style="color:#ef4444;font-weight:700;font-size:14px">გადასახდელია ახლა</span><span class="tv" style="color:#ef4444;font-size:20px;font-weight:800">₾ ${(totals.total * Number(prepayPct) / 100).toFixed(2)}</span></div>`
+  : `<div class="totals-row grand"><span class="tl">სულ გადასახდელი</span><span class="tv">₾ ${totals.total.toFixed(2)}</span></div>`}
     </div>
   </div>
   <div class="inv-payment">
@@ -295,6 +299,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const [issueDate,      setIssueDate]      = useState(invoice?.issueDate || today);
   const [dueDate,        setDueDate]        = useState(invoice?.dueDate   || dueDefault);
   const [discount,       setDiscount]       = useState(invoice?.discount  ?? 0);
+  const [prepayPct,      setPrepayPct]      = useState(invoice?.prepayPct ?? 0);
   const [notes,          setNotes]          = useState(invoice?.notes     || 'ფასები ეროვნულ ვალუტაში (GEL)');
   const [items,          setItems]          = useState(
     invoice?.items?.length ? invoice.items : [emptyItem(), emptyItem(), emptyItem()]
@@ -348,7 +353,8 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
       },
       issueDate, dueDate,
       items: validItems,
-      discount: Number(discount),
+      discount:  Number(discount),
+      prepayPct: Number(prepayPct),
       notes,
       subtotal:  recalc.subtotal,
       vatAmount: recalc.vatAmount,
@@ -373,6 +379,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
         invoiceNumber: invoiceData.number,
         issueDate, dueDate, discount, notes,
         totals: recalc,
+        prepayPct: Number(prepayPct),
       });
       const win = window.open('', '_blank', 'width=960,height=860,scrollbars=yes');
       win.document.write(html);
@@ -624,6 +631,11 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
             <input className="input" type="number" min="0" value={discount}
               onChange={e => setDiscount(e.target.value)} />
           </div>
+          <div className="fg" style={{ marginBottom: 0 }}>
+            <label className="form-label">წინასწარი ჩარიცხვა %</label>
+            <input className="input" type="number" min="0" max="100" step="5"
+              value={prepayPct} onChange={e => setPrepayPct(e.target.value)} placeholder="0" />
+          </div>
           <div style={{
             background: 'var(--bg-muted)', borderRadius: 'var(--radius)',
             padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6,
@@ -645,6 +657,23 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                 ₾{totals.total.toFixed(2)}
               </span>
             </div>
+            {Number(prepayPct) > 0 && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 6,
+                  borderTop: '2px solid var(--accent)', marginTop: 4, fontSize: 12 }}>
+                  <span style={{ color: 'var(--accent)', fontWeight: 700 }}>წინასწარი ({prepayPct}%)</span>
+                  <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
+                    ₾{(totals.total * Number(prepayPct) / 100).toFixed(2)}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 12 }}>
+                  <span style={{ color: 'var(--danger)', fontWeight: 700 }}>დარჩენილი</span>
+                  <span style={{ color: 'var(--danger)', fontWeight: 800 }}>
+                    ₾{(totals.total * (1 - Number(prepayPct) / 100)).toFixed(2)}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
