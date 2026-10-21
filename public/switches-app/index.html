@@ -57,9 +57,9 @@ h2.step b{background:var(--ink);color:var(--bg);border-radius:50%;width:20px;hei
 .bcard .bname{font-size:18px;font-weight:700;color:var(--ink)}
 .bcard .bdesc{font-size:12px;color:var(--muted);line-height:1.4}
 .bcard .bcount{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--accent-soft);color:var(--accent)}
-.brand-back{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:16px;padding:4px 0}
+.brand-back{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:16px;padding:4px 0;border:none;background:none}
 .brand-back:hover{color:var(--accent)}
-.brand-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;background:var(--accent-soft);color:var(--accent);margin-bottom:12px;cursor:pointer}
+.brand-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;background:var(--accent-soft);color:var(--accent);margin-bottom:12px;cursor:pointer;border:none}
 .rail{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
 .scard{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:0;overflow:hidden;text-align:left;display:flex;flex-direction:column;transition:border-color .15s, transform .15s}
 .scard:hover{border-color:var(--accent)}
@@ -520,7 +520,7 @@ function renderQuote(){
   const brandBar=brand?`<button class="brand-back" data-clearbrand="1">← ყველა ბრენდი</button>
     <button class="brand-badge" data-clearbrand="1" style="color:${brand.color};background:${brand.color}18">
       <img src="${brand.logo}" style="height:16px;object-fit:contain" onerror="this.style.display='none'"> ${esc(brand.ka)}
-    </div>`:"";
+    </button>`:"";
   const col=s.colors.find(c=>c.id===ui.color);
   const kinds=[...new Set(s.items.map(i=>i.kind))];
   const allItems=filtered(s);const items=allItems.filter(it=>unitPrice(it,ui.color)!=null);const hidden=allItems.length-items.length;
