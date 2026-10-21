@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useFlipsAccess } from '@/lib/flips/useFlipsAccess';
 
 const NAV = [
   { href: '/dashboard',  icon: '◫',  key: 'dashboard' },
@@ -15,6 +16,7 @@ const NAV = [
   { href: '/switches',   icon: '🔌', key: 'switches' },
   { href: '/invoice',    icon: '🧾', key: 'invoice' },
   { href: '/passports',  icon: '🔖', key: 'passports' },
+  { href: '/flips',      icon: '🏠', key: 'flips', flipsOnly: true },
 ];
 
 // მობილურზე ქვედა bar-ში 4 მთავარი + "მეტი"
@@ -23,6 +25,7 @@ const MOBILE_MAIN = ['/dashboard', '/tasks', '/clients', '/invoice'];
 export default function Sidebar() {
   const pathname = usePathname();
   const { db, user, t, lang, setLang, logout } = useApp();
+  const flipsLevel = useFlipsAccess();
   const [dirsOpen, setDirsOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -38,6 +41,7 @@ export default function Sidebar() {
 
   const navItems = NAV.filter(item => {
     if (user?.role === 'specialist' && item.key === 'employees') return false;
+    if (item.flipsOnly && !flipsLevel) return false;
     return true;
   });
 
