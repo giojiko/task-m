@@ -30,7 +30,7 @@ export async function POST(request) {
     return Response.json({ error: 'არასწორი ელ.ფოსტა ან პაროლი' }, { status: 401 });
   }
 
-  const token = await createSessionToken(user.id, user.role);
+  const token = await createSessionToken(user.id, user.role, user.email);
   const { password: _p, passwordHash: _ph, ...safeUser } = user;
 
   const response = Response.json({ user: safeUser });

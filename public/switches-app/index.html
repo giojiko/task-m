@@ -269,10 +269,10 @@ const CATORDER=["switch","socket","weak","other","frame"];
 let catalog=null, byId={}, prices={}, settings={...DEFAULTS};
 let db=null, dl=null, dbState="loading";
 let quotes=LS.get("quotes",[]);let curQ=LS.get("curq",null);
-let ui=Object.assign({tab:"quote",brand:null,sid:"B1",color:"white",kind:"all",cat:"all",q:"",psid:"B1",pcolors:false},LS.get("ui",{}));
+let ui=Object.assign({tab:"quote",sid:"B1",color:"white",kind:"all",cat:"all",q:"",psid:"B1",pcolors:false},LS.get("ui",{}));ui.brand=null;
 let cart=LS.get("cart",[]);
 let client=LS.get("client",{name:"",project:"",phone:"",note:""});
-const saveUi=()=>LS.set("ui",{tab:ui.tab,brand:ui.brand,sid:ui.sid,color:ui.color,kind:ui.kind,psid:ui.psid,pcolors:ui.pcolors});
+const saveUi=()=>LS.set("ui",{tab:ui.tab,sid:ui.sid,color:ui.color,kind:ui.kind,psid:ui.psid,pcolors:ui.pcolors});
 const saveCart=()=>{LS.set("cart",cart);LS.set("client",client)};
 
 /* ---------- icons ---------- */
