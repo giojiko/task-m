@@ -517,8 +517,8 @@ function renderQuote(){
   if(!s){$("#view").innerHTML=`<div class="empty">ამ ბრენდს პროდუქტი ჯერ არ აქვს</div>`;return}
   if(!s.colors.find(c=>c.id===ui.color))ui.color=s.colors[0].id;
   const brand=brands.find(b=>b.id===ui.brand);
-  const brandBar=brand?`<div class="brand-back" data-clearbrand="1">← ყველა ბრენდი</div>
-    <div class="brand-badge" data-clearbrand="1" style="color:${brand.color};background:${brand.color}18">
+  const brandBar=brand?`<button class="brand-back" data-clearbrand="1">← ყველა ბრენდი</button>
+    <button class="brand-badge" data-clearbrand="1" style="color:${brand.color};background:${brand.color}18">
       <img src="${brand.logo}" style="height:16px;object-fit:contain" onerror="this.style.display='none'"> ${esc(brand.ka)}
     </div>`:"";
   const col=s.colors.find(c=>c.id===ui.color);
@@ -787,7 +787,7 @@ async function download(){if(saveQuote(true)===false)return;if(isPending(saveQuo
 
 /* ---------- events ---------- */
 document.addEventListener("click",e=>{
-  const t=e.target.closest("button,input[type=checkbox]");if(!t)return;
+  const t=e.target.closest("button,input[type=checkbox],[data-brand],[data-clearbrand]");if(!t)return;
   if(t.dataset.tab){if(ui.tab==="internal"&&ui.idirty){toast("შიდა კალკულატორის ცვლილებები არ შეინახა");ui.idirty=false;ui.idraft=null}ui.tab=t.dataset.tab;if(ui.tab==="internal")ui.iq=null;saveUi();render();return}
   if(t.dataset.brand){
     const b=brands.find(x=>x.id===t.dataset.brand);

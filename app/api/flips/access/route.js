@@ -1,5 +1,5 @@
-import { getSessionUser } from '@/lib/auth-guard';
-import { isFlipsOwner, auditLog } from '@/lib/flips/access';
+﻿import { getSessionUser } from '@/lib/auth-guard';
+import { isFlipsOwnerAsync, auditLog } from '@/lib/flips/access';
 import { supabase } from '@/lib/supabase';
 
 const notFound = () => Response.json({ error: 'Not Found' }, { status: 404 });
