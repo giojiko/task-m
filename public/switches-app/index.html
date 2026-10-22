@@ -263,17 +263,17 @@ table.it tr.tot td{background:var(--sunk);font-weight:600}
       {"id":"white","ka":"თეთრი","hex":"#f3f3f1"}
     ],
     "items":[
-      {"id":"VK-SW1",  "ka":"ჩამრთველი 1-ნი",                          "code":"VK-SW1",  "kind":"module","cat":"switch", "icon":"sw1",   "cost":4.51},
-      {"id":"VK-SW1V", "ka":"ჩამრთველი 1-ნი ველვეთი",                  "code":"VK-SW1V", "kind":"module","cat":"switch", "icon":"sw1",   "cost":5.79},
-      {"id":"VK-SW1D", "ka":"ჩამრთველი 1-ნი დამიწებული",               "code":"VK-SW1D", "kind":"module","cat":"switch", "icon":"sw1",   "cost":5.45},
-      {"id":"VK-SW2",  "ka":"ჩამრთველი 2-ნი",                          "code":"VK-SW2",  "kind":"module","cat":"switch", "icon":"sw2",   "cost":8.33},
-      {"id":"VK-SW2D", "ka":"ჩამრთველი 2-ნი დამიწებული",               "code":"VK-SW2D", "kind":"module","cat":"switch", "icon":"sw2",   "cost":5.45},
-      {"id":"VK-F2",   "ka":"ჩარჩო 2-ნი კომბინირებული",                "code":"VK-F2",   "kind":"frame", "cat":"frame",  "icon":"frame2","cost":2.95},
-      {"id":"VK-F3",   "ka":"ჩარჩო 3-ნი კომბინირებული",                "code":"VK-F3",   "kind":"frame", "cat":"frame",  "icon":"frame3","cost":3.71},
-      {"id":"VK-F4",   "ka":"ჩარჩო 4-ნი კომბინირებული",                "code":"VK-F4",   "kind":"frame", "cat":"frame",  "icon":"frame4","cost":4.75},
-      {"id":"VK-F1C",  "ka":"ჩარჩო 1-ნი ჭერმეტაქრო",                  "code":"VK-F1C",  "kind":"frame", "cat":"frame",  "icon":"frame1","cost":7.81},
-      {"id":"VK-SOC",  "ka":"როზეტი დამიწებით",                        "code":"VK-SOC",  "kind":"module","cat":"socket", "icon":"sock",  "cost":4.51},
-      {"id":"VK-SOC0", "ka":"როზეტი (ყოველგვარი დამიწების გარეშე)",     "code":"VK-SOC0", "kind":"module","cat":"socket", "icon":"sockr", "cost":4.51}
+      {"id":"VK1~m~VK-SW1",  "ka":"ჩამრთველი 1-ნი",                      "code":"VK-SW1",  "kind":"module","cat":"switch", "icon":"sw1"},
+      {"id":"VK1~m~VK-SW1V", "ka":"ჩამრთველი 1-ნი ველვეთი",            "code":"VK-SW1V", "kind":"module","cat":"switch", "icon":"sw1"},
+      {"id":"VK1~m~VK-SW1D", "ka":"ჩამრთველი 1-ნი დამიწებული",         "code":"VK-SW1D", "kind":"module","cat":"switch", "icon":"sw1"},
+      {"id":"VK1~m~VK-SW2",  "ka":"ჩამრთველი 2-ნი",                    "code":"VK-SW2",  "kind":"module","cat":"switch", "icon":"sw2"},
+      {"id":"VK1~m~VK-SW2D", "ka":"ჩამრთველი 2-ნი დამიწებული",         "code":"VK-SW2D", "kind":"module","cat":"switch", "icon":"sw2"},
+      {"id":"VK1~f~VK-F2",   "ka":"ჩარჩო 2-ნი კომბინირებული",          "code":"VK-F2",   "kind":"frame", "cat":"frame",  "icon":"frame2"},
+      {"id":"VK1~f~VK-F3",   "ka":"ჩარჩო 3-ნი კომბინირებული",          "code":"VK-F3",   "kind":"frame", "cat":"frame",  "icon":"frame3"},
+      {"id":"VK1~f~VK-F4",   "ka":"ჩარჩო 4-ნი კომბინირებული",          "code":"VK-F4",   "kind":"frame", "cat":"frame",  "icon":"frame4"},
+      {"id":"VK1~f~VK-F1C",  "ka":"ჩარჩო 1-ნი ჭერმეტაქრო",            "code":"VK-F1C",  "kind":"frame", "cat":"frame",  "icon":"frame1"},
+      {"id":"VK1~m~VK-SOC",  "ka":"როზეტი დამიწებით",                  "code":"VK-SOC",  "kind":"module","cat":"socket", "icon":"sock"},
+      {"id":"VK1~m~VK-SOC0", "ka":"როზეტი (ყოველგვარი დამიწების გარეშე)","code":"VK-SOC0","kind":"module","cat":"socket", "icon":"sockr"}
     ],
     "pages":["/switch-catalog/viko/vk-modus.png"]
   }
@@ -345,11 +345,13 @@ function icon(type,hex){
 const N=v=>{const n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:null};
 const gel=v=>v==null?"—":v.toLocaleString("ka-GE",{minimumFractionDigits:2,maximumFractionDigits:2})+" ₾";
 const cur=()=>settings.currency==="CNY"?"¥":"$";
-function unitPrice(it,color){const p=prices[it.id];if(!p)return null;const o=p.colors&&N(p.colors[color]);return o!=null?o:N(p.price)}
+function unitPrice(it,color){const p=prices[it.id];if(!p)return null;if(p.gelCost!=null)return N(p.gelCost);const o=p.colors&&N(p.colors[color]);return o!=null?o:N(p.price)}
 function costOf(it,color){
   const price=unitPrice(it,color);if(price==null)return null;const S=settings;
+  const p=prices[it.id];
+  if(p&&p.gelCost!=null){let c=price;if(S.vat)c*=1.18;return c;}
   const rate=S.currency==="CNY"?N(S.cny):N(S.usd);const usd=N(S.usd)||0;
-  const w=(N(prices[it.id]?.weight)||0)/1000;
+  const w=(N(p?.weight)||0)/1000;
   let c=price*rate*(1+(N(S.bank)||0)/100)+w*(N(S.freight)||0)*usd;
   c*=(1+(N(S.customs)||0)/100)*(1+(N(S.other)||0)/100);
   c+=fixedPerUnit();
@@ -357,7 +359,9 @@ function costOf(it,color){
 }
 function costParts(it,color){
   const price=unitPrice(it,color);if(price==null)return null;const S=settings;
-  const rate=S.currency==="CNY"?N(S.cny):N(S.usd);const usd=N(S.usd)||0;const wg=N(prices[it.id]?.weight)||0;
+  const p=prices[it.id];
+  if(p&&p.gelCost!=null){const vat=S.vat?price*0.18:0;return{price,wg:0,goods:price,bank:0,freight:0,customs:0,other:0,fixed:0,vat,total:price+vat,isGel:true};}
+  const rate=S.currency==="CNY"?N(S.cny):N(S.usd);const usd=N(S.usd)||0;const wg=N(p?.weight)||0;
   const goods=price*rate,bank=goods*(N(S.bank)||0)/100,freight=wg/1000*(N(S.freight)||0)*usd,base=goods+bank+freight;
   const customs=base*(N(S.customs)||0)/100,other=(base+customs)*(N(S.other)||0)/100,fixed=fixedPerUnit();
   const pre=base+customs+other+fixed,vat=S.vat?pre*0.18:0;
