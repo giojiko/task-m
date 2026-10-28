@@ -314,13 +314,8 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const updItem = (idx, key, val) =>
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, [key]: val } : it));
   const addRow    = () => setItems(prev => [...prev, emptyItem()]);
-  const insertRowAfter = (idx) => setItems(prev => {
-    const next = [...prev];
-    next.splice(idx + 1, 0, emptyItem());
-    return next;
-  });
-  const removeRow = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
   const insertRowAfter = (idx) => setItems(prev => [...prev.slice(0, idx + 1), emptyItem(), ...prev.slice(idx + 1)]);
+  const removeRow = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
 
   async function handleSave(openAfter = true) {
     let newDb = { ...(dbRef?.current || db) };
