@@ -164,17 +164,23 @@ function InvoicePageInner() {
     if (!raw) return;
     try {
       const q = JSON.parse(decodeURIComponent(raw));
+      const subtotal = q.lines.reduce((s, l) => s + (parseFloat(l.sale || l.price || 0)) * (l.qty || 1), 0);
+      const discountLari = q.discountPct > 0
+        ? Math.round(subtotal * q.discountPct) / 100
+        : 0;
       const prefill = {
         _fromQuote: q.no,
+        client: q.client?.name ? { name: q.client.name, address: q.client.project || '' } : undefined,
         items: q.lines.map(l => ({
           id: uid(),
-          name: l.name || '',
+          name: l.ka || l.name || '',
           qty: l.qty || 1,
           unit: l.unit || 'ცალი',
-          price: l.price || 0,
+          price: parseFloat(l.sale || l.price || 0),
           vatEnabled: false,
           vatRate: 18,
         })),
+        discount: discountLari,
         notes: `შეთავაზება ${q.no}${q.client?.project ? ' — ' + q.client.project : ''}`,
       };
       const url = new URL(window.location.href);
