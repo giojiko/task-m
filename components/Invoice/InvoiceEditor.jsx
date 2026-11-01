@@ -299,6 +299,8 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const [issueDate,      setIssueDate]      = useState(invoice?.issueDate || today);
   const [dueDate,        setDueDate]        = useState(invoice?.dueDate   || dueDefault);
   const [discount,       setDiscount]       = useState(invoice?.discount  ?? 0);
+  const [discountMode,   setDiscountMode]   = useState(invoice?.discountMode ?? 'lari'); // 'lari' | 'pct'
+  const [discountPct,    setDiscountPct]    = useState(invoice?.discountPct  ?? 0);
   const [prepayPct,      setPrepayPct]      = useState(invoice?.prepayPct ?? 0);
   const [notes,          setNotes]          = useState(invoice?.notes     || 'ფასები ეროვნულ ვალუტაში (GEL)');
   const [items,          setItems]          = useState(
@@ -309,7 +311,11 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const isCreatingNew  = !clientId && (newClientDraft._active || newClientDraft.name.trim());
   const displayClient  = isCreatingNew ? newClientDraft : (selectedClient || {});
 
-  const totals = calcInvoiceTotals(items, discount);
+  const subtotalForDiscount = items.reduce((s, i) => s + (parseFloat(i.price) || 0) * (parseFloat(i.qty) || 0), 0);
+  const discountLari = discountMode === 'pct'
+    ? Math.round(subtotalForDiscount * parseFloat(discountPct || 0)) / 100
+    : parseFloat(discount || 0);
+  const totals = calcInvoiceTotals(items, discountLari);
 
   const updItem = (idx, key, val) =>
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, [key]: val } : it));
@@ -343,7 +349,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
       ? (newDb.clients || []).find(c => c.id === finalClientId) || {}
       : isCreatingNew ? newClientDraft : {};
 
-    const recalc = calcInvoiceTotals(validItems, discount);
+    const recalc = calcInvoiceTotals(validItems, discountLari);
     const invoiceData = {
       id:       invoice?.id      || uid(),
       number:   invoice?.number  || getNextInvoiceNumber(newDb),
@@ -354,7 +360,9 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
       },
       issueDate, dueDate,
       items: validItems,
-      discount:  Number(discount),
+      discount:     discountLari,
+      discountMode: discountMode,
+      discountPct:  discountMode === 'pct' ? Number(discountPct) : 0,
       prepayPct: Number(prepayPct),
       notes,
       subtotal:  recalc.subtotal,
@@ -378,7 +386,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
         client: invoiceData.clientSnapshot,
         items: validItems,
         invoiceNumber: invoiceData.number,
-        issueDate, dueDate, discount, notes,
+        issueDate, dueDate, discount: discountLari, notes,
         totals: recalc,
         prepayPct: Number(prepayPct),
       });
@@ -648,9 +656,33 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
             <input className="input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
           </div>
           <div className="fg" style={{ marginBottom: 0 }}>
-            <label className="form-label">ფასდაკლება (₾)</label>
-            <input className="input" type="number" min="0" value={discount}
-              onChange={e => setDiscount(e.target.value)} />
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>ფასდაკლება</span>
+              <span style={{ display: 'flex', gap: 0, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+                {['lari', 'pct'].map(mode => (
+                  <button key={mode} type="button"
+                    onClick={() => setDiscountMode(mode)}
+                    style={{ padding: '2px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
+                      background: discountMode === mode ? 'var(--primary)' : 'transparent',
+                      color: discountMode === mode ? '#fff' : 'var(--text-secondary)',
+                      fontWeight: discountMode === mode ? 700 : 400 }}>
+                    {mode === 'lari' ? '₾' : '%'}
+                  </button>
+                ))}
+              </span>
+            </label>
+            {discountMode === 'lari' ? (
+              <input className="input" type="number" min="0" value={discount}
+                onChange={e => setDiscount(e.target.value)} />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input className="input" type="number" min="0" max="100" step="0.1" value={discountPct}
+                  onChange={e => setDiscountPct(e.target.value)} style={{ flex: 1 }} />
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                  = ₾{discountLari.toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
           <div className="fg" style={{ marginBottom: 0 }}>
             <label className="form-label">წინასწარი ჩარიცხვა %</label>
@@ -664,7 +696,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
             {[
               { label: 'ქვეჯამი',    val: totals.subtotal.toFixed(2) },
               { label: 'დღგ ჯამი',   val: totals.vatAmount.toFixed(2) },
-              { label: 'ფასდაკლება', val: `-${Number(discount).toFixed(2)}` },
+              { label: discountMode === 'pct' ? `ფასდაკლება ${discountPct}%` : 'ფასდაკლება', val: `-${discountLari.toFixed(2)}` },
             ].map(({ label, val }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                 <span style={{ color: 'var(--text-secondary)' }}>{label}</span>

@@ -164,10 +164,6 @@ function InvoicePageInner() {
     if (!raw) return;
     try {
       const q = JSON.parse(decodeURIComponent(raw));
-      const subtotal = q.lines.reduce((s, l) => s + (parseFloat(l.sale || l.price || 0)) * (l.qty || 1), 0);
-      const discountLari = q.discountPct > 0
-        ? Math.round(subtotal * q.discountPct) / 100
-        : 0;
       const prefill = {
         _fromQuote: q.no,
         client: q.client?.name ? { name: q.client.name, address: q.client.project || '' } : undefined,
@@ -180,7 +176,9 @@ function InvoicePageInner() {
           vatEnabled: false,
           vatRate: 18,
         })),
-        discount: discountLari,
+        discountMode: q.discountPct > 0 ? 'pct' : 'lari',
+        discountPct:  q.discountPct || 0,
+        discount:     0,
         notes: `შეთავაზება ${q.no}${q.client?.project ? ' — ' + q.client.project : ''}`,
       };
       const url = new URL(window.location.href);
