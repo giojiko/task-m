@@ -774,9 +774,12 @@ function renderInternal(){
 function offerHtml(){
   const d=new Date();const ds=d.toLocaleDateString("ka-GE",{year:"numeric",month:"long",day:"numeric"});
   const no=curQ?curQ.no:"SP-"+d.toISOString().slice(2,10).replace(/-/g,"")+"-"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0");
+  const discPct=curQ&&curQ.discountPct?parseFloat(curQ.discountPct):0;
   let tot=0;
   const rows=cart.map((l,i)=>{const it=byId[l.id];const s=catalog.series.find(x=>x.id===it.sid);const col=s.colors.find(c=>c.id===l.color)||s.colors[0];const p=saleOf(l);const sum=p==null?null:p*l.qty;if(sum)tot+=sum;
     return`<tr><td>${i+1}</td><td class="ic">${icon(it.icon,col.hex)}</td><td><b>${esc(it.ka)}</b><div class="sub">${esc(s.ka)} · ${esc(col.ka)} · კოდი ${esc(it.code)}</div></td><td class="r">${l.qty}</td><td class="r">${p==null?"—":p.toFixed(2)}</td><td class="r">${sum==null?"—":sum.toFixed(2)}</td></tr>`}).join("");
+  const discAmt=discPct>0?Math.round(tot*discPct)/100:0;
+  const finalTot=discPct>0?Math.round((tot-discAmt)*100)/100:tot;
   const S2=settings;
   return`<!doctype html><html lang="ka"><head><meta charset="utf-8"><title>შეთავაზება ${no}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;600;700&display=swap">
@@ -786,7 +789,7 @@ function offerHtml(){
 .meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-bottom:14px;font-size:12px}.meta span{color:#5d6878}
 table{width:100%;border-collapse:collapse}th{background:#eef3f8;text-align:left;font-size:11px;padding:7px 8px;color:#3d4a5c}td{padding:6px 8px;border-bottom:1px solid #dfe4ea;vertical-align:middle}
 td.ic{width:44px}td.r,th.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.sub{color:#6b7684;font-size:11px}
-.tot{display:flex;justify-content:flex-end;margin-top:12px}.tot div{background:#152233;color:#fff;padding:10px 16px;border-radius:6px;font-size:15px;font-weight:700}
+.tot{display:flex;justify-content:flex-end;margin-top:12px;flex-direction:column;align-items:flex-end;gap:6px}.tot .subtot{font-size:12.5px;color:#5d6878}.tot .disc{background:#1a6e3a;color:#fff;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600}.tot .final{background:#152233;color:#fff;padding:10px 16px;border-radius:6px;font-size:15px;font-weight:700}
 .note{margin-top:16px;font-size:11.5px;color:#4a5566;line-height:1.6}.sign{margin-top:36px;display:flex;justify-content:space-between;font-size:11.5px;color:#4a5566}
 @media print{body{padding:0}}</style></head><body>
 <div class="hd"><div><h1>${esc(S2.company)}</h1><div style="font-size:12px;color:#4a5566">ჩამრთველები, როზეტები, ელექტრო მონტაჟი</div></div>
@@ -795,7 +798,7 @@ td.ic{width:44px}td.r,th.r{text-align:right;font-variant-numeric:tabular-nums;wh
 <div class="meta"><div><span>თარიღი:</span> ${ds}</div><div><span>მოქმედებს:</span> ${esc(S2.validity)} დღე</div>
 ${client.name?`<div><span>კლიენტი:</span> ${esc(client.name)}</div>`:""}${client.project?`<div><span>ობიექტი:</span> ${esc(client.project)}</div>`:""}</div>
 <table><thead><tr><th>№</th><th></th><th>დასახელება</th><th class="r">რაოდენობა</th><th class="r">ფასი (ლარი)</th><th class="r">ჯამი (ლარი)</th></tr></thead><tbody>${rows}</tbody></table>
-<div class="tot"><div>სულ: ${tot.toFixed(2)} ლარი</div></div>
+<div class="tot">${discPct>0?`<div class="subtot">სულ ფასდაკლებამდე: ${tot.toFixed(2)} ლარი</div><div class="disc">ფასდაკლება ${discPct}%: −${discAmt.toFixed(2)} ლარი</div><div class="final">სულ გადასახდელი: ${finalTot.toFixed(2)} ლარი</div>`:`<div class="final">სულ: ${tot.toFixed(2)} ლარი</div>`}</div>
 <div class="note">${client.note?esc(client.note)+"<br>":""}${esc(S2.footer)}</div>
 <div class="sign"><div>შეადგინა: ____________________</div><div>${esc(S2.company)}</div></div>
 <script>window.addEventListener("load",function(){if(location.protocol!=="about:"&&!window.frameElement)setTimeout(function(){window.print()},500)})<\/script>
