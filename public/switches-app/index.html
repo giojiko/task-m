@@ -372,6 +372,7 @@ function smk(sid){const v=N(settings.seriesMk?.[sid]);return v!=null?v:(N(settin
 function pmk(it){const v=N(prices[it.id]?.markup);return v!=null?v:smk(it.sid||byId[it.id]?.sid)}
 function mkOf(line){const v=N(line.mk);return v!=null?v:pmk(byId[line.id])}
 function saleOf(line){const it=byId[line.id];if(N(line.sale)!=null)return N(line.sale);
+  if(!it)return null;
   // use manual price list price if set (per color, falls back to first color of series, then any set color)
   const p=prices[it.id]||{};const sl=p.sale||{};
   // 1. exact color match
@@ -386,7 +387,7 @@ function saleOf(line){const it=byId[line.id];if(N(line.sale)!=null)return N(line
   // 4. no manual price set — return null (no auto-compute from markup)
   return null}
 const fmt=v=>v==null?"":(Math.round(v*100)/100).toString();
-function lineCalc(l){const it=byId[l.id];const c=costOf(it,l.color),sale=saleOf(l);const man=sale!=null&&N(l.sale)==null;
+function lineCalc(l){const it=byId[l.id];if(!it)return{c:null,sale:null,man:false,eff:null,amk:null,pu:null};const c=costOf(it,l.color),sale=saleOf(l);const man=sale!=null&&N(l.sale)==null;
   const eff=c&&sale!=null?(sale/c-1)*100:null;return{c,sale,man,eff,amk:man?null:mkOf(l),pu:c!=null&&sale!=null?sale-c:null}}
 function lvl(k){if(k.c==null||k.sale==null||!(k.c>0))return"";const e=k.amk!=null?k.amk:(k.sale/k.c-1)*100+0.05;const mn=N(settings.minMk)??30,ok=N(settings.okMk)??80;
   if(e<mn-1e-9)return"bad";if(e<ok-1e-9)return"warn";return""}
@@ -473,6 +474,8 @@ function migrate(){
   if(!settings.v2){if(N(settings.validity)===14)settings.validity=7;if(N(settings.markup)===40)settings.markup=80;if(N(settings.round)===0.5)settings.round=0;settings.v2=true}
   // v3: clear auto-computed sale values from cart (markup removed)
   if(!settings.v3){cart.forEach(l=>{if(N(l.sale)!=null&&N(l.mk)==null)l.sale=null});saveCart();settings.v3=true;saveSettings()}
+  // v4: remove cart items whose item id is not in byId (stale B2/B5 items that crash render)
+  if(!settings.v4){cart=cart.filter(l=>!!byId[l.id]);saveCart();settings.v4=true;saveSettings()}
 }
 function setStatus(){
   const dot=$("#dbdot"),t=$("#dbtxt");
@@ -613,7 +616,7 @@ function renderQuote(){
 function ledgerHtml(){
   setTimeout(syncLv,0);
   const findSer=sid=>{for(const cat of Object.values(catalogs)){const sr=cat.series?.find(x=>x.id===sid);if(sr)return sr;}return catalog.series.find(x=>x.id===sid)||null};
-  const lines=cart.map((l,i)=>{const it=byId[l.id];const s=findSer(it.sid);const col=(s?s.colors.find(c=>c.id===l.color)||s.colors[0]:{ka:"?"});const k=lineCalc(l);
+  const lines=cart.map((l,i)=>{const it=byId[l.id];if(!it)return"";const s=findSer(it.sid);const col=(s?s.colors.find(c=>c.id===l.color)||s.colors[0]:{ka:"?"});const k=lineCalc(l);
     const lv=lvl(k);return`<div class="line${lv?" lv-"+lv:""}" data-i="${i}"><div class="t">${esc(it.ka)}<br><i>${esc(s?.ka||"")} · ${esc(col.ka)} · <b>${esc(it.code)}</b></i></div><button class="x" data-rm="${i}" aria-label="წაშლა">×</button>
       <div class="m"><label>რაოდენობა <input class="lq" data-lq="${i}" inputmode="numeric" value="${l.qty}"></label><label>ფასი <input class="sale${k.man?" man":""}" data-sale="${i}" inputmode="decimal" ${role()==="specialist"?"readonly":""} value="${k.sale==null?"":k.sale.toFixed(2)}" title="ფასი დათვლილია სტანდარტული ნამატით; შეგიძლიათ შეცვალოთ. გასუფთავებით დაბრუნდება დათვლილზე"> ₾</label><span class="sum num">${k.sale==null?"—":gel(k.sale*l.qty)}</span></div><div class="lvmsg">${lv?LVMSG[lv]:""}</div></div>`}).join("");
   return`<aside class="panel ledger">
