@@ -170,10 +170,18 @@ function InvoicePageInner() {
   const [refreshKey,     setRefreshKey]    = useState(0);
 
   useEffect(() => {
-    const raw = searchParams.get('fromQuote');
+    // URL param (legacy) ან sessionStorage (switches iframe-იდან postMessage-ით)
+    let raw = searchParams.get('fromQuote');
+    let fromSession = false;
+    if (!raw) {
+      try {
+        const ss = sessionStorage.getItem('sp-fromQuote');
+        if (ss) { raw = ss; fromSession = true; }
+      } catch {}
+    }
     if (!raw) return;
     try {
-      const q = JSON.parse(decodeURIComponent(raw));
+      const q = fromSession ? JSON.parse(raw) : JSON.parse(decodeURIComponent(raw));
       const prefill = {
         _fromQuote: q.no,
         client: q.client?.name ? { name: q.client.name, address: q.client.project || '' } : undefined,
@@ -181,7 +189,7 @@ function InvoicePageInner() {
           const origPrice = parseFloat(l.sale || l.price || 0);
           return {
             id: uid(),
-            name: l.ka || l.name || '',
+            name: l.name || l.ka || '',
             qty: l.qty || 1,
             unit: l.unit || 'ცალი',
             listPrice: origPrice,
@@ -196,9 +204,13 @@ function InvoicePageInner() {
         discount:     0,
         notes: `შეთავაზება ${q.no}${q.client?.project ? ' — ' + q.client.project : ''}`,
       };
-      const url = new URL(window.location.href);
-      url.searchParams.delete('fromQuote');
-      window.history.replaceState({}, '', url.toString());
+      if (fromSession) {
+        try { sessionStorage.removeItem('sp-fromQuote'); } catch {}
+      } else {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('fromQuote');
+        window.history.replaceState({}, '', url.toString());
+      }
       setEditingInvoice(prefill);
       setEditorOpen(true);
     } catch {}

@@ -3,6 +3,7 @@
 // The prototype keeps its own look and behaviour; this page only gives it the data from the store
 // (db.switchPrices, db.switchSettings, db.switchQuotes) and saves its changes back with saveDB.
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import AppShell from '@/components/Layout/AppShell';
 import seedData from '@/lib/switch-prices-seed.json';
@@ -12,6 +13,7 @@ const RATE_FIELDS = ['usd', 'cny', 'rateAt', 'rateErr'];
 
 export default function SwitchesPage() {
   const { db, dbRef, saveDB, user } = useApp();
+  const router = useRouter();
   const frameRef = useRef(null);
   const queue = useRef([]);
   const timer = useRef(null);
@@ -78,6 +80,11 @@ export default function SwitchesPage() {
     const onMsg = (e) => {
       if (e.origin !== window.location.origin || e.source !== frameRef.current?.contentWindow || !e.data) return;
       if (e.data.type === 'sp-ready') sendInit();
+      if (e.data.type === 'sp-qtoinv') {
+        try { sessionStorage.setItem('sp-fromQuote', JSON.stringify(e.data.payload)); } catch {}
+        router.push('/invoice');
+        return;
+      }
       if (e.data.type === 'sp-write') {
         queue.current.push(e.data);
         clearTimeout(timer.current);
