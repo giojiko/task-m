@@ -417,7 +417,8 @@ function hostBridge(){
   if(window.parent===window)return Promise.resolve(null);
   const host=window.parent,origin=location.origin;
   const subs={prices:[],quotes:[],settings:[]};let data=null;
-  const fillLine=l=>{const it=byId[l.id];if(!it)return l;const s=catalog.series.find(x=>x.id===it.sid);const col=(s.colors.find(c=>c.id===l.color)||s.colors[0]);return{code:it.code,ka:it.ka,series:s.ka,colorKa:col.ka,...l}};
+  const findSeries=sid=>{for(const cat of Object.values(catalogs)){const sr=cat.series?.find(x=>x.id===sid);if(sr)return sr;}return catalog.series.find(x=>x.id===sid)||null};
+  const fillLine=l=>{const it=byId[l.id];if(!it)return l;const s=findSeries(it.sid);if(!s)return l;const col=(s.colors.find(c=>c.id===l.color)||s.colors[0]);return{code:it.code,ka:it.ka,series:s.ka,colorKa:col.ka,...l}};
   const normQ=q=>({...q,client:{name:"",project:"",phone:"",note:"",...(q.client||{})},lines:(q.lines||[]).map(fillLine)});
   const emit=()=>{if(!data)return;
     const pd=Object.keys(data.prices||{}).map(id=>({id,data:()=>data.prices[id]}));
@@ -602,7 +603,8 @@ function renderQuote(){
 }
 function ledgerHtml(){
   setTimeout(syncLv,0);
-  const lines=cart.map((l,i)=>{const it=byId[l.id];const s=catalog.series.find(x=>x.id===it.sid);const col=s.colors.find(c=>c.id===l.color)||s.colors[0];const k=lineCalc(l);
+  const findSer=sid=>{for(const cat of Object.values(catalogs)){const sr=cat.series?.find(x=>x.id===sid);if(sr)return sr;}return catalog.series.find(x=>x.id===sid)||null};
+  const lines=cart.map((l,i)=>{const it=byId[l.id];const s=findSer(it.sid);const col=(s?s.colors.find(c=>c.id===l.color)||s.colors[0]:{ka:"?"});const k=lineCalc(l);
     const lv=lvl(k);return`<div class="line${lv?" lv-"+lv:""}" data-i="${i}"><div class="t">${esc(it.ka)}<br><i>${esc(s.ka)} · ${esc(col.ka)} · <b>${esc(it.code)}</b></i></div><button class="x" data-rm="${i}" aria-label="წაშლა">×</button>
       <div class="m"><label>რაოდენობა <input class="lq" data-lq="${i}" inputmode="numeric" value="${l.qty}"></label><label>ფასი <input class="sale${k.man?" man":""}" data-sale="${i}" inputmode="decimal" ${role()==="specialist"?"readonly":""} value="${k.sale==null?"":k.sale.toFixed(2)}" title="ფასი დათვლილია სტანდარტული ნამატით; შეგიძლიათ შეცვალოთ. გასუფთავებით დაბრუნდება დათვლილზე"> ₾</label><span class="sum num">${k.sale==null?"—":gel(k.sale*l.qty)}</span></div><div class="lvmsg">${lv?LVMSG[lv]:""}</div></div>`}).join("");
   return`<aside class="panel ledger">
