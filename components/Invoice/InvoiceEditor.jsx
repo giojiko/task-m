@@ -13,6 +13,19 @@ function escHtml(s) {
 
 function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, discount, notes, totals, prepayPct }) {
   const validItems = items.filter(i => i.name.trim());
+  // item-level discount totals
+  const origItemsTotal = validItems.reduce((s, it) => {
+    const lp = parseFloat(it.listPrice) || parseFloat(it.price) || 0;
+    return s + lp * (Number(it.qty) || 0);
+  }, 0);
+  const saleItemsTotal = validItems.reduce((s, it) => {
+    const lp = parseFloat(it.listPrice) || parseFloat(it.price) || 0;
+    const sp = parseFloat(it.salePrice);
+    const fp = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+    return s + fp * (Number(it.qty) || 0);
+  }, 0);
+  const itemDiscTotal = origItemsTotal - saleItemsTotal; // ₾ ფასდაკლება პოზიციებზე
+  const totalDiscount = itemDiscTotal + Number(discount); // + ზოგადი ფასდაკლება
   const rows = validItems.map((item, i) => {
     const lp = parseFloat(item.listPrice) || parseFloat(item.price) || 0;
     const sp = parseFloat(item.salePrice);
@@ -181,9 +194,14 @@ function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, di
       <div class="note-box">${escHtml(notes || '—')}</div>
     </div>
     <div class="inv-totals">
+      ${origItemsTotal > saleItemsTotal ? `
+      <div class="totals-row"><span class="tl">საწყისი ფასი</span><span class="tv" style="text-decoration:line-through;color:#9aa">₾ ${origItemsTotal.toFixed(2)}</span></div>
+      <div class="totals-row" style="color:#1a6e3a"><span class="tl" style="color:#1a6e3a;font-weight:600">ფასდაკლება პოზიციებზე</span><span class="tv" style="color:#1a6e3a;font-weight:700">-₾ ${itemDiscTotal.toFixed(2)}</span></div>
+      ` : ''}
       <div class="totals-row"><span class="tl">ქვეჯამი (დღგ-ს გარეშე)</span><span class="tv">₾ ${totals.subtotal.toFixed(2)}</span></div>
       <div class="totals-row"><span class="tl">დღგ ჯამი</span><span class="tv">₾ ${totals.vatAmount.toFixed(2)}</span></div>
-      <div class="totals-row"><span class="tl">ფასდაკლება</span><span class="tv">₾ ${Number(discount).toFixed(2)}</span></div>
+      ${Number(discount) > 0 ? `<div class="totals-row"><span class="tl">დამატებითი ფასდაკლება</span><span class="tv" style="color:#1a6e3a">-₾ ${Number(discount).toFixed(2)}</span></div>` : ''}
+      ${totalDiscount > 0.001 ? `<div class="totals-row" style="border-top:1px dashed #c3e6cb;padding-top:6px"><span class="tl" style="color:#1a6e3a;font-weight:600">სულ ფასდაკლება</span><span class="tv" style="color:#1a6e3a;font-weight:700">-₾ ${totalDiscount.toFixed(2)}</span></div>` : ''}
       ${Number(prepayPct) > 0
   ? `<div class="totals-row grand"><span class="tl">სრული თანხა</span><span class="tv" style="color:#6b7a99;font-size:15px">₾ ${totals.total.toFixed(2)}</span></div>
      <div class="totals-row" style="border-top:2px solid #0077cc;padding-top:8px"><span class="tl" style="color:#0077cc;font-weight:700">წინასწარი ჩარიცხვა (${prepayPct}%)</span><span class="tv" style="color:#0077cc">₾ ${(totals.total * Number(prepayPct) / 100).toFixed(2)}</span></div>
