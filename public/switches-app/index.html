@@ -551,7 +551,7 @@ function render(){
   // ბრენდის შერჩევა — tab quote ან prices-ზე, თუ brand არ არის არჩეული
   if(!ui.brand && (ui.tab==="quote"||ui.tab==="prices")){renderBrandPicker();return}
   const priced=Object.keys(prices).filter(k=>N(prices[k]?.price)!=null||Object.keys(prices[k]?.colors||{}).length).length;
-  $("#banner").innerHTML=priced===0?`<div class="banner">კატალოგი ჩაიტვირთა: ${catalog.series.length} სერია, ${Object.keys(byId).length} პროდუქტი. ფასები ჯერ არ არის შეყვანილი — როგორც კი მომწოდებლის ფასებს და წონას მიიღებთ, ჩაწერეთ „ფასები და წონა" გვერდზე და თვითღირებულება ავტომატურად დაითვლება.</div>`:"";
+  $("#banner").innerHTML=priced===0?`<div class="banner">კატალოგი ჩაიტვირთა: ${catalog.series.length} სერია, ${Object.keys(byId).length} პროდუქტი. ფასები ჯერ არ არის შეყვანილი — როგორც კი მომწოდებლის ფასებს და წონას მიიღებთ, ჩაწერეთ "ფასები და წონა" გვერდზე და თვითღირებულება ავტომატურად დაითვლება.</div>`:"";
   if(ui.tab==="quote")renderQuote();else if(ui.tab==="prices")renderPrices();else if(ui.tab==="quotes")renderQuotes();else if(ui.tab==="internal")renderInternal();else renderSettings();
   showRate();
 }
@@ -608,7 +608,7 @@ function renderQuote(){
         ${CATORDER.filter(c=>s.items.some(i=>i.cat===c)).map(c=>`<button class="chip" data-cat="${c}" aria-pressed="${ui.cat===c}">${CATSHORT[c]}</button>`).join("")}
         <input class="search" id="search" placeholder="ძებნა: კოდი ან სახელი" value="${esc(ui.q)}">
       </div>
-      <div class="list">${rows||`<div class="empty">${hidden?"ამ სერიაში ფასიანი პროდუქტი ჯერ არ არის. ფასები შეიყვანეთ „ფასები და წონა" გვერდზე.":"ამ ფილტრით პროდუქტი ვერ მოიძებნა."}</div>`}</div>${hidden&&rows?`<div class="note" style="padding-top:10px">${hidden} პროდუქტი დამალულია, რადგან ფასი ჯერ არ აქვს.</div>`:""}
+      <div class="list">${rows||`<div class="empty">${hidden?"ამ სერიაში ფასიანი პროდუქტი ჯერ არ არის. ფასები შეიყვანეთ „ფასები და წონა“ გვერდზე.":"ამ ფილტრით პროდუქტი ვერ მოიძებნა."}</div>`}</div>${hidden&&rows?`<div class="note" style="padding-top:10px">${hidden} პროდუქტი დამალულია, რადგან ფასი ჯერ არ აქვს.</div>`:""}
     </section>
     ${ledgerHtml()}
   </div>`;
@@ -620,7 +620,7 @@ function ledgerHtml(){
     const lv=lvl(k);return`<div class="line${lv?" lv-"+lv:""}" data-i="${i}"><div class="t">${esc(it.ka)}<br><i>${esc(s?.ka||"")} · ${esc(col.ka)} · <b>${esc(it.code)}</b></i></div><button class="x" data-rm="${i}" aria-label="წაშლა">×</button>
       <div class="m"><label>რაოდენობა <input class="lq" data-lq="${i}" inputmode="numeric" value="${l.qty}"></label><label>ფასი <input class="sale${k.man?" man":""}" data-sale="${i}" inputmode="decimal" ${role()==="specialist"?"readonly":""} value="${k.sale==null?"":k.sale.toFixed(2)}" title="ფასი დათვლილია სტანდარტული ნამატით; შეგიძლიათ შეცვალოთ. გასუფთავებით დაბრუნდება დათვლილზე"> ₾</label><span class="sum num">${k.sale==null?"—":gel(k.sale*l.qty)}</span></div><div class="lvmsg">${lv?LVMSG[lv]:""}</div></div>`}).join("");
   return`<aside class="panel ledger">
-    <div class="phead"><h3>შეთავაზება კლიენტისთვის</h3><span class="status">${curQ?`რედაქტირდება № ${esc(curQ.no)} — ცვლილების შემდეგ დააჭირეთ „შენახვა"`:"ახალი შეთავაზება"}</span><span class="status" id="saved"></span></div>
+    <div class="phead"><h3>შეთავაზება კლიენტისთვის</h3><span class="status">${curQ?`რედაქტირდება № ${esc(curQ.no)} — ცვლილების შემდეგ დააჭირეთ "შენახვა"`:"ახალი შეთავაზება"}</span><span class="status" id="saved"></span></div>
     <div class="fields">
       <label>კლიენტი<input id="cl-name" value="${esc(client.name)}" placeholder="სახელი ან კომპანია"></label>
       <label>ობიექტი<input id="cl-project" value="${esc(client.project)}" placeholder="მაგალითად: ბინა, ვაკე"></label>
@@ -634,7 +634,7 @@ function ledgerHtml(){
       <button class="btn" id="download" ${cart.length&&!badCount()?"":"disabled"}>ჩამოტვირთვა დასაბეჭდად</button>
       <button class="btn ghost" id="clear" ${cart.length||curQ?"":"disabled"}>ახალი შეთავაზება</button>
     </div>
-    <p class="note">ფასი დათვლილია სტანდარტული ნამატით და ხელითაც იცვლება. მოგება ჩანს „შეთავაზებების" ცხრილში. დაბეჭდვისას ან ჩამოტვირთვისას შეთავაზება ავტომატურად ინახება „შეთავაზებების" ცხრილში.</p>
+    <p class="note">ფასი დათვლილია სტანდარტული ნამატით და ხელითაც იცვლება. მოგება ჩანს "შეთავაზებების" ცხრილში. დაბეჭდვისას ან ჩამოტვირთვისას შეთავაზება ავტომატურად ინახება "შეთავაზებების" ცხრილში.</p>
   </aside>`;
 }
 function refreshNumbers(){ /* light refresh of ledger only when typing elsewhere */ const l=$(".ledger");if(l&&!l.contains(document.activeElement)){l.outerHTML=ledgerHtml()} }
@@ -749,7 +749,7 @@ function saveQuote(silent){
   if(!cart.length)return false;if(badCount()){toast("წითლად მონიშნულ პროდუქტს ფასი ძალიან დაბალი აქვს — შეასწორეთ და შემდეგ შეინახეთ");return false}const now=new Date();
   if(!curQ){const no="SP-"+now.toISOString().slice(2,10).replace(/-/g,"")+"-"+String(now.getHours()).padStart(2,"0")+String(now.getMinutes()).padStart(2,"0")+String(now.getSeconds()).padStart(2,"0");curQ={id:"q"+now.getTime(),no,created:now.toISOString()}}
   let cost=0,total=0;
-  const lines=cart.map(l=>{const it=byId[l.id];const s=catalog.series.find(x=>x.id===it.sid);const col=s.colors.find(c=>c.id===l.color)||s.colors[0];const k=lineCalc(l);
+  const lines=cart.map(l=>{const it=byId[l.id];if(!it)return null;const s=findSeries(it.sid);const col=(s?s.colors.find(c=>c.id===l.color)||s.colors[0]:{ka:"?"});const k=lineCalc(l);
     if(k.c!=null&&k.sale!=null){cost+=k.c*l.qty;total+=k.sale*l.qty}
     return{id:l.id,color:l.color,qty:l.qty,sale:l.sale??null,mk:l.mk??null,code:it.code,ka:it.ka,series:s.ka,colorKa:col.ka,cost:k.c,price:k.sale}});
   const prevQ=quotes.find(q=>q.id===curQ.id);const doc={id:curQ.id,no:curQ.no,created:curQ.created||now.toISOString(),updated:now.toISOString(),client:{...client},approval:approvalFor(cart,prevQ),lines,cost:Math.round(cost*100)/100,total:Math.round(total*100)/100,profit:Math.round((total-cost)*100)/100};
@@ -771,7 +771,7 @@ function renderQuotes(){
   ${list.map(x=>{const lt=liveTotal(x);return`<tr${curQ&&curQ.id===x.id?' class="has"':""}><td class="code">${esc(x.no)}</td><td style="white-space:nowrap">${d(x.updated||x.created)}</td><td>${esc(x.client?.name||"—")}</td><td>${esc(x.client?.project||"—")}</td><td class="cost">${x.lines.reduce((a,l)=>a+l.qty,0)} ცალი (${x.lines.length})</td><td class="cost"><b>${gel(lt||x.total)}</b></td>
   <td style="white-space:nowrap">${approvalBadge(x)} ${isPending(x)&&isSuper()?`<button class="btn primary" data-qok="${x.id}">დადასტურება</button> `:""}<button class="btn" data-qopen="${x.id}">რედაქტირება</button> <button class="btn" data-qprint="${x.id}" ${isPending(x)?"disabled":""}>დაბეჭდვა</button> <button class="btn" data-qtoinv="${x.id}" ${isPending(x)?"disabled":""} style="background:var(--accent);color:#fff">📄 ინვოისი</button> <button class="btn ghost" data-qdel="${x.id}">წაშლა</button></td></tr>`}).join("")}
   <tr><td colspan="5" style="text-align:right;color:var(--muted)">სულ ${list.length} შეთავაზება</td><td class="cost"><b>${gel(T)}</b></td><td></td></tr></tbody></table></div>`
-  :`<div class="empty">${quotes.length?"ძებნით ვერაფერი მოიძებნა.":"ჯერ არცერთი შეთავაზება არ არის შენახული. „შეთავაზების შედგენა" გვერდზე დააჭირეთ „შენახვა" ან დაბეჭდეთ — შეთავაზება აქ გამოჩნდება."}</div>`}</section>`;
+  :`<div class="empty">${quotes.length?"ძებნით ვერაფერი მოიძებნა.":"ჯერ არცერთი შეთავაზება არ არის შენახული. „შეთავაზების შედგენა“ გვერდზე დააჭირეთ „შენახვა“ ან დაბეჭდეთ — შეთავაზება აქ გამოჩნდება."}</div>`}</section>`;
 }
 
 /* ---------- internal calculator ---------- */
@@ -812,7 +812,7 @@ function renderInternal(){
       <div><span>მოგების წილი ფასში</span><b>${T.sale?(P/T.sale*100).toFixed(1):"0.0"}%</b></div></div>
     <div class="tblwrap"><table class="pt it"><thead><tr><th>პროდუქტი</th><th>რაოდენობა</th><th style="text-align:right">ქარხნის ფასი</th><th style="text-align:right">საქონელი + ბანკი (₾)</th><th style="text-align:right">გადაზიდვა (₾)</th><th style="text-align:right">საბაჟო და სხვა % (₾)</th><th style="text-align:right">ფიქსირებული${S.vat?" და დღგ":""} (₾)</th><th style="text-align:right">თვითღირებულება 1 ცალი (₾)</th><th>ნამატი</th><th>ფასი 1 ცალი (₾)</th><th style="text-align:right">მოგება 1 ცალი (₾)</th><th style="text-align:right">მოგება სულ (₾)</th><th style="text-align:right">მოგების წილი ფასში</th></tr></thead>
     <tbody>${rows}<tr class="tot"><td>სულ (ყველა ცალი)</td><td></td><td></td><td class="cost">${g(T.goods+T.bank)}</td><td class="cost">${g(T.freight)}</td><td class="cost">${g(T.cust)}</td><td class="cost">${g(T.fixed+T.vat)}</td><td class="cost strong">${g(T.cost)}</td><td></td><td class="cost strong">${g(T.sale)}</td><td></td><td class="cost profit strong">${g(P)}</td><td class="cost">${T.sale?(P/T.sale*100).toFixed(1)+"%":"—"}</td></tr></tbody></table></div>
-    <div class="formula" style="margin-top:14px">გამოყენებული პარამეტრები: 1 დოლარი = ${esc(S.usd)} ₾, 1 იუანი = ${esc(S.cny)} ₾ · ბანკი ${esc(S.bank)}% · გადაზიდვა ${esc(S.freight)} დოლარი 1 კილოგრამზე · საბაჟო ${esc(S.customs)}% · სხვა ${esc(S.other)}% · ფიქსირებული ${gel(fixedPerUnit())} ერთ ცალზე${S.vat?" · დღგ 18%":""}.<br>რაოდენობის, ნამატის ან ფასის შეცვლა შეთავაზებაში ჩაიწერება მხოლოდ „შენახვაზე" დაჭერის შემდეგ. ცარიელი ფასი — დაბრუნდება ნამატით დათვლილზე.</div>
+    <div class="formula" style="margin-top:14px">გამოყენებული პარამეტრები: 1 დოლარი = ${esc(S.usd)} ₾, 1 იუანი = ${esc(S.cny)} ₾ · ბანკი ${esc(S.bank)}% · გადაზიდვა ${esc(S.freight)} დოლარი 1 კილოგრამზე · საბაჟო ${esc(S.customs)}% · სხვა ${esc(S.other)}% · ფიქსირებული ${gel(fixedPerUnit())} ერთ ცალზე${S.vat?" · დღგ 18%":""}.<br>რაოდენობის, ნამატის ან ფასის შეცვლა შეთავაზებაში ჩაიწერება მხოლოდ "შენახვაზე" დაჭერის შემდეგ. ცარიელი ფასი — დაბრუნდება ნამატით დათვლილზე.</div>
   </section>`;
 }
 /* ---------- client document ---------- */
