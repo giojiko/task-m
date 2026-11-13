@@ -469,7 +469,11 @@ async function initData(){
   setStatus();render();
   if(settings.autoRate)fetchRates(false);
 }
-function migrate(){if(!settings.v2){if(N(settings.validity)===14)settings.validity=7;if(N(settings.markup)===40)settings.markup=80;if(N(settings.round)===0.5)settings.round=0;settings.v2=true}}
+function migrate(){
+  if(!settings.v2){if(N(settings.validity)===14)settings.validity=7;if(N(settings.markup)===40)settings.markup=80;if(N(settings.round)===0.5)settings.round=0;settings.v2=true}
+  // v3: clear auto-computed sale values from cart (markup removed)
+  if(!settings.v3){cart.forEach(l=>{if(N(l.sale)!=null&&N(l.mk)==null)l.sale=null});saveCart();settings.v3=true;saveSettings()}
+}
 function setStatus(){
   const dot=$("#dbdot"),t=$("#dbtxt");
   if(dbState==="ok"){dot.className="dot ok";t.textContent="ფასები ინახება office.smartpro.ge ბაზაში"}
