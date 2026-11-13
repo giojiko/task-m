@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Modal from '@/components/UI/Modal';
 import { useApp } from '@/context/AppContext';
 import { uid, getNextInvoiceNumber, calcInvoiceTotals } from '@/lib/utils';
@@ -117,7 +117,15 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const wh = db?.wh || [];
   const [suggestions,   setSuggestions]   = useState([]);
   const [activeSugIdx,  setActiveSugIdx]  = useState(null);
+  const [dealerPopup,   setDealerPopup]   = useState(null); // { idx, matches }
   const sugRef = useRef(null);
+
+  useEffect(() => {
+    if (!dealerPopup) return;
+    const close = () => setDealerPopup(null);
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [dealerPopup]);
   const isNew = !invoice?.id;
   const clients = db?.clients || [];
   const sellers = db?.sellers || [];
@@ -464,14 +472,24 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                         </td>
                         <td>
                           {(() => {
-                            const spEntry = sellerId
+                            // ზუსტი match
+                            const exactMatch = sellerId
                               ? sellerPrices.find(p =>
                                   p.sellerId === sellerId &&
                                   p.productName?.toLowerCase().trim() === item.name?.toLowerCase().trim()
                                 )
                               : null;
+                            // fuzzy match — ინვოისის სახელი sellerPrice სახელის შიგნითაა
+                            const fuzzyMatches = (!exactMatch && sellerId && item.name?.trim())
+                              ? sellerPrices.filter(p =>
+                                  p.sellerId === sellerId && p.price > 0 &&
+                                  p.productName?.toLowerCase().includes(item.name.toLowerCase().trim())
+                                )
+                              : [];
+                            const hasDealer = exactMatch || fuzzyMatches.length > 0;
+                            const isPopupOpen = dealerPopup?.idx === idx;
                             return (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative' }}>
                                 <input className="input" type="number" min="0" step="0.01"
                                   style={{
                                     border: 'none',
@@ -483,21 +501,61 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                                   value={item.salePrice ?? lp}
                                   onChange={e => updItem(idx, 'salePrice', e.target.value)}
                                   placeholder={lp > 0 ? lp.toFixed(2) : '0.00'} />
-                                {spEntry && spEntry.price > 0 && (
+                                {hasDealer && (
                                   <button
                                     type="button"
-                                    title={`დილერის ფასი: ₾${spEntry.price}`}
-                                    onClick={() => updItem(idx, 'salePrice', spEntry.price)}
+                                    title={exactMatch ? `დილერის ფასი: ₾${exactMatch.price}` : `${fuzzyMatches.length} ვარიანტი`}
+                                    onClick={() => {
+                                      if (exactMatch) {
+                                        updItem(idx, 'salePrice', exactMatch.price);
+                                      } else {
+                                        setDealerPopup(isPopupOpen ? null : { idx, matches: fuzzyMatches });
+                                      }
+                                    }}
                                     style={{
                                       flexShrink: 0, padding: '2px 5px', fontSize: 11,
-                                      border: '1px solid var(--accent)',
-                                      borderRadius: 4, background: 'rgba(27,234,205,0.12)',
-                                      color: 'var(--accent)', cursor: 'pointer',
-                                      fontWeight: 700, lineHeight: 1.3,
+                                      border: `1px solid ${fuzzyMatches.length > 1 ? 'var(--warning, #f59e0b)' : 'var(--accent)'}`,
+                                      borderRadius: 4,
+                                      background: fuzzyMatches.length > 1 ? 'rgba(245,158,11,0.12)' : 'rgba(27,234,205,0.12)',
+                                      color: fuzzyMatches.length > 1 ? 'var(--warning, #f59e0b)' : 'var(--accent)',
+                                      cursor: 'pointer', fontWeight: 700, lineHeight: 1.3,
                                     }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,234,205,0.28)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,234,205,0.12)'}
-                                  >💲</button>
+                                  >💲{fuzzyMatches.length > 1 ? ` ▾` : ''}</button>
+                                )}
+                                {isPopupOpen && (
+                                  <div style={{
+                                    position: 'absolute', top: '100%', right: 0, zIndex: 1000,
+                                    background: 'var(--bg-card)', border: '1px solid var(--border-accent)',
+                                    borderRadius: 'var(--radius)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                                    minWidth: 230, overflow: 'hidden',
+                                  }}>
+                                    <div style={{ padding: '5px 10px', fontSize: 10, fontWeight: 700,
+                                      color: 'var(--text-muted)', textTransform: 'uppercase',
+                                      letterSpacing: '.05em', borderBottom: '1px solid var(--border)',
+                                      background: 'var(--bg-subtle)' }}>
+                                      💲 დილერის ვარიანტები
+                                    </div>
+                                    {dealerPopup.matches.map((m, mi) => (
+                                      <div key={mi}
+                                        onMouseDown={e => {
+                                          e.preventDefault();
+                                          updItem(idx, 'salePrice', m.price);
+                                          setDealerPopup(null);
+                                        }}
+                                        style={{
+                                          padding: '7px 12px', cursor: 'pointer',
+                                          borderBottom: '1px solid var(--border)',
+                                          display: 'flex', justifyContent: 'space-between',
+                                          alignItems: 'center', gap: 8, fontSize: 12.5,
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-muted)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                      >
+                                        <span style={{ color: 'var(--text-secondary)', flex: 1, fontSize: 12 }}>{m.productName}</span>
+                                        <span style={{ fontWeight: 700, color: 'var(--accent)', flexShrink: 0 }}>₾{m.price}</span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
                             );
