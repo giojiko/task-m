@@ -463,17 +463,45 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                             onChange={e => updItem(idx, 'listPrice', e.target.value)} />
                         </td>
                         <td>
-                          <input className="input" type="number" min="0" step="0.01"
-                            style={{
-                              border: 'none',
-                              background: discLari > 0.001 ? 'rgba(26,110,58,0.10)' : 'transparent',
-                              padding: '4px 2px', textAlign: 'right', width: '100%',
-                              color: discLari > 0.001 ? '#1a6e3a' : 'var(--text-primary)',
-                              fontWeight: discLari > 0.001 ? 700 : 400,
-                            }}
-                            value={item.salePrice ?? lp}
-                            onChange={e => updItem(idx, 'salePrice', e.target.value)}
-                            placeholder={lp > 0 ? lp.toFixed(2) : '0.00'} />
+                          {(() => {
+                            const spEntry = sellerId
+                              ? sellerPrices.find(p =>
+                                  p.sellerId === sellerId &&
+                                  p.productName?.toLowerCase().trim() === item.name?.toLowerCase().trim()
+                                )
+                              : null;
+                            return (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <input className="input" type="number" min="0" step="0.01"
+                                  style={{
+                                    border: 'none',
+                                    background: discLari > 0.001 ? 'rgba(26,110,58,0.10)' : 'transparent',
+                                    padding: '4px 2px', textAlign: 'right', flex: 1, minWidth: 0,
+                                    color: discLari > 0.001 ? '#1a6e3a' : 'var(--text-primary)',
+                                    fontWeight: discLari > 0.001 ? 700 : 400,
+                                  }}
+                                  value={item.salePrice ?? lp}
+                                  onChange={e => updItem(idx, 'salePrice', e.target.value)}
+                                  placeholder={lp > 0 ? lp.toFixed(2) : '0.00'} />
+                                {spEntry && spEntry.price > 0 && (
+                                  <button
+                                    type="button"
+                                    title={`დილერის ფასი: ₾${spEntry.price}`}
+                                    onClick={() => updItem(idx, 'salePrice', spEntry.price)}
+                                    style={{
+                                      flexShrink: 0, padding: '2px 5px', fontSize: 11,
+                                      border: '1px solid var(--accent)',
+                                      borderRadius: 4, background: 'rgba(27,234,205,0.12)',
+                                      color: 'var(--accent)', cursor: 'pointer',
+                                      fontWeight: 700, lineHeight: 1.3,
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,234,205,0.28)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(27,234,205,0.12)'}
+                                  >💲</button>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'center' }}>
