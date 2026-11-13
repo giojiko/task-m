@@ -5,15 +5,8 @@ import { useApp } from '@/context/AppContext';
 import { uid, getNextInvoiceNumber, calcInvoiceTotals } from '@/lib/utils';
 
 const UNITS = ['ცალი','კომპლ.','მეტრი','მ²','საათი','მომსახ.','კგ'];
-const emptyItem = () => ({ name: '', qty: 1, unit: 'ცალი', listPrice: 0, itemDisc: 0, price: 0, vatEnabled: false, vatRate: 18 });
-// price = listPrice * (1 - itemDisc/100)
-function calcItemPrice(listPrice, itemDisc) {
-  const lp = parseFloat(listPrice) || 0;
-  const d  = parseFloat(itemDisc)  || 0;
-  if (d <= 0) return lp;
-  return Math.round(lp * (1 - d / 100) * 10000) / 10000;
-}
-
+// listPrice = საწყისი (quote) ფასი; salePrice = ჩემი გასაყიდი ფასი (ხელით)
+const emptyItem = () => ({ name: '', qty: 1, unit: 'ცალი', listPrice: 0, salePrice: 0, price: 0, vatEnabled: false, vatRate: 18 });
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -22,12 +15,13 @@ function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, di
   const validItems = items.filter(i => i.name.trim());
   const rows = validItems.map((item, i) => {
     const lp = parseFloat(item.listPrice) || parseFloat(item.price) || 0;
-    const disc = parseFloat(item.itemDisc) || 0;
-    const finalPrice = disc > 0 ? calcItemPrice(lp, disc) : lp;
+    const sp = parseFloat(item.salePrice);
+    const finalPrice = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+    const discLari = lp - finalPrice;
     const lineTotal = Number(item.qty) * finalPrice;
     const lineVat = item.vatEnabled ? lineTotal * (Number(item.vatRate ?? 18) / 100) : 0;
-    const priceCell = disc > 0
-      ? `<div style="text-align:right"><span style="text-decoration:line-through;color:#9aa;font-size:10px">₾ ${lp.toFixed(2)}</span><br><span style="color:#1a6e3a;font-weight:700">₾ ${finalPrice.toFixed(2)}</span><br><span style="font-size:9px;background:#1a6e3a;color:#fff;padding:1px 5px;border-radius:4px">-${disc}%</span></div>`
+    const priceCell = (discLari > 0.001)
+      ? `<div style="text-align:right"><span style="text-decoration:line-through;color:#9aa;font-size:10px">₾ ${lp.toFixed(2)}</span><br><span style="color:#1a6e3a;font-weight:700">₾ ${finalPrice.toFixed(2)}</span><br><span style="font-size:9px;background:#1a6e3a;color:#fff;padding:1px 5px;border-radius:4px">-₾${discLari.toFixed(2)}</span></div>`
       : `<span style="text-align:right;display:block">₾ ${finalPrice.toFixed(2)}</span>`;
     return `
       <tr>
@@ -330,8 +324,8 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   }, 0);
   const subtotalForDiscount = items.reduce((s, i) => {
     const lp = parseFloat(i.listPrice) || parseFloat(i.price) || 0;
-    const d  = parseFloat(i.itemDisc) || 0;
-    const fp = d > 0 ? calcItemPrice(lp, d) : lp;
+    const sp = parseFloat(i.salePrice);
+    const fp = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
     return s + fp * (parseFloat(i.qty) || 0);
   }, 0);
   const discountLari = discountMode === 'pct'
@@ -343,12 +337,18 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
     setItems(prev => prev.map((it, i) => {
       if (i !== idx) return it;
       const updated = { ...it, [key]: val };
-      // recalc price when listPrice or itemDisc changes
-      if (key === 'listPrice' || key === 'itemDisc') {
-        updated.price = calcItemPrice(
-          key === 'listPrice' ? val : updated.listPrice,
-          key === 'itemDisc'  ? val : updated.itemDisc
-        );
+      // when listPrice changes, reset salePrice to match (unless user already set it lower)
+      if (key === 'listPrice') {
+        const lp = parseFloat(val) || 0;
+        const sp = parseFloat(updated.salePrice);
+        if (isNaN(sp) || sp <= 0 || sp >= lp) {
+          updated.salePrice = lp;
+        }
+        updated.price = parseFloat(updated.salePrice) || lp;
+      }
+      // when salePrice changes, update price directly
+      if (key === 'salePrice') {
+        updated.price = parseFloat(val) || 0;
       }
       return updated;
     }));
@@ -377,9 +377,9 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
 
     const validItems = items.filter(i => i.name.trim()).map(i => {
       const lp = parseFloat(i.listPrice) || parseFloat(i.price) || 0;
-      const d  = parseFloat(i.itemDisc)  || 0;
-      const fp = d > 0 ? calcItemPrice(lp, d) : lp;
-      return { ...i, listPrice: lp, itemDisc: d, price: fp };
+      const sp = parseFloat(i.salePrice);
+      const fp = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+      return { ...i, listPrice: lp, salePrice: fp, price: fp };
     });
     if (validItems.length === 0) { toast('მინიმუმ 1 პოზიცია საჭიროა'); return; }
 
@@ -484,9 +484,8 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                     <th style={{ minWidth: 160 }}>დასახელება</th>
                     <th style={{ width: 52 }}>რაოდ.</th>
                     <th style={{ width: 70 }}>ერთ.</th>
-                    <th style={{ width: 82 }}>საწყისი ფასი (₾)</th>
-                    <th style={{ width: 56 }}>ფასდ. %</th>
-                    <th style={{ width: 82 }}>ჩემი ფასი (₾)</th>
+                    <th style={{ width: 90 }}>საწყისი ფასი (₾)</th>
+                    <th style={{ width: 90 }}>ფასდაკლ. ფასი (₾)</th>
                     <th style={{ width: 54 }}>დღგ</th>
                     <th style={{ width: 82 }}>ჯამი</th>
                     <th style={{ width: 40, textAlign: 'center', fontSize: 9, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '.04em' }}>+/✕</th>
@@ -495,8 +494,9 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                 <tbody>
                   {items.map((item, idx) => {
                     const lp = parseFloat(item.listPrice) || parseFloat(item.price) || 0;
-                    const disc = parseFloat(item.itemDisc) || 0;
-                    const finalPrice = disc > 0 ? calcItemPrice(lp, disc) : lp;
+                    const sp = parseFloat(item.salePrice);
+                    const finalPrice = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+                    const discLari = lp - finalPrice;
                     const lineTotal = Number(item.qty) * finalPrice;
                     const lineVat = item.vatEnabled ? lineTotal * (Number(item.vatRate ?? 18) / 100) : 0;
                     return (
@@ -571,7 +571,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                                       updItem(idx, 'name',      w.name || '');
                                       updItem(idx, 'unit',      w.unit || 'ცალი');
                                       updItem(idx, 'listPrice', sellP);
-                                      updItem(idx, 'itemDisc',  0);
+                                      updItem(idx, 'salePrice', sellP);
                                       updItem(idx, 'price',     sellP);
                                       setSuggestions([]);
                                       setActiveSugIdx(null);
@@ -633,34 +633,17 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                             onChange={e => updItem(idx, 'listPrice', e.target.value)} />
                         </td>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <input className="input" type="number" min="0" max="100" step="0.5"
-                              style={{
-                                border: 'none', background: disc > 0 ? 'rgba(26,110,58,0.12)' : 'transparent',
-                                padding: '4px 2px', textAlign: 'center', width: '100%',
-                                color: disc > 0 ? '#1a6e3a' : 'var(--text-muted)', fontWeight: disc > 0 ? 700 : 400,
-                              }}
-                              value={item.itemDisc ?? 0}
-                              onChange={e => updItem(idx, 'itemDisc', e.target.value)}
-                              placeholder="0" />
-                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>%</span>
-                          </div>
-                        </td>
-                        <td style={{ textAlign: 'right', fontSize: 12.5 }}>
-                          {lp > 0 ? (
-                            <div>
-                              <span style={{ color: disc > 0 ? '#1a6e3a' : 'var(--text-primary)', fontWeight: 700 }}>
-                                ₾{finalPrice.toFixed(2)}
-                              </span>
-                              {disc > 0 && lp !== finalPrice && (
-                                <div style={{ fontSize: 10, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                                  ₾{lp.toFixed(2)}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>
-                          )}
+                          <input className="input" type="number" min="0" step="0.01"
+                            style={{
+                              border: 'none',
+                              background: discLari > 0.001 ? 'rgba(26,110,58,0.10)' : 'transparent',
+                              padding: '4px 2px', textAlign: 'right', width: '100%',
+                              color: discLari > 0.001 ? '#1a6e3a' : 'var(--text-primary)',
+                              fontWeight: discLari > 0.001 ? 700 : 400,
+                            }}
+                            value={item.salePrice ?? lp}
+                            onChange={e => updItem(idx, 'salePrice', e.target.value)}
+                            placeholder={lp > 0 ? lp.toFixed(2) : '0.00'} />
                         </td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'center' }}>

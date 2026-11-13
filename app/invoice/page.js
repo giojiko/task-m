@@ -175,7 +175,7 @@ function InvoicePageInner() {
             qty: l.qty || 1,
             unit: l.unit || 'ცალი',
             listPrice: origPrice,
-            itemDisc: 0,
+            salePrice: origPrice,
             price: origPrice,
             vatEnabled: false,
             vatRate: 18,
