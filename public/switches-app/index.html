@@ -373,8 +373,11 @@ function pmk(it){const v=N(prices[it.id]?.markup);return v!=null?v:smk(it.sid||b
 function mkOf(line){const v=N(line.mk);return v!=null?v:pmk(byId[line.id])}
 function saleOf(line){const it=byId[line.id];if(N(line.sale)!=null)return N(line.sale);
   // use manual price list price if set (per color, falls back to first color)
-  const p=prices[it.id]||{};const sl=p.sale||{};const c0=()=>{const s=activeCatalog().series.find(x=>x.id===it.sid);return s?s.colors[0].id:null};
-  const ms=N(sl[line.color])!=null?N(sl[line.color]):(N(sl[c0()])!=null?N(sl[c0()]):null);
+  const p=prices[it.id]||{};const sl=p.sale||{};
+  // find first color of this item's series without depending on activeCatalog()
+  const sid=it?.sid;let c0id=null;
+  if(sid){for(const cat of Object.values(catalogs)){const sr=cat.series?.find(x=>x.id===sid);if(sr){c0id=sr.colors[0]?.id;break;}}}
+  const ms=N(sl[line.color])!=null?N(sl[line.color]):(c0id&&N(sl[c0id])!=null?N(sl[c0id]):null);
   if(ms!=null)return ms;
   const c=costOf(it,line.color);if(c==null)return null;return roundUp(c*(1+mkOf(line)/100))}
 const fmt=v=>v==null?"":(Math.round(v*100)/100).toString();
@@ -659,7 +662,8 @@ function renderPrices(){
   $("#view").innerHTML=`${seriesRail(s.id,"psid")}
   <section class="panel">
     <div class="phead"><div class="sinfo"><img src="${s.img}" alt=""><div><h3>${esc(s.ka)} — მომწოდებლის ფასები</h3><p>შევსებულია ${done} / ${s.items.length}. ფასი ჩაწერეთ ${settings.currency==="CNY"?"იუანში (¥)":"დოლარში ($)"} ერთ ცალზე, წონა — გრამებში. ცვლილება ავტომატურად ინახება.</p></div></div>
-      <span class="saved" id="saved"></span></div>
+      <span class="saved" id="saved"></span>${s.id==="B2"?`<button class="btn" id="copy-b2-btn" title="B2-ის გასაყიდი ფასები გადაკოპირდება B1 და B5 სერიებში" style="margin-left:auto">📋 B2 ფასები → B1 &amp; B5</button>`:""}
+      </div>
     <div class="tblwrap"><table class="pt"><thead><tr>
       <th></th><th>კოდი</th><th>დასახელება</th>
       <th>ფასი (${cur()})</th><th>წონა (გ)</th>
@@ -898,7 +902,42 @@ document.addEventListener("click",e=>{
   if(t.id==="m-print"){const fr=$("#m-frame");try{fr.contentWindow.focus();fr.contentWindow.print()}catch(err){toast("დაბეჭდვა ვერ მოხერხდა")}return}
   if(t.id==="m-close"){$("#modal").innerHTML="";return}
   if(t.id==="clear"){if(t.dataset.sure){cart=[];client={name:"",project:"",phone:"",note:""};curQ=null;LS.set("curq",null);saveCart();render()}else{t.dataset.sure="1";t.textContent="დარწმუნებული ხართ? დააჭირეთ ისევ";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent="ახალი შეთავაზება"}},3000)}return}
+  if(t.id==="copy-b2-btn"){copyB2Prices();return}
 });
+function copyB2Prices(){
+  // B2 suffix → B1 suffix (direct 1:1, strip "B2-" prefix, add "B1-")
+  // B2 suffix → B5 suffix (modules: B5-72-N, some exceptions)
+  const B2_TO_B5_MOD={
+    "B2-1":"B5-72-1","B2-2":"B5-72-2","B2-3":"B5-72-4","B2-4":"B5-72-5",
+    "B2-5":"B5-72-6","B2-7":"B5-72-7","B2-8":"B5-72-8","B2-10":"B5-72-10",
+    "B2-12":"B5-72-12","B2-12F":"B5-72-12F","B2-R1":"B5-72-R1","B2-R2":"B5-72-R2",
+    "B2-R3":"B5-72-R3","B2-X2":"B5-72-X2","B2-EU":"B5-EU","B2-OH":"B5-OH","B2-HDMI":"B5-HDMI"
+  };
+  const B2_TO_B5_FRAME={"B2-B1":"B5-F1","B2-B2":"B5-F2","B2-B3":"B5-F3","B2-B4":"B5-F4","B2-B5":"B5-F5"};
+  let count=0;
+  // iterate all prices entries that belong to B2
+  for(const [id,p] of Object.entries(prices)){
+    if(!id.startsWith("B2~"))continue;
+    if(!p.sale||!Object.keys(p.sale).length)continue;
+    const parts=id.split("~"); // ["B2","m","B2-1"] or ["B2","f","B2-B1"]
+    if(parts.length<3)continue;
+    const kind=parts[1],code=parts[2];
+    // B1 target
+    const b1code=code.replace(/^B2-/,"B1-");
+    const b1id=`B1~${kind}~${b1code}`;
+    if(byId[b1id]){savePrice(b1id,{sale:{...p.sale}});count++}
+    // B5 target
+    let b5code=null;
+    if(kind==="m")b5code=B2_TO_B5_MOD[code]||null;
+    else if(kind==="f")b5code=B2_TO_B5_FRAME[code]||null;
+    if(b5code){
+      const b5id=`B5~${kind}~${b5code}`;
+      if(byId[b5id]){savePrice(b5id,{sale:{...p.sale}});count++}
+    }
+  }
+  if(count>0){toast(`✅ ${count} ჩანაწერი გადაკოპირდა B1 და B5 სერიებში`);render()}
+  else toast("B2-ში გასაყიდი ფასები არ მოიძებნა — ჯერ შეავსეთ B2-ის ფასები")
+}
 function setQty(id,q){
   q=Math.max(0,Math.round(q||0));const i=cart.findIndex(x=>x.id===id&&x.color===ui.color);
   if(q===0){if(i>-1)cart.splice(i,1)}else if(i>-1)cart[i].qty=q;else cart.push({id,color:ui.color,qty:q});
