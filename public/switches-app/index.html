@@ -372,13 +372,18 @@ function smk(sid){const v=N(settings.seriesMk?.[sid]);return v!=null?v:(N(settin
 function pmk(it){const v=N(prices[it.id]?.markup);return v!=null?v:smk(it.sid||byId[it.id]?.sid)}
 function mkOf(line){const v=N(line.mk);return v!=null?v:pmk(byId[line.id])}
 function saleOf(line){const it=byId[line.id];if(N(line.sale)!=null)return N(line.sale);
-  // use manual price list price if set (per color, falls back to first color)
+  // use manual price list price if set (per color, falls back to first color of series, then any set color)
   const p=prices[it.id]||{};const sl=p.sale||{};
-  // find first color of this item's series without depending on activeCatalog()
+  // 1. exact color match
+  if(N(sl[line.color])!=null)return N(sl[line.color]);
+  // 2. first color of series
   const sid=it?.sid;let c0id=null;
   if(sid){for(const cat of Object.values(catalogs)){const sr=cat.series?.find(x=>x.id===sid);if(sr){c0id=sr.colors[0]?.id;break;}}}
-  const ms=N(sl[line.color])!=null?N(sl[line.color]):(c0id&&N(sl[c0id])!=null?N(sl[c0id]):null);
-  if(ms!=null)return ms;
+  if(c0id&&N(sl[c0id])!=null)return N(sl[c0id]);
+  // 3. any manually set sale price exists — use first one found
+  const anyVal=Object.values(sl).map(v=>N(v)).find(v=>v!=null);
+  if(anyVal!=null)return anyVal;
+  // 4. no manual price — compute from cost + markup
   const c=costOf(it,line.color);if(c==null)return null;return roundUp(c*(1+mkOf(line)/100))}
 const fmt=v=>v==null?"":(Math.round(v*100)/100).toString();
 function lineCalc(l){const it=byId[l.id];const c=costOf(it,l.color),sale=saleOf(l);const man=N(l.sale)!=null;
