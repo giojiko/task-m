@@ -617,24 +617,33 @@ function ledgerHtml(){
 function refreshNumbers(){ /* light refresh of ledger only when typing elsewhere */ const l=$(".ledger");if(l&&!l.contains(document.activeElement)){l.outerHTML=ledgerHtml()} }
 
 function saleCell(it,c){const k=costOf(it,c);return k==null?"—":gel(roundUp(k*(1+pmk(it)/100)))}
+function saleCellColor(it,c){const k=costOf(it,c);return k==null?"—":gel(roundUp(k*(1+pmk(it)/100)))}
 function renderPrices(){
   const s=activeCatalog().series.find(x=>x.id===ui.psid)||activeCatalog().series[0];
   const c0=s.colors[0].id;
   const rows=s.items.map(it=>{const p=prices[it.id]||{};const has=N(p.price)!=null;
+    // per-color sale price cells (always shown)
+    const colorSaleCells=s.colors.map(c=>{
+      const sp=saleCellColor(it,c.id);
+      const isFirst=c.id===c0;
+      return`<td class="cost sale-col" style="text-align:right;background:${isFirst?"":"color-mix(in srgb,"+c.hex+" 10%,var(--bg))"}"><span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c.hex};border:1px solid rgba(0,0,0,0.2);flex-shrink:0"></span><b>${sp}</b></span></td>`
+    }).join("");
     return`<tr class="${has?"has":""}" data-id="${it.id}"><td>${icon(it.icon,s.colors[0].hex)}</td><td class="code">${esc(it.code)}</td><td>${esc(it.ka)}<br><span style="color:var(--muted);font-size:11.5px">${KIND[it.kind]} · ${esc(it.en)}</span></td>
       <td><input id="p-${it.id}" data-f="price" inputmode="decimal" value="${esc(p.price??"")}" placeholder="0.00"></td>
       <td><input id="w-${it.id}" data-f="weight" inputmode="decimal" value="${esc(p.weight??"")}" placeholder="გრამი"></td>
       <td><input class="c" id="m-${it.id}" data-f="markup" inputmode="decimal" value="${esc(p.markup??"")}" placeholder="${esc(smk(s.id))}"></td>
-      <td class="cost sale" id="sale-${it.id}">${saleCell(it,c0)}</td>
+      ${colorSaleCells}
       ${ui.pcolors?s.colors.map(c=>`<td><input class="c" id="c-${it.id}-${c.id}" data-color="${c.id}" inputmode="decimal" value="${esc(p.colors?.[c.id]??"")}" placeholder="—"></td>`).join(""):""}
       <td class="cost" id="cost-${it.id}">${gel(costOf(it,c0))}</td></tr>`}).join("");
   const done=s.items.filter(it=>N(prices[it.id]?.price)!=null).length;
+  // per-color sale price header
+  const colorSaleHeaders=s.colors.map(c=>`<th style="text-align:right;white-space:nowrap"><span style="display:inline-flex;align-items:center;gap:5px"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${c.hex};border:1px solid rgba(0,0,0,0.25)"></span>${esc(c.ka)}</span></th>`).join("");
   $("#view").innerHTML=`${seriesRail(s.id,"psid")}
   <section class="panel">
     <div class="phead"><div class="sinfo"><img src="${s.img}" alt=""><div><h3>${esc(s.ka)} — მომწოდებლის ფასები</h3><p>შევსებულია ${done} / ${s.items.length}. ფასი ჩაწერეთ ${settings.currency==="CNY"?"იუანში (¥)":"დოლარში ($)"} ერთ ცალზე, წონა — გრამებში ერთ ცალზე. ცვლილება ავტომატურად ინახება.</p></div></div>
       <label class="cbtn" style="padding:5px 10px"><input type="checkbox" id="pcolors" ${ui.pcolors?"checked":""}> ფერის მიხედვით სხვა ფასი</label>
       <span class="saved" id="saved"></span></div>
-    <div class="tblwrap"><table class="pt"><thead><tr><th></th><th>კოდი</th><th>დასახელება</th><th>ფასი (${cur()})</th><th>წონა (გრამი)</th><th>ნამატი (%)</th><th style="text-align:right">გასაყიდი ფასი</th>${ui.pcolors?s.colors.map(c=>`<th>${esc(c.ka)} (${cur()})</th>`).join(""):""}<th style="text-align:right">თვითღირებულება (${esc(s.colors[0].ka)})</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="tblwrap"><table class="pt"><thead><tr><th></th><th>კოდი</th><th>დასახელება</th><th>ფასი (${cur()})</th><th>წონა (გრამი)</th><th>ნამატი (%)</th>${colorSaleHeaders}${ui.pcolors?s.colors.map(c=>`<th>${esc(c.ka)} (${cur()})</th>`).join(""):""}<th style="text-align:right">თვითღირებულება (${esc(s.colors[0].ka)})</th></tr></thead><tbody>${rows}</tbody></table></div>
   </section>`;
 }
 function renderSettings(){setTimeout(()=>{["s-usd","s-cny"].forEach(id=>{const el=$("#"+id);if(el)el.readOnly=!!settings.autoRate})},0);
