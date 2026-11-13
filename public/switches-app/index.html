@@ -584,12 +584,14 @@ function renderQuote(){
     for(const c of CATORDER){
       const its=items.filter(i=>i.cat===c&&(k==null||i.kind===k));if(!its.length)continue;
       rows+=`<div class="grp">${k?KIND[k]+" · ":""}${CAT[c]}</div>`;
-      rows+=its.map(it=>{const l=inCart(it.id);const cst=costOf(it,ui.color);const sale=cst==null?null:roundUp(cst*(1+pmk(it)/100));
+      rows+=its.map(it=>{const l=inCart(it.id);const cst=costOf(it,ui.color);
+        const p=prices[it.id];const sl=p?.sale||{};const c0s=findSeries(it.sid)?.colors[0]?.id;const ms=N(sl[ui.color])??(c0s?N(sl[c0s]):null)??Object.values(sl).map(v=>N(v)).find(v=>v!=null)??null;
+        const sale=ms!=null?ms:(cst==null?null:roundUp(cst*(1+pmk(it)/100)));
         return`<div class="row${l?" on":""}" data-id="${it.id}">
           <input type="checkbox" id="ck-${it.id}" ${l?"checked":""} aria-label="${esc(it.code)}">
           <label class="ic" for="ck-${it.id}">${icon(it.icon,col.hex)}</label>
           <label class="nm" for="ck-${it.id}"><b>${esc(it.code)}</b><span>${esc(it.ka)}</span></label>
-          <div class="pr num">${cst==null?`<span class="missing">ფასი არ არის</span>`:`${gel(sale)}<small>ფასი 1 ცალზე</small>`}</div>
+          <div class="pr num">${cst==null&&ms==null?`<span class="missing">ფასი არ არის</span>`:`${gel(sale)}<small>ფასი 1 ცალზე</small>`}</div>
           <div class="qty"><button data-d="-1" aria-label="შემცირება">−</button><input id="q-${it.id}" inputmode="numeric" value="${l?l.qty:0}" aria-label="რაოდენობა"><button data-d="1" aria-label="გაზრდა">+</button></div>
         </div>`}).join("");
     }
