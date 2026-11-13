@@ -81,7 +81,7 @@ function ClientPicker({ clientId, onSelect, newClientDraft, onNewClient }) {
 /* ── კომისიის გამოთვლა ────────────────────────────────────────────── */
 /* სახელიდან (B2-1) ტიპის კოდის ამოღება */
 function extractItemCode(name) {
-  const m = name?.match(/\(([A-Z]\d+-\d+)\)/i);
+  const m = name?.match(/\(([A-Z]\d+-[A-Z]?\d+)\)/i);
   return m ? m[1].toUpperCase() : null;
 }
 /* ნაცრისფერი/შავი/სერი = "dark" ჯგუფი; თეთრი/ოქრო = "light" ჯგუფი */
