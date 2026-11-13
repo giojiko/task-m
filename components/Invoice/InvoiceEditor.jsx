@@ -324,6 +324,10 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const isCreatingNew  = !clientId && (newClientDraft._active || newClientDraft.name.trim());
   const displayClient  = isCreatingNew ? newClientDraft : (selectedClient || {});
 
+  const origSubtotal = items.reduce((s, i) => {
+    const lp = parseFloat(i.listPrice) || parseFloat(i.price) || 0;
+    return s + lp * (parseFloat(i.qty) || 0);
+  }, 0);
   const subtotalForDiscount = items.reduce((s, i) => {
     const lp = parseFloat(i.listPrice) || parseFloat(i.price) || 0;
     const d  = parseFloat(i.itemDisc) || 0;
@@ -480,9 +484,9 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                     <th style={{ minWidth: 160 }}>დასახელება</th>
                     <th style={{ width: 52 }}>რაოდ.</th>
                     <th style={{ width: 70 }}>ერთ.</th>
-                    <th style={{ width: 82 }}>სია-ფასი (₾)</th>
+                    <th style={{ width: 82 }}>საწყისი ფასი (₾)</th>
                     <th style={{ width: 56 }}>ფასდ. %</th>
-                    <th style={{ width: 82 }}>ფასი (₾)</th>
+                    <th style={{ width: 82 }}>ჩემი ფასი (₾)</th>
                     <th style={{ width: 54 }}>დღგ</th>
                     <th style={{ width: 82 }}>ჯამი</th>
                     <th style={{ width: 40, textAlign: 'center', fontSize: 9, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '.04em' }}>+/✕</th>
@@ -643,8 +647,17 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                           </div>
                         </td>
                         <td style={{ textAlign: 'right', fontSize: 12.5 }}>
-                          {disc > 0 ? (
-                            <span style={{ color: '#1a6e3a', fontWeight: 700 }}>₾{finalPrice.toFixed(2)}</span>
+                          {lp > 0 ? (
+                            <div>
+                              <span style={{ color: disc > 0 ? '#1a6e3a' : 'var(--text-primary)', fontWeight: 700 }}>
+                                ₾{finalPrice.toFixed(2)}
+                              </span>
+                              {disc > 0 && lp !== finalPrice && (
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                                  ₾{lp.toFixed(2)}
+                                </div>
+                              )}
+                            </div>
                           ) : (
                             <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>
                           )}
@@ -756,6 +769,12 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
             background: 'var(--bg-muted)', borderRadius: 'var(--radius)',
             padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6,
           }}>
+            {origSubtotal > subtotalForDiscount && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                <span style={{ color: 'var(--text-muted)' }}>საწყისი ფასი</span>
+                <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>₾{origSubtotal.toFixed(2)}</span>
+              </div>
+            )}
             {[
               { label: 'ქვეჯამი',    val: totals.subtotal.toFixed(2) },
               { label: 'დღგ ჯამი',   val: totals.vatAmount.toFixed(2) },

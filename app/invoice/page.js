@@ -167,17 +167,22 @@ function InvoicePageInner() {
       const prefill = {
         _fromQuote: q.no,
         client: q.client?.name ? { name: q.client.name, address: q.client.project || '' } : undefined,
-        items: q.lines.map(l => ({
-          id: uid(),
-          name: l.ka || l.name || '',
-          qty: l.qty || 1,
-          unit: l.unit || 'ცალი',
-          price: parseFloat(l.sale || l.price || 0),
-          vatEnabled: false,
-          vatRate: 18,
-        })),
-        discountMode: q.discountPct > 0 ? 'pct' : 'lari',
-        discountPct:  q.discountPct || 0,
+        items: q.lines.map(l => {
+          const origPrice = parseFloat(l.sale || l.price || 0);
+          return {
+            id: uid(),
+            name: l.ka || l.name || '',
+            qty: l.qty || 1,
+            unit: l.unit || 'ცალი',
+            listPrice: origPrice,
+            itemDisc: 0,
+            price: origPrice,
+            vatEnabled: false,
+            vatRate: 18,
+          };
+        }),
+        discountMode: 'lari',
+        discountPct:  0,
         discount:     0,
         notes: `შეთავაზება ${q.no}${q.client?.project ? ' — ' + q.client.project : ''}`,
       };
