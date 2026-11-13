@@ -383,10 +383,10 @@ function saleOf(line){const it=byId[line.id];if(N(line.sale)!=null)return N(line
   // 3. any manually set sale price exists — use first one found
   const anyVal=Object.values(sl).map(v=>N(v)).find(v=>v!=null);
   if(anyVal!=null)return anyVal;
-  // 4. no manual price — compute from cost + markup
-  const c=costOf(it,line.color);if(c==null)return null;return roundUp(c*(1+mkOf(line)/100))}
+  // 4. no manual price set — return null (no auto-compute from markup)
+  return null}
 const fmt=v=>v==null?"":(Math.round(v*100)/100).toString();
-function lineCalc(l){const it=byId[l.id];const c=costOf(it,l.color),sale=saleOf(l);const man=N(l.sale)!=null;
+function lineCalc(l){const it=byId[l.id];const c=costOf(it,l.color),sale=saleOf(l);const man=sale!=null&&N(l.sale)==null;
   const eff=c&&sale!=null?(sale/c-1)*100:null;return{c,sale,man,eff,amk:man?null:mkOf(l),pu:c!=null&&sale!=null?sale-c:null}}
 function lvl(k){if(k.c==null||k.sale==null||!(k.c>0))return"";const e=k.amk!=null?k.amk:(k.sale/k.c-1)*100+0.05;const mn=N(settings.minMk)??30,ok=N(settings.okMk)??80;
   if(e<mn-1e-9)return"bad";if(e<ok-1e-9)return"warn";return""}
@@ -701,11 +701,6 @@ function renderSettings(){setTimeout(()=>{["s-usd","s-cny"].forEach(id=>{const e
         <div class="fixline" style="font-size:12px;color:var(--muted)">ფიქსირებული ხარჯი ერთ ცალზე სულ: <b class="num" id="fixpu">${gel(fixedPerUnit())}</b></div>
         <label style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="s-vat" data-s="vat" ${settings.vat?"checked":""}> დღგ 18% ჩავთვალოთ თვითღირებულებაში</label></fieldset>
       <fieldset><legend>გასაყიდი ფასი</legend>
-        ${f("markup","ნამატი თვითღირებულებაზე, ნაგულისხმევი (%)")}
-        ${f("minMk","მინიმალური ნამატი — ამაზე დაბალი ფასით შეთავაზება არ შეინახება (%)")}
-        ${f("okMk","ამ ნამატის ქვემოთ ფასი ითვლება ექსტრა ფასდაკლებად (%)")}
-        <div style="font-weight:600;font-size:12.5px;color:var(--ink);margin-top:4px">ნამატი სერიების მიხედვით (%) — ცარიელი ნიშნავს ნაგულისხმევს</div>
-        <div class="smkgrid">${catalog.series.map(x=>`<label>${esc(x.ka)}<input data-smk="${x.id}" inputmode="decimal" value="${esc(settings.seriesMk?.[x.id]??"")}" placeholder="${esc(settings.markup)}"></label>`).join("")}</div>
         ${f("round","ავტომატური დამრგვალება ზემოთ, ლარი (0 — არ დამრგვალდეს; მაგალითად 0.1 ან 1)")}
         ${f("validity","შეთავაზება მოქმედებს (დღე)","number","1")}</fieldset>
       <fieldset><legend>შეთავაზების ფორმა</legend>
