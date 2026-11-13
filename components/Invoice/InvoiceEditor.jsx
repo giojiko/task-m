@@ -78,6 +78,40 @@ function ClientPicker({ clientId, onSelect, newClientDraft, onNewClient }) {
   );
 }
 
+/* ── კომისიის გამოთვლა ────────────────────────────────────────────── */
+function calcSellerCommission(items, sellerId, sellerPrices, sellers) {
+  if (!sellerId) return { lines: [], totalComm: 0 };
+  const seller = (sellers || []).find(s => s.id === sellerId);
+  const lines = items.filter(i => i.name?.trim()).map(i => {
+    const qty       = Number(i.qty) || 0;
+    const myPrice   = Number(i.salePrice || i.price || 0);
+    const lp        = Number(i.listPrice || myPrice);
+    // seller's specific price for this product
+    const spEntry   = (sellerPrices || []).find(p =>
+      p.sellerId === sellerId &&
+      p.productName?.toLowerCase().trim() === i.name?.toLowerCase().trim()
+    );
+    let sellerPrice;
+    if (spEntry) {
+      if (spEntry.price > 0) {
+        sellerPrice = spEntry.price;
+      } else if (spEntry.discountPct > 0) {
+        sellerPrice = myPrice * (1 - spEntry.discountPct / 100);
+      } else {
+        sellerPrice = myPrice;
+      }
+    } else if (seller?.defPct > 0) {
+      sellerPrice = myPrice * (1 - seller.defPct / 100);
+    } else {
+      sellerPrice = myPrice; // no diff
+    }
+    const commission = Math.max(0, (myPrice - sellerPrice) * qty);
+    return { name: i.name, qty, myPrice, sellerPrice, commission, hasEntry: !!spEntry };
+  });
+  const totalComm = lines.reduce((s, l) => s + l.commission, 0);
+  return { lines, totalComm };
+}
+
 export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSaved }) {
   const { db, dbRef, user, saveDB, toast } = useApp();
   const wh = db?.wh || [];
@@ -86,6 +120,8 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const sugRef = useRef(null);
   const isNew = !invoice?.id;
   const clients = db?.clients || [];
+  const sellers = db?.sellers || [];
+  const sellerPrices = db?.sellerPrices || [];
 
   const today = new Date().toISOString().slice(0, 10);
   const dueDefault = (() => { const d = new Date(); d.setDate(d.getDate() + 5); return d.toISOString().slice(0, 10); })();
@@ -99,6 +135,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const [discountPct,    setDiscountPct]    = useState(invoice?.discountPct  ?? 0);
   const [prepayPct,      setPrepayPct]      = useState(invoice?.prepayPct ?? 0);
   const [notes,          setNotes]          = useState(invoice?.notes     || 'ფასები ეროვნულ ვალუტაში (GEL)');
+  const [sellerId,       setSellerId]       = useState(invoice?.sellerId  || '');
   const [items,          setItems]          = useState(
     invoice?.items?.length ? invoice.items : [emptyItem(), emptyItem(), emptyItem()]
   );
@@ -121,6 +158,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
     ? Math.round(subtotalForDiscount * parseFloat(discountPct || 0)) / 100
     : parseFloat(discount || 0);
   const totals = calcInvoiceTotals(items, discountLari);
+  const sellerComm = calcSellerCommission(items, sellerId, sellerPrices, sellers);
 
   const updItem = (idx, key, val) =>
     setItems(prev => prev.map((it, i) => {
@@ -195,6 +233,9 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
       subtotal:  recalc.subtotal,
       vatAmount: recalc.vatAmount,
       total:     recalc.total,
+      sellerId:         sellerId || null,
+      sellerSnapshot:   sellerId ? (sellers.find(s => s.id === sellerId) || null) : null,
+      sellerCommission: sellerId ? sellerComm.totalComm : 0,
       status:    invoice?.status    || 'sent',
       createdBy: invoice?.createdBy || user.id,
       created:   invoice?.created   || new Date().toISOString(),
@@ -537,6 +578,54 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
             <input className="input" type="number" min="0" max="100" step="5"
               value={prepayPct} onChange={e => setPrepayPct(e.target.value)} placeholder="0" />
           </div>
+
+          {/* Seller Picker */}
+          <div className="fg" style={{ marginBottom: 0 }}>
+            <label className="form-label">🤝 გამყიდველი / რეფერალი</label>
+            <select className="select" value={sellerId} onChange={e => setSellerId(e.target.value)}>
+              <option value="">— არ მიბმულა —</option>
+              {sellers.filter(s => s.active !== false).map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Seller Commission Panel */}
+          {sellerId && sellerComm.totalComm >= 0 && (
+            <div style={{
+              background: 'rgba(234,179,8,0.06)',
+              border: '1px solid rgba(234,179,8,0.25)',
+              borderRadius: 'var(--radius)', padding: '10px 12px',
+              display: 'flex', flexDirection: 'column', gap: 5,
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#d97706',
+                textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 2 }}>
+                🤝 {sellers.find(s => s.id === sellerId)?.name} — საკომისო
+              </div>
+              {sellerComm.lines.filter(l => l.commission > 0.001).map((l, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between',
+                  fontSize: 11, color: 'var(--text-secondary)' }}>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap', maxWidth: 100 }} title={l.name}>{l.name}</span>
+                  <span style={{ color: '#d97706', fontWeight: 700, flexShrink: 0 }}>
+                    ₾{l.commission.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+              {sellerComm.lines.filter(l => l.commission <= 0.001).length > 0 && (
+                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                  {sellerComm.lines.filter(l => l.commission <= 0.001).length} პოზ. — ცალკე ფასი არ არის
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between',
+                borderTop: '1px solid rgba(234,179,8,0.3)', paddingTop: 6, marginTop: 2 }}>
+                <span style={{ fontWeight: 700, fontSize: 12, color: '#d97706' }}>სულ საკომ.</span>
+                <span style={{ fontWeight: 800, fontSize: 14, color: '#d97706' }}>
+                  ₾{sellerComm.totalComm.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
           <div style={{
             background: 'var(--bg-muted)', borderRadius: 'var(--radius)',
             padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6,

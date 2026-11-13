@@ -15,6 +15,7 @@ const NAV = [
   { href: '/calculator', icon: '🧮', key: 'calculator' },
   { href: '/switches',   icon: '🔌', key: 'switches' },
   { href: '/invoice',    icon: '🧾', key: 'invoice' },
+  { href: '/sellers',    icon: '🤝', key: 'sellers' },
   { href: '/passports',  icon: '🔖', key: 'passports' },
   { href: '/flips',      icon: '🏠', key: 'flips', flipsOnly: true },
 ];
