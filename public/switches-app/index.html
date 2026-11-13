@@ -576,7 +576,7 @@ function renderQuote(){
     </button>`:"";
   const col=s.colors.find(c=>c.id===ui.color);
   const kinds=[...new Set(s.items.map(i=>i.kind))];
-  const allItems=filtered(s);const items=allItems.filter(it=>unitPrice(it,ui.color)!=null);const hidden=allItems.length-items.length;
+  const allItems=filtered(s);const items=allItems.filter(it=>{if(unitPrice(it,ui.color)!=null)return true;const sl=prices[it.id]?.sale||{};return Object.values(sl).some(v=>N(v)!=null)});const hidden=allItems.length-items.length;
   const inCart=id=>cart.find(l=>l.id===id&&l.color===ui.color);
   let rows="";
   const groups=kinds.length>1&&ui.kind==="all"?kinds:[null];
