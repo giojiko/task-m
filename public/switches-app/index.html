@@ -614,7 +614,7 @@ function ledgerHtml(){
   setTimeout(syncLv,0);
   const findSer=sid=>{for(const cat of Object.values(catalogs)){const sr=cat.series?.find(x=>x.id===sid);if(sr)return sr;}return catalog.series.find(x=>x.id===sid)||null};
   const lines=cart.map((l,i)=>{const it=byId[l.id];const s=findSer(it.sid);const col=(s?s.colors.find(c=>c.id===l.color)||s.colors[0]:{ka:"?"});const k=lineCalc(l);
-    const lv=lvl(k);return`<div class="line${lv?" lv-"+lv:""}" data-i="${i}"><div class="t">${esc(it.ka)}<br><i>${esc(s.ka)} · ${esc(col.ka)} · <b>${esc(it.code)}</b></i></div><button class="x" data-rm="${i}" aria-label="წაშლა">×</button>
+    const lv=lvl(k);return`<div class="line${lv?" lv-"+lv:""}" data-i="${i}"><div class="t">${esc(it.ka)}<br><i>${esc(s?.ka||"")} · ${esc(col.ka)} · <b>${esc(it.code)}</b></i></div><button class="x" data-rm="${i}" aria-label="წაშლა">×</button>
       <div class="m"><label>რაოდენობა <input class="lq" data-lq="${i}" inputmode="numeric" value="${l.qty}"></label><label>ფასი <input class="sale${k.man?" man":""}" data-sale="${i}" inputmode="decimal" ${role()==="specialist"?"readonly":""} value="${k.sale==null?"":k.sale.toFixed(2)}" title="ფასი დათვლილია სტანდარტული ნამატით; შეგიძლიათ შეცვალოთ. გასუფთავებით დაბრუნდება დათვლილზე"> ₾</label><span class="sum num">${k.sale==null?"—":gel(k.sale*l.qty)}</span></div><div class="lvmsg">${lv?LVMSG[lv]:""}</div></div>`}).join("");
   return`<aside class="panel ledger">
     <div class="phead"><h3>შეთავაზება კლიენტისთვის</h3><span class="status">${curQ?`რედაქტირდება № ${esc(curQ.no)} — ცვლილების შემდეგ დააჭირეთ „შენახვა"`:"ახალი შეთავაზება"}</span><span class="status" id="saved"></span></div>
