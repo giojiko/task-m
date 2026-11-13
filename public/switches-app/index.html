@@ -452,6 +452,8 @@ async function initData(){
   // catalog ახლა ui.brand-ზე დამოკიდებული — მაგრამ byId-სთვის ყველა ვტვირთავთ
   // backwards compat: catalog = bote catalog
   try{catalog=JSON.parse(document.getElementById("catalog-data").textContent)}catch(e){$("#view").innerHTML=`<div class="banner warn">კატალოგი ვერ ჩაიტვირთა. განაახლეთ გვერდი.</div>`;return}
+  // defensive: თუ catalogs["bote"] ცარიელია (parse შეცდომა loadBrands-ში), catalog-ის data გამოვიყენოთ
+  if(!catalogs["bote"]?.series?.length && catalog?.series?.length){catalogs["bote"]={series:catalog.series}}
   // byId — ყველა ბრენდის პროდუქტი
   Object.values(catalogs).forEach(cat=>{
     (cat.series||[]).forEach(s=>s.items.forEach(it=>{byId[it.id]={...it,sid:s.id}}));
@@ -872,7 +874,9 @@ document.addEventListener("click",e=>{
   if(t.dataset.tab){if(ui.tab==="internal"&&ui.idirty){toast("შიდა კალკულატორის ცვლილებები არ შეინახა");ui.idirty=false;ui.idraft=null}ui.tab=t.dataset.tab;if(ui.tab==="internal")ui.iq=null;saveUi();render();return}
   if(t.dataset.brand){
     const b=brands.find(x=>x.id===t.dataset.brand);
-    if(!b||!catalogs[b.id]?.series?.length){toast("ეს ბრენდი ჯერ მიმდინარეობს");return}
+    const bSeries=catalogs[b.id]?.series||(b.id==="bote"?catalog?.series:null);
+    if(!b||!bSeries?.length){toast("ეს ბრენდი ჯერ მიმდინარეობს");return}
+    if(!catalogs[b.id]?.series?.length&&bSeries?.length){catalogs[b.id]={series:bSeries}}
     ui.brand=t.dataset.brand;
     // პირველი სერია ავტომატურად
     const firstS=catalogs[ui.brand].series[0];
