@@ -21,7 +21,8 @@ function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, di
   const saleItemsTotal = validItems.reduce((s, it) => {
     const lp = parseFloat(it.listPrice) || parseFloat(it.price) || 0;
     const sp = parseFloat(it.salePrice);
-    const fp = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+    const ld = parseFloat(it.itemDisc) || 0;
+    const fp = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : (ld > 0 ? lp * (1 - ld / 100) : lp);
     return s + fp * (Number(it.qty) || 0);
   }, 0);
   const itemDiscTotal = origItemsTotal - saleItemsTotal; // ₾ ფასდაკლება პოზიციებზე
@@ -29,7 +30,10 @@ function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, di
   const rows = validItems.map((item, i) => {
     const lp = parseFloat(item.listPrice) || parseFloat(item.price) || 0;
     const sp = parseFloat(item.salePrice);
-    const finalPrice = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+    // fallback for old invoices that used itemDisc (%)
+    const legacyDisc = parseFloat(item.itemDisc) || 0;
+    const legacyPrice = legacyDisc > 0 ? lp * (1 - legacyDisc / 100) : lp;
+    const finalPrice = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : (legacyDisc > 0 ? legacyPrice : lp);
     const discLari = lp - finalPrice;
     const lineTotal = Number(item.qty) * finalPrice;
     const lineVat = item.vatEnabled ? lineTotal * (Number(item.vatRate ?? 18) / 100) : 0;
@@ -43,7 +47,6 @@ function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, di
         <td style="text-align:right">${item.qty}</td>
         <td>${escHtml(item.unit)}</td>
         <td>${priceCell}</td>
-        <td style="text-align:center">${item.vatEnabled ? `${item.vatRate ?? 18}%` : '—'}</td>
         <td style="text-align:right;font-weight:600">₾ ${(lineTotal + lineVat).toFixed(2)}</td>
       </tr>`;
   }).join('');
@@ -173,15 +176,14 @@ function buildInvoiceHTML({ client, items, invoiceNumber, issueDate, dueDate, di
           <th>დასახელება</th>
           <th style="width:60px;text-align:right">რაოდ.</th>
           <th style="width:60px">ერთ.</th>
-          <th style="width:90px;text-align:right">ფასი</th>
-          <th style="width:50px;text-align:center">დღგ</th>
-          <th style="width:90px;text-align:right">ჯამი ₾</th>
+          <th style="width:110px;text-align:right">ფასი</th>
+          <th style="width:100px;text-align:right">ჯამი ₾</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
       <tfoot>
         <tr>
-          <td colspan="5"></td>
+          <td colspan="4"></td>
           <td style="text-align:right;color:#6b7a99;font-size:11px">სულ</td>
           <td style="text-align:right;color:#0077cc;font-size:14px;font-weight:700">₾ ${totals.total.toFixed(2)}</td>
         </tr>
