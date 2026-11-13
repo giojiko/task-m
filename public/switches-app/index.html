@@ -639,7 +639,7 @@ function ledgerHtml(){
 }
 function refreshNumbers(){ /* light refresh of ledger only when typing elsewhere */ const l=$(".ledger");if(l&&!l.contains(document.activeElement)){l.outerHTML=ledgerHtml()} }
 
-function saleCell(it,c){const k=costOf(it,c);return k==null?"—":gel(roundUp(k*(1+pmk(it)/100)))}
+function saleCell(it,c){const p=prices[it.id];const s=p?.sale||{};const c0=p?.c0;const ms=N(s[c])??(c0?N(s[c0]):null)??Object.values(s).map(v=>N(v)).find(v=>v!=null)??null;if(ms!=null)return gel(ms);const k=costOf(it,c);return k==null?"—":gel(roundUp(k*(1+pmk(it)/100)))}
 // Get manual sale price for a color — falls back to first color's manual price
 function manualSale(p,colorId,c0Id){
   const s=p.sale||{};
@@ -763,7 +763,7 @@ function deleteQuote(id){const i=quotes.findIndex(q=>q.id===id);if(i<0)return;co
 function renderQuotes(){
   const q=(ui.qq||"").toLowerCase();
   const list=[...quotes].sort((a,b)=>(b.updated||"").localeCompare(a.updated||"")).filter(x=>!q||((x.client?.name||"")+" "+(x.client?.project||"")+" "+x.no).toLowerCase().includes(q));
-  const liveTotal=x=>{let t=0;x.lines.forEach(l=>{const k=lineCalc(l);if(k.sale!=null)t+=k.sale*l.qty});return Math.round(t*100)/100};
+  const liveTotal=x=>{let t=0;x.lines.forEach(l=>{const k=lineCalc(l);const s=k.sale??l.price??null;if(s!=null)t+=s*l.qty});return Math.round(t*100)/100};
   let T=0;list.forEach(x=>{T+=liveTotal(x)});
   const d=v=>{const t=new Date(v);return t.toLocaleDateString("ka-GE")+" "+t.toLocaleTimeString("ka-GE",{hour:"2-digit",minute:"2-digit"})};
   $("#view").innerHTML=`<section class="panel"><div class="phead"><h3 style="margin:0;font-size:15px">შედგენილი შეთავაზებები</h3><span class="status">${quotes.length} შეთავაზება</span><input class="search" id="qsearch" placeholder="ძებნა: კლიენტი, ობიექტი, ნომერი" value="${esc(ui.qq||"")}"></div>
