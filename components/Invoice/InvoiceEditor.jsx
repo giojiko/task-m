@@ -81,7 +81,8 @@ function ClientPicker({ clientId, onSelect, newClientDraft, onNewClient }) {
 /* ── კომისიის გამოთვლა ────────────────────────────────────────────── */
 /* სახელიდან (B2-1) ტიპის კოდის ამოღება */
 function extractItemCode(name) {
-  const m = name?.match(/\(([A-Z]\d+-[A-Z]?\d+[A-Z]?)\)/i);
+  // ამოიღებს ნებისმიერ კოდს ფრჩხილებიდან: (B1-B1), (B2-12F), (B5-72-1), (B5-F1)...
+  const m = name?.match(/\(([A-Z]\d+(?:-[A-Z]?\d+[A-Z]?)+)\)/i);
   return m ? m[1].toUpperCase() : null;
 }
 /* ნაცრისფერი/შავი/სერი = "dark" ჯგუფი; თეთრი/ოქრო = "light" ჯგუფი */
@@ -91,6 +92,20 @@ function colorGroup(text) {
   if (t.includes('თეთ') || t.includes('ოქრ')) return 'light';
   if (t.includes('ნაც') || t.includes('შავ') || t.includes('სერ')) return 'dark';
   return null;
+}
+/* B5 სერია: catalog იყენებს B5-72-X ფორმატს, sellerPrices-ში ინახება B5-X ფორმატით.
+   ასევე B5-F1 (ჩარჩო) → sellerPrices-ში B5-B1 ფორმატით. */
+function normalizeB5Code(code) {
+  if (!code) return [];
+  const up = code.toUpperCase();
+  const alts = [up];
+  // B5-72-X → B5-X (ამოვჭრათ შუა "72-" ვარიანტი)
+  const m72 = up.match(/^(B5)-72-(.+)$/);
+  if (m72) alts.push(`${m72[1]}-${m72[2]}`);
+  // B5-F1 / B5-F2 ... → B5-B1 / B5-B2 ... (F=ჩარჩო კატალოგში, B=ბოქსი/ჩარჩო sellerPrices-ში)
+  const mF = up.match(/^(B5)-F(\d+)$/);
+  if (mF) alts.push(`${mF[1]}-B${mF[2]}`);
+  return alts;
 }
 function findSellerPrice(sellerPrices, sellerId, itemName) {
   const list = (sellerPrices || []).filter(p => p.sellerId === sellerId);
@@ -102,9 +117,12 @@ function findSellerPrice(sellerPrices, sellerId, itemName) {
   const code = extractItemCode(itemName);
   const grp  = colorGroup(itemName);
   if (code) {
+    // B5 სერიისთვის დამატებითი ალტერნატიული კოდები
+    const codes = normalizeB5Code(code);
     const byCode = list.filter(p => {
       const pName = p.productName || '';
-      if (!pName.toUpperCase().includes(code.toUpperCase())) return false;
+      const pUp = pName.toUpperCase();
+      if (!codes.some(c => pUp.includes(c))) return false;
       if (grp) return colorGroup(pName) === grp;
       return true;
     });
