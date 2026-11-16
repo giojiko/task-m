@@ -214,11 +214,11 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
     setItems(prev => prev.map((it, i) => {
       if (i !== idx) return it;
       const updated = { ...it, [key]: val };
-      // when listPrice changes, reset salePrice to match (unless user already set it lower)
+      // when listPrice changes, reset salePrice to match (unless user already set a custom price)
       if (key === 'listPrice') {
         const lp = parseFloat(val) || 0;
         const sp = parseFloat(updated.salePrice);
-        if (isNaN(sp) || sp <= 0 || sp >= lp) {
+        if (isNaN(sp) || sp <= 0) {
           updated.salePrice = lp;
         }
         updated.price = parseFloat(updated.salePrice) || lp;
@@ -255,7 +255,8 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
     const validItems = items.filter(i => i.name.trim()).map(i => {
       const lp = parseFloat(i.listPrice) || parseFloat(i.price) || 0;
       const sp = parseFloat(i.salePrice);
-      const fp = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+      // salePrice ვინახავთ თუ ვალიდური რიცხვია და > 0 (sp >= lp ნებადართულია — სპეციალური ფასი)
+      const fp = (!isNaN(sp) && sp > 0) ? sp : lp;
       return { ...i, listPrice: lp, salePrice: fp, price: fp };
     });
     if (validItems.length === 0) { toast('მინიმუმ 1 პოზიცია საჭიროა'); return; }
