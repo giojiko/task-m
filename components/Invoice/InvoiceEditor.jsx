@@ -376,7 +376,8 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                   {items.map((item, idx) => {
                     const lp = parseFloat(item.listPrice) || parseFloat(item.price) || 0;
                     const sp = parseFloat(item.salePrice);
-                    const finalPrice = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+                    // finalPrice: ნებისმიერი > 0 ფასი valid-ია (dealer ფასი შეიძლება >= lp)
+                    const finalPrice = (!isNaN(sp) && sp > 0) ? sp : lp;
                     const discLari = lp - finalPrice;
                     const lineTotal = Number(item.qty) * finalPrice;
                     const lineVat = item.vatEnabled ? lineTotal * (Number(item.vatRate ?? 18) / 100) : 0;
