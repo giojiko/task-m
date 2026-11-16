@@ -201,7 +201,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
   const subtotalForDiscount = items.reduce((s, i) => {
     const lp = parseFloat(i.listPrice) || parseFloat(i.price) || 0;
     const sp = parseFloat(i.salePrice);
-    const fp = (!isNaN(sp) && sp > 0 && sp < lp) ? sp : lp;
+    const fp = (!isNaN(sp) && sp > 0) ? sp : lp;
     return s + fp * (parseFloat(i.qty) || 0);
   }, 0);
   const discountLari = discountMode === 'pct'
@@ -690,9 +690,9 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                   </span>
                 </div>
               ))}
-              {sellerComm.lines.filter(l => l.commission <= 0.001).length > 0 && (
+              {sellerComm.lines.filter(l => l.commission <= 0.001 && l.hasEntry).length > 0 && (
                 <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                  {sellerComm.lines.filter(l => l.commission <= 0.001).length} პოზ. — ცალკე ფასი არ არის
+                  {sellerComm.lines.filter(l => l.commission <= 0.001 && l.hasEntry).length} პოზ. — სარგებელი 0 (ფასი = სია)
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between',
