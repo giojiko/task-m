@@ -424,7 +424,7 @@ export default function SellersPage() {
                     <span style={{
                       display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 11,
                       background: s.active !== false ? 'rgba(34,197,94,.12)' : 'rgba(239,68,68,.1)',
-                      color: s.active !== false ? '#22c55e' : 'var(--danger)',
+                      color: s.active !== false ? '#2E7D4F' : 'var(--danger)',
                       fontWeight: 700,
                     }}>
                       {s.active !== false ? 'აქტიური' : 'გათიშული'}

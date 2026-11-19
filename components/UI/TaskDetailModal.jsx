@@ -139,7 +139,7 @@ export default function TaskDetailModal({ task: initialTask, onClose, onRefresh 
     <Modal open title={null} onClose={onClose} size="modal-xl">
       {/* Gradient header */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(27,234,205,0.08), rgba(27,234,205,0.02))',
+        background: 'linear-gradient(135deg, rgba(201,154,74,0.13), rgba(201,154,74,0.03))',
         borderBottom: '1px solid var(--border)',
         padding: '16px 20px',
         margin: '-20px -20px 20px',
@@ -156,7 +156,7 @@ export default function TaskDetailModal({ task: initialTask, onClose, onRefresh 
               </span>
             )}
           </div>
-          <h2 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: 0, lineHeight: 1.3 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', margin: 0, lineHeight: 1.3 }}>
             {task.title}
           </h2>
         </div>

@@ -5,6 +5,7 @@ import AppShell from '@/components/Layout/AppShell';
 import Modal from '@/components/UI/Modal';
 import { useApp } from '@/context/AppContext';
 import { uid } from '@/lib/utils';
+import { inkColor } from '@/lib/color';
 
 /* ─── Direction Modal (add/edit) ─── */
 function DirModal({ dir, onClose, onSave }) {
@@ -15,7 +16,7 @@ function DirModal({ dir, onClose, onSave }) {
     nameRu: dir?.nameRu || '',
     desc:   dir?.desc   || '',
     icon:   dir?.icon   || '📁',
-    color:  dir?.color  || '#1BEACD',
+    color:  dir?.color  || '#C99A4A',
   });
   const [err, setErr] = useState('');
   const upd = (k, v) => setForm(p => ({ ...p, [k]: v }));
@@ -96,12 +97,12 @@ function DirCard({ d, clientCount, isSuper, lang, onClick, onEdit, onDelete }) {
             </div>
           )}
         </div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: d.color, marginTop: 8, marginBottom: 3 }}>{name}</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: inkColor(d.color), marginTop: 8, marginBottom: 3 }}>{name}</div>
         <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginBottom: 10, lineHeight: 1.4 }}>{d.desc}</div>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 5,
           background: d.color + '18', borderRadius: 20,
-          padding: '3px 10px', fontSize: 12, color: d.color, fontWeight: 600,
+          padding: '3px 10px', fontSize: 12, color: inkColor(d.color), fontWeight: 600,
         }}>
           👥 {clientCount} კლიენტი
         </div>
@@ -210,7 +211,7 @@ function DirectionsContent() {
     const isOnline = selectedDir === 'online';
     const displayClients = isOnline ? onlineClients : dirClients;
     const title = isOnline ? '🛒 ონლაინ გაყიდვა' : `${activeDir?.icon || ''} ${activeDir?.name || ''}`;
-    const color = isOnline ? '#F59E0B' : (activeDir?.color || 'var(--accent)');
+    const color = isOnline ? '#B26B00' : (activeDir?.color || 'var(--accent)');
     return (
       <AppShell>
         <div className="page-header">
@@ -259,13 +260,13 @@ function DirectionsContent() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
           transition: 'border-color .18s',
         }}
-        onMouseEnter={e => e.currentTarget.style.borderColor = '#F59E0B'}
+        onMouseEnter={e => e.currentTarget.style.borderColor = '#B26B00'}
         onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(245,158,11,0.35)'}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <span style={{ fontSize: 32 }}>🛒</span>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B', marginBottom: 2 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#B26B00', marginBottom: 2 }}>
               ონლაინ გაყიდვა
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
@@ -275,7 +276,7 @@ function DirectionsContent() {
         </div>
         <div style={{
           background: 'rgba(245,158,11,0.18)', borderRadius: 20,
-          padding: '4px 14px', fontSize: 13, color: '#F59E0B', fontWeight: 700, flexShrink: 0,
+          padding: '4px 14px', fontSize: 13, color: '#B26B00', fontWeight: 700, flexShrink: 0,
         }}>
           👥 {onlineClients.length}
         </div>

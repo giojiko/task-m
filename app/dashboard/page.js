@@ -52,11 +52,11 @@ export default function DashboardPage() {
 
   const statusColors = {
     pending: '#A1A1AA',
-    in_progress: '#60A5FA',
-    paused: '#FCD34D',
-    completed: '#4ADE80',
-    stopped: '#F87171',
-    pending_approval: '#C084FC',
+    in_progress: '#2563A8',
+    paused: '#B26B00',
+    completed: '#2E7D4F',
+    stopped: '#C0392B',
+    pending_approval: '#7B3FA8',
   };
 
   return (
@@ -127,7 +127,7 @@ export default function DashboardPage() {
                   fontSize: 13, cursor: 'pointer', borderRadius: 4,
                   transition: 'background var(--transition)',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(27,234,205,0.04)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(201,154,74,0.06)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
                 <div style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>

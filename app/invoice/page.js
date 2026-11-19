@@ -63,7 +63,7 @@ function PaymentModal({ invoice, onClose }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)',
+      position: 'fixed', inset: 0, background: 'rgba(7,26,43,0.55)',
       backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center',
       justifyContent: 'center', zIndex: 200, padding: 18,
     }} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -75,9 +75,9 @@ function PaymentModal({ invoice, onClose }) {
         {/* header */}
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'rgba(0,0,0,0.12)' }}>
+          background: 'var(--bg-elevated)' }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>💳 გადახდის სტატუსი</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>💳 გადახდის სტატუსი</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
               {invoice.number} · სულ ₾{invoice.total.toFixed(2)}
             </div>
@@ -93,7 +93,7 @@ function PaymentModal({ invoice, onClose }) {
               display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
               padding: '12px 16px', borderRadius: 'var(--radius)',
               border: `2px solid ${status === opt.val ? 'var(--accent)' : 'var(--border)'}`,
-              background: status === opt.val ? 'rgba(27,234,205,0.06)' : 'var(--bg-muted)',
+              background: status === opt.val ? 'rgba(201,154,74,0.10)' : 'var(--bg-muted)',
               transition: 'var(--transition)',
             }}>
               <div style={{
@@ -103,7 +103,7 @@ function PaymentModal({ invoice, onClose }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 {status === opt.val && (
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#0D1117' }} />
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff' }} />
                 )}
               </div>
               <span style={{ fontWeight: 600, color: status === opt.val ? opt.color : 'var(--text-secondary)', fontSize: 13 }}>
@@ -150,7 +150,7 @@ function PaymentModal({ invoice, onClose }) {
 
         {/* footer */}
         <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)',
-          background: 'rgba(0,0,0,0.15)', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          background: 'var(--bg-elevated)', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>გაუქმება</button>
           <button className="btn btn-primary btn-sm" onClick={save}>შენახვა</button>
         </div>

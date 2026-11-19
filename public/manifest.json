@@ -5,8 +5,8 @@
   "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0D1117",
-  "theme_color": "#0D1117",
+  "background_color": "#F5F2EA",
+  "theme_color": "#F5F2EA",
   "lang": "ka",
   "scope": "/",
   "icons": [

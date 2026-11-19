@@ -24,7 +24,7 @@ function buildInvoiceHTML({ client, selectedItems, invoiceNumber, issueDate, due
       <td class="num">${i + 1}</td>
       <td>
         <div>${escHtml(item.itemName)}</div>
-        ${item.notes ? `<div style="font-size:10px;color:#6b7a99;margin-top:2px">${escHtml(item.notes)}</div>` : ''}
+        ${item.notes ? `<div style="font-size:10px;color:#5B6775;margin-top:2px">${escHtml(item.notes)}</div>` : ''}
       </td>
       <td style="text-align:right">${item.qty}</td>
       <td>ცალი</td>
@@ -56,19 +56,19 @@ function buildInvoiceHTML({ client, selectedItems, invoiceNumber, issueDate, due
       .invoice-wrap { box-shadow: none; border-radius: 0; max-width: 100%; }
     }
     :root {
-      --primary: #0d1b3e; --accent: #00aaff; --accent2: #0077cc;
-      --light: #f4f7fc; --border: #dce4f0; --text: #1a2340; --muted: #6b7a99; --white: #ffffff;
+      --primary: #071A2B; --accent: #C99A4A; --accent2: #9A7230;
+      --light: #F5F2EA; --border: #E6DFD0; --text: #071A2B; --muted: #5B6775; --white: #ffffff;
     }
     body { font-family: 'Noto Sans Georgian', sans-serif; background: var(--light); color: var(--text); padding: 16px; font-size: 13px; }
-    .invoice-wrap { max-width: 860px; margin: 0 auto; background: var(--white); border-radius: 14px; box-shadow: 0 8px 40px rgba(13,27,62,0.13); overflow: hidden; }
-    .inv-header { background: linear-gradient(135deg, #0d1b3e 0%, #152d5e 60%, #0077cc 100%); padding: 26px 36px 22px; display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
-    .logo-side img { height: 48px; filter: brightness(0) invert(1); object-fit: contain; }
+    .invoice-wrap { max-width: 860px; margin: 0 auto; background: var(--white); border-radius: 14px; box-shadow: 0 8px 40px rgba(7,26,43,0.13); overflow: hidden; }
+    .inv-header { background: linear-gradient(135deg, #071A2B 0%, #0E2A42 100%); border-bottom: 3px solid #C99A4A; padding: 26px 36px 22px; display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+    .logo-side img { height: 48px; object-fit: contain; }
     .logo-side .tagline { color: rgba(255,255,255,0.5); font-size: 10px; margin-top: 5px; }
     .title-side { text-align: right; }
     .title-side h1 { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: 1px; text-transform: uppercase; }
     .title-side .inv-num { color: var(--accent); font-size: 14px; font-weight: 600; margin-top: 3px; }
-    .title-side .inv-badge { display: inline-block; margin-top: 8px; padding: 3px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; background: rgba(0,170,255,0.18); color: var(--accent); border: 1px solid rgba(0,170,255,0.35); }
-    .inv-meta { background: #eef3fb; padding: 12px 36px; display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+    .title-side .inv-badge { display: inline-block; margin-top: 8px; padding: 3px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; background: rgba(201,154,74,0.18); color: var(--accent); border: 1px solid rgba(201,154,74,0.35); }
+    .inv-meta { background: #F5F2EA; padding: 12px 36px; display: flex; gap: 0; border-bottom: 1px solid var(--border); }
     .meta-item { flex:1; border-right:1px solid var(--border); padding:0 16px 0 0; margin-right:16px; }
     .meta-item:last-child { border-right:none; margin-right:0; }
     .meta-item .ml { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:2px; }
@@ -89,11 +89,11 @@ function buildInvoiceHTML({ client, selectedItems, invoiceNumber, issueDate, due
     table.items thead th { padding:8px 10px; font-size:10px; font-weight:600; text-align:left; }
     table.items thead th.r { text-align:right; }
     table.items tbody tr { border-bottom: 1px solid var(--border); }
-    table.items tbody tr:nth-child(even) { background: #f8faff; }
+    table.items tbody tr:nth-child(even) { background: #FBF9F4; }
     table.items tbody td { padding:7px 10px; font-size:11.5px; vertical-align:middle; }
     table.items tbody td.r { text-align:right; }
     table.items tbody td.num { color:var(--muted); font-size:10px; text-align:center; width:26px; }
-    table.items tfoot tr { background: #eef3fb; border-top: 2px solid var(--primary); }
+    table.items tfoot tr { background: #F5F2EA; border-top: 2px solid var(--primary); }
     table.items tfoot td { padding:8px 10px; font-size:12px; font-weight:700; }
     .inv-bottom { display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--border); }
     .inv-notes { padding:16px 36px; border-right:1px solid var(--border); }
@@ -106,7 +106,7 @@ function buildInvoiceHTML({ client, selectedItems, invoiceNumber, issueDate, due
     .totals-row.grand { border-top: 2px solid var(--primary); padding-top:10px; }
     .totals-row.grand .tl { font-size:14px; font-weight:700; color:var(--primary); }
     .totals-row.grand .tv { font-size:20px; font-weight:800; color:var(--accent2); }
-    .inv-payment { background:#f7faff; padding:14px 36px; border-bottom:1px solid var(--border); display:flex; gap:24px; flex-wrap:wrap; }
+    .inv-payment { background:#FBF9F4; padding:14px 36px; border-bottom:1px solid var(--border); display:flex; gap:24px; flex-wrap:wrap; }
     .pay-item { display:flex; flex-direction:column; flex:1; min-width:120px; }
     .pay-item .pl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:3px; }
     .pay-item .pv { font-size:12px; font-weight:700; color:var(--text); }
@@ -123,7 +123,7 @@ function buildInvoiceHTML({ client, selectedItems, invoiceNumber, issueDate, due
     .btn { padding:10px 22px; border-radius:8px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:7px; transition:all 0.2s; }
     .btn-outline { background:#fff; border:2px solid var(--border); color:var(--text); }
     .btn-outline:hover { border-color:var(--accent); color:var(--accent); }
-    .btn-primary { background:linear-gradient(135deg,#0d1b3e,#0077cc); color:#fff; box-shadow:0 4px 15px rgba(0,119,204,0.35); }
+    .btn-primary { background:#071A2B; color:#fff; box-shadow:0 4px 15px rgba(201,154,74,0.35); }
   </style>
 </head>
 <body>
@@ -131,7 +131,7 @@ function buildInvoiceHTML({ client, selectedItems, invoiceNumber, issueDate, due
 
   <div class="inv-header">
     <div class="logo-side">
-      <img src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png" alt="Smart Pro" onerror="this.style.display='none'"/>
+      <img src="https://office.smartpro.ge/brand/logo-gold.png" alt="Smart Pro" onerror="this.style.display='none'"/>
       <div class="tagline">ელექტროობა · უსაფრთხოება · ჭკვიანი სახლი</div>
     </div>
     <div class="title-side">
@@ -252,7 +252,7 @@ function buildInvoiceHTML({ client, selectedItems, invoiceNumber, issueDate, due
       new QRCode(holder, {
         text: 'https://www.facebook.com/profile.php?id=61582332145766',
         width: 128, height: 128,
-        colorDark: '#0d1b3e', colorLight: '#ffffff',
+        colorDark: '#071A2B', colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
       });
       setTimeout(() => {

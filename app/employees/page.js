@@ -216,7 +216,7 @@ function EmployeeDetailModal({ emp, onClose }) {
     <Modal open title={null} onClose={onClose} size="modal-lg">
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(27,234,205,0.1), transparent)',
+        background: 'linear-gradient(135deg, rgba(201,154,74,0.16), transparent)',
         borderBottom: '1px solid var(--border)',
         padding: '18px 20px', margin: '-20px -20px 20px',
         display: 'flex', alignItems: 'center', gap: 14,
@@ -225,7 +225,7 @@ function EmployeeDetailModal({ emp, onClose }) {
           {emp.firstName?.[0]}{emp.lastName?.[0]}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h2 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: '0 0 6px' }}>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px' }}>
             {emp.firstName} {emp.lastName}
           </h2>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

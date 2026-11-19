@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
+import Logo from '@/components/Brand/Logo';
 
 export default function LoginPage() {
   const { user, login, lang, setLang, t } = useApp();
@@ -32,13 +33,7 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-logo">
-          <img
-            src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png"
-            alt="SmartPro"
-            style={{ height: 36, objectFit: 'contain' }}
-            onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
-          />
-          <span style={{ display: 'none', fontSize: 22, fontWeight: 800, color: 'var(--text-primary)' }}>SmartPro</span>
+          <Logo />
         </div>
         <p className="login-subtitle">{t('platform_name')}</p>
 

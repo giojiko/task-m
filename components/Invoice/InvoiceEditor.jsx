@@ -345,7 +345,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
 
           {displayClient.name && !isCreatingNew && (
             <div style={{
-              background: 'rgba(27,234,205,0.06)', border: '1px solid rgba(27,234,205,0.2)',
+              background: 'rgba(201,154,74,0.10)', border: '1px solid rgba(201,154,74,0.32)',
               borderRadius: 'var(--radius)', padding: '8px 12px', fontSize: 12,
               display: 'flex', gap: 14, flexWrap: 'wrap', color: 'var(--text-secondary)',
             }}>
@@ -543,7 +543,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                                       flexShrink: 0, padding: '2px 5px', fontSize: 11,
                                       border: '1px solid var(--accent)',
                                       borderRadius: 4,
-                                      background: 'rgba(27,234,205,0.12)',
+                                      background: 'rgba(201,154,74,0.19)',
                                       color: 'var(--accent)',
                                       cursor: 'pointer', fontWeight: 700, lineHeight: 1.3,
                                     }}
@@ -630,7 +630,7 @@ export default function InvoiceEditor({ invoice, prefillClientId, onClose, onSav
                   <button key={mode} type="button"
                     onClick={() => setDiscountMode(mode)}
                     style={{ padding: '2px 10px', fontSize: 12, border: 'none', cursor: 'pointer',
-                      background: discountMode === mode ? 'var(--primary)' : 'transparent',
+                      background: discountMode === mode ? 'var(--navy)' : 'transparent',
                       color: discountMode === mode ? '#fff' : 'var(--text-secondary)',
                       fontWeight: discountMode === mode ? 700 : 400 }}>
                     {mode === 'lari' ? '₾' : '%'}

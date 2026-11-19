@@ -12,14 +12,14 @@ export default function RootLayout({ children }) {
       <head>
         {/* PWA */}
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0D1117" />
+        <meta name="theme-color" content="#F5F2EA" />
         <meta name="mobile-web-app-capable" content="yes" />
 
         {/* iOS PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="SmartPro" />
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
 
         {/* Viewport — mobile app feel */}
         <meta name="viewport"

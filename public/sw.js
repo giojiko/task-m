@@ -1,4 +1,4 @@
-const CACHE = 'smartpro-v1';
+const CACHE = 'smartpro-v2';
 const OFFLINE_URL = '/offline';
 
 self.addEventListener('install', e => {

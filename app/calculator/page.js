@@ -8,7 +8,7 @@ import { uid } from '@/lib/utils';
 const CATALOG = {
   electro_labor: {
     label: '⚡ ელექტრო გაყვანილობა — ხელობა',
-    color: '#E5D936', isLabor: true,
+    color: '#9A7230', isLabor: true,
     items: [
       { name: '1 წერტილი დაკაბელება / კოლოფი', note: 'კაბელის გაყვანა, გოფრა, კოლოფის ჩასმა', min: 15, max: 30 },
       { name: '1 წერტილი დაერთება', note: 'შემოწმება, დაერთება, მორგება', min: 30, max: 50 },
@@ -27,7 +27,7 @@ const CATALOG = {
   },
   network_labor: {
     label: '🌐 ქსელი და Wi-Fi — ხელობა',
-    color: '#1BEACD', isLabor: true,
+    color: '#2563A8', isLabor: true,
     items: [
       { name: 'RJ45 ქსელური წერტილი', note: 'ბუდე, კისტონი, პაჩ-პანელი ცალკე', min: 25, max: 50 },
       { name: 'ქსელური კაბელის ტერმინაცია', note: 'თითო ბოლო', min: 10, max: 20 },
@@ -40,7 +40,7 @@ const CATALOG = {
   },
   security_labor: {
     label: '🎥 უსაფრთხოება — ხელობა',
-    color: '#FF4060', isLabor: true,
+    color: '#C0392B', isLabor: true,
     items: [
       { name: 'ვიდეოკამერის მონტაჟი', note: 'კაბელის გაყვანა, დამაგრება, კონფიგ.', min: 40, max: 80, unit: 'წერტილი' },
       { name: 'სახანძრო სენსორი', note: 'კვამლის/სითბოს სენსორის მონტაჟი', min: 25, max: 45, unit: 'წერტილი' },
@@ -50,7 +50,7 @@ const CATALOG = {
   },
   electro_material: {
     label: '⚡ ელექტრო — მასალა',
-    color: '#E5D936', isLabor: false,
+    color: '#9A7230', isLabor: false,
     items: [
       { name: 'კაბელი NYM 3x2.5', note: 'თურქული/ევროპული/ქართული NYM', min: 4, max: 7, unit: 'მ' },
       { name: 'კაბელი NYM 3x1.5', note: 'ქართული/ევროპული NYM', min: 3, max: 6, unit: 'მ' },
@@ -64,7 +64,7 @@ const CATALOG = {
   },
   security_material: {
     label: '🎥 უსაფრთხოება — მასალა',
-    color: '#FF4060', isLabor: false,
+    color: '#C0392B', isLabor: false,
     items: [
       { name: 'IP კამერა (2MP-4MP)', note: 'Hikvision/Dahua/Uniview', min: 150, max: 800 },
       { name: 'ჩამწერი (NVR/DVR)', note: 'Hikvision/Dahua/Uniview', min: 300, max: 5000 },
@@ -86,14 +86,14 @@ const GN = (n) => Number(n).toLocaleString('ka-GE', { minimumFractionDigits: 2, 
 // ─── Renovation Tiers ───
 const RENO_TIERS = {
   black: {
-    eco:      { min: 500,  max: 700,  label: 'ეკონომი',    color: '#68D391' },
-    standard: { min: 700,  max: 1000, label: 'სტანდარტი',  color: '#F6AD55' },
-    premium:  { min: 1000, max: 1800, label: 'პრემიუმი',   color: '#FC8181' },
+    eco:      { min: 500,  max: 700,  label: 'ეკონომი',    color: '#2E7D4F' },
+    standard: { min: 700,  max: 1000, label: 'სტანდარტი',  color: '#B26B00' },
+    premium:  { min: 1000, max: 1800, label: 'პრემიუმი',   color: '#C0392B' },
   },
   white: {
-    eco:      { min: 300, max: 500,  label: 'ეკონომი',    color: '#68D391' },
-    standard: { min: 500, max: 800,  label: 'სტანდარტი',  color: '#F6AD55' },
-    premium:  { min: 800, max: 1500, label: 'პრემიუმი',   color: '#FC8181' },
+    eco:      { min: 300, max: 500,  label: 'ეკონომი',    color: '#2E7D4F' },
+    standard: { min: 500, max: 800,  label: 'სტანდარტი',  color: '#B26B00' },
+    premium:  { min: 800, max: 1500, label: 'პრემიუმი',   color: '#C0392B' },
   },
 };
 
@@ -319,7 +319,7 @@ function RenovationCalculator({ type, onSave }) {
                 padding: '8px 16px', border: 'none', borderRadius: 8, cursor: 'pointer',
                 fontSize: 14, fontWeight: 600,
                 background: selectedRange?.label === r.label
-                  ? 'linear-gradient(135deg, rgba(27,234,205,0.2), rgba(27,234,205,0.08))'
+                  ? 'linear-gradient(135deg, rgba(201,154,74,0.32), rgba(201,154,74,0.13))'
                   : 'var(--bg-muted)',
                 color: selectedRange?.label === r.label ? 'var(--accent)' : 'var(--text-secondary)',
                 border: `1.5px solid ${selectedRange?.label === r.label ? 'var(--accent)' : 'var(--border)'}`,
@@ -376,8 +376,8 @@ function RenovationCalculator({ type, onSave }) {
                     <div onClick={e => e.stopPropagation()}
                       style={{
                         marginTop: 12, padding: '10px 12px',
-                        background: 'rgba(27,234,205,0.06)',
-                        border: '1px solid rgba(27,234,205,0.2)',
+                        background: 'rgba(201,154,74,0.10)',
+                        border: '1px solid rgba(201,154,74,0.32)',
                         borderRadius: 8,
                       }}>
                       <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
@@ -439,8 +439,8 @@ function RenovationCalculator({ type, onSave }) {
           </div>
 
           <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 16,
-            background: 'rgba(27,234,205,0.05)', borderRadius: 8, padding: '8px 12px',
-            border: '1px solid rgba(27,234,205,0.1)' }}>
+            background: 'rgba(201,154,74,0.08)', borderRadius: 8, padding: '8px 12px',
+            border: '1px solid rgba(201,154,74,0.16)' }}>
             ⚠️ ეს საორიენტაციო ფასია. ზუსტი ფასი განისაზღვრება ობიექტის დათვალიერების შემდეგ. ცდომილება 20–25%.
           </div>
 
@@ -604,7 +604,7 @@ function ClientInfoStep({ initial, onNext, onSaveOnly }) {
               display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
               padding: '10px 14px', borderRadius: 10, transition: 'all .15s',
               background: form.interests.includes(int.key)
-                ? 'rgba(27,234,205,0.08)' : 'var(--bg-muted)',
+                ? 'rgba(201,154,74,0.13)' : 'var(--bg-muted)',
               border: `1.5px solid ${form.interests.includes(int.key)
                 ? 'var(--accent)' : 'var(--border)'}`,
             }}>
@@ -854,49 +854,49 @@ function CalculatorStep({ client, onSave, onBack, existingEstimate, readOnly: in
         @page{size:A4;margin:8mm 7mm;}
         *{margin:0;padding:0;box-sizing:border-box;}
         @media print{body{background:#fff;padding:0;}.no-print{display:none!important;}}
-        body{font-family:'Noto Sans Georgian',sans-serif;background:#f4f7fc;color:#1a2340;padding:16px;font-size:13px;}
-        .wrap{max-width:860px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(13,27,62,.13);overflow:hidden;}
-        .hdr{background:linear-gradient(135deg,#0d1b3e 0%,#152d5e 60%,#0077cc 100%);padding:22px 36px;display:flex;justify-content:space-between;align-items:center;}
-        .hdr img{height:40px;filter:brightness(0) invert(1);}
+        body{font-family:'Noto Sans Georgian',sans-serif;background:#F5F2EA;color:#071A2B;padding:16px;font-size:13px;}
+        .wrap{max-width:860px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(7,26,43,.13);overflow:hidden;}
+        .hdr{background:linear-gradient(135deg,#071A2B 0%,#0E2A42 100%);padding:22px 36px;display:flex;justify-content:space-between;align-items:center;}
+        .hdr img{height:40px;}
         .hdr-r{text-align:right;}
         .hdr-r h1{font-size:20px;font-weight:700;color:#fff;letter-spacing:1px;}
-        .hdr-r .sub{color:#1BEACD;font-size:10px;font-weight:600;letter-spacing:.08em;margin-top:3px;}
-        .meta{background:#eef3fb;padding:10px 36px;display:flex;gap:0;border-bottom:1px solid #dce4f0;}
-        .mi{flex:1;border-right:1px solid #dce4f0;padding:0 14px 0 0;margin-right:14px;}
+        .hdr-r .sub{color:#C99A4A;font-size:10px;font-weight:600;letter-spacing:.08em;margin-top:3px;}
+        .meta{background:#F5F2EA;padding:10px 36px;display:flex;gap:0;border-bottom:1px solid #E6DFD0;}
+        .mi{flex:1;border-right:1px solid #E6DFD0;padding:0 14px 0 0;margin-right:14px;}
         .mi:last-child{border-right:none;}
-        .ml{font-size:9px;color:#6b7a99;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;}
+        .ml{font-size:9px;color:#5B6775;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;}
         .mv{font-size:12px;font-weight:700;}
         .sec{padding:14px 36px 0;}
-        .sec-title{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#00aaff;font-weight:700;margin-bottom:8px;}
+        .sec-title{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#C99A4A;font-weight:700;margin-bottom:8px;}
         table.t{width:100%;border-collapse:collapse;margin-bottom:14px;}
-        table.t thead tr{background:#0d1b3e;color:#fff;}
+        table.t thead tr{background:#071A2B;color:#fff;}
         table.t thead th{padding:7px 8px;font-size:10px;font-weight:600;text-align:left;}
-        table.t tbody tr{border-bottom:1px solid #dce4f0;}
-        table.t tbody tr:nth-child(even){background:#f8faff;}
+        table.t tbody tr{border-bottom:1px solid #E6DFD0;}
+        table.t tbody tr:nth-child(even){background:#FBF9F4;}
         table.t tbody td{padding:6px 8px;font-size:11.5px;vertical-align:middle;}
-        td.num{color:#6b7a99;font-size:10px;text-align:center;width:22px;}
-        .totals{padding:12px 36px;border-top:2px solid #0d1b3e;}
-        .tr{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid #dce4f0;}
+        td.num{color:#5B6775;font-size:10px;text-align:center;width:22px;}
+        .totals{padding:12px 36px;border-top:2px solid #071A2B;}
+        .tr{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid #E6DFD0;}
         .tr:last-child{border:none;padding-top:8px;}
-        .tl{color:#6b7a99;}
+        .tl{color:#5B6775;}
         .tv{font-weight:600;}
-        .grand .tl{font-size:14px;font-weight:700;color:#0d1b3e;}
-        .grand .tv{font-size:19px;font-weight:800;color:#0077cc;}
-        .vat-note{font-size:11px;color:#6b7a99;margin-top:6px;font-style:italic;}
-        .note-box{margin:0 36px 14px;background:#f4f7fc;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;}
-        .ftr{background:#0d1b3e;padding:8px 36px;display:flex;justify-content:space-between;align-items:center;}
+        .grand .tl{font-size:14px;font-weight:700;color:#071A2B;}
+        .grand .tv{font-size:19px;font-weight:800;color:#9A7230;}
+        .vat-note{font-size:11px;color:#5B6775;margin-top:6px;font-style:italic;}
+        .note-box{margin:0 36px 14px;background:#F5F2EA;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;}
+        .ftr{background:#071A2B;padding:8px 36px;display:flex;justify-content:space-between;align-items:center;}
         .ftr-c{color:rgba(255,255,255,.6);font-size:10px;line-height:1.6;}
-        .ftr-c span{color:#1BEACD;font-weight:600;}
+        .ftr-c span{color:#C99A4A;font-weight:600;}
         .action-bar{max-width:860px;margin:14px auto 0;display:flex;gap:10px;justify-content:flex-end;}
         .btn{padding:10px 22px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border:none;}
-        .btn-outline{background:#fff;border:2px solid #dce4f0;color:#1a2340;}
-        .btn-primary{background:linear-gradient(135deg,#0d1b3e,#0077cc);color:#fff;}
+        .btn-outline{background:#fff;border:2px solid #E6DFD0;color:#071A2B;}
+        .btn-primary{background:#071A2B;color:#fff;}
       </style>
     </head><body>
     <div class="wrap">
       <div class="hdr">
         <div>
-          <img src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png" onerror="this.style.display='none'"/>
+          <img src="https://office.smartpro.ge/brand/logo-gold.png" onerror="this.style.display='none'"/>
           <div style="color:rgba(255,255,255,.5);font-size:10px;margin-top:4px">ელექტროობა · უსაფრთხოება · ჭკვიანი სახლი</div>
         </div>
         <div class="hdr-r">
@@ -961,7 +961,7 @@ function CalculatorStep({ client, onSave, onBack, existingEstimate, readOnly: in
           </div>
           {readOnly && internalComment && (
             <div style={{ marginTop: 6, fontSize: 12, color: 'var(--accent)',
-              background: 'rgba(27,234,205,0.07)', borderRadius: 6,
+              background: 'rgba(201,154,74,0.11)', borderRadius: 6,
               padding: '4px 10px', display: 'inline-block' }}>
               🔒 {internalComment}
             </div>
@@ -1034,7 +1034,7 @@ function CalculatorStep({ client, onSave, onBack, existingEstimate, readOnly: in
           <label style={{ display: 'flex', alignItems: 'center', gap: 10,
             cursor: readOnly ? 'default' : 'pointer',
             padding: '10px 12px', borderRadius: 8, marginBottom: 12,
-            background: withVat ? 'rgba(27,234,205,0.08)' : 'var(--bg-muted)',
+            background: withVat ? 'rgba(201,154,74,0.13)' : 'var(--bg-muted)',
             border: `1.5px solid ${withVat ? 'var(--accent)' : 'var(--border)'}`,
             transition: 'all .15s' }}>
             <input type="checkbox" checked={withVat} disabled={readOnly}
@@ -1178,8 +1178,8 @@ function LeadsList() {
                         return int ? (
                           <span key={k} style={{
                             display: 'inline-block', padding: '2px 8px', borderRadius: 20,
-                            fontSize: 11, fontWeight: 600, background: 'rgba(27,234,205,0.08)',
-                            color: 'var(--accent)', border: '1px solid rgba(27,234,205,0.2)',
+                            fontSize: 11, fontWeight: 600, background: 'rgba(201,154,74,0.13)',
+                            color: 'var(--accent)', border: '1px solid rgba(201,154,74,0.32)',
                           }}>{int.label}</span>
                         ) : null;
                       })}
@@ -1458,7 +1458,7 @@ export default function CalculatorPage() {
                   flex: 1, minWidth: 150, padding: '12px 16px', border: 'none',
                   borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'left',
                   background: active
-                    ? 'linear-gradient(135deg, rgba(27,234,205,0.15), rgba(27,234,205,0.05))'
+                    ? 'linear-gradient(135deg, rgba(201,154,74,0.24), rgba(201,154,74,0.08))'
                     : 'var(--bg-muted)',
                   border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
                   transition: 'all .15s',

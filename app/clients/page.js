@@ -6,6 +6,7 @@ import Modal from '@/components/UI/Modal';
 import { uid, fd } from '@/lib/utils';
 import InvoiceGenerator from '@/components/Invoice/InvoiceGenerator';
 import InvoiceEditor from '@/components/Invoice/InvoiceEditor';
+import { inkColor } from '@/lib/color';
 
 function ClientModal({ client, onClose, onSave }) {
   const { db, t } = useApp();
@@ -94,7 +95,7 @@ function ClientModal({ client, onClose, onSave }) {
                 <input type="checkbox" checked={active} onChange={() => toggleDir(d.id)}
                   style={{ width: 13, height: 13, accentColor: d.color }} />
                 <span>{d.icon}</span>
-                <span style={{ color: active ? d.color : 'var(--text-secondary)', fontWeight: active ? 600 : 400 }}>
+                <span style={{ color: active ? inkColor(d.color) : 'var(--text-secondary)', fontWeight: active ? 600 : 400 }}>
                   {d.name}
                 </span>
               </label>
@@ -139,7 +140,7 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
     <Modal open title={null} onClose={onClose} size="modal-lg">
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(27,234,205,0.08), transparent)',
+        background: 'linear-gradient(135deg, rgba(201,154,74,0.13), transparent)',
         borderBottom: '1px solid var(--border)',
         padding: '16px 20px', margin: '-20px -20px 20px',
         display: 'flex', alignItems: 'center', gap: 16,
@@ -148,7 +149,7 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
           {client.name?.[0]}{client.name?.split(' ')?.[1]?.[0] || ''}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h2 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: 0 }}>{client.name}</h2>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{client.name}</h2>
           {client.phone && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{client.phone}</div>}
         </div>
         <button className="btn btn-secondary btn-sm" style={{ marginRight: 8 }}
@@ -198,7 +199,7 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {(client.directions || []).map(did => {
                   const d = dirs.find(x => x.id === did);
-                  return d ? <span key={did} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: d.color + '22', color: d.color, border: `1px solid ${d.color}44`, fontWeight: 600 }}>{d.icon} {d.name}</span> : null;
+                  return d ? <span key={did} style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: d.color + '22', color: inkColor(d.color), border: `1px solid ${d.color}44`, fontWeight: 600 }}>{d.icon} {d.name}</span> : null;
                 })}
               </div>
             </div>
@@ -231,7 +232,7 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
 
           {/* Invoice bar */}
           {usedItems.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(27,234,205,0.06)', border: '1px solid rgba(27,234,205,0.2)', borderRadius: 'var(--radius)', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(201,154,74,0.10)', border: '1px solid rgba(201,154,74,0.32)', borderRadius: 'var(--radius)', marginBottom: 14 }}>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                 {invoiceSelected.length === 0
                   ? 'ინვოისისთვის მონიშნეთ პოზიციები ↓'
@@ -272,7 +273,7 @@ function ClientDetailModal({ client: initialClient, onClose, defaultTab = 'info'
                   {usedItems.map((item, i) => {
                     const isSelected = invoiceSelected.some(x => x._index === i);
                     return (
-                      <tr key={i} style={{ opacity: item.paid ? 0.7 : 1, background: isSelected ? 'rgba(27,234,205,0.05)' : 'transparent' }}>
+                      <tr key={i} style={{ opacity: item.paid ? 0.7 : 1, background: isSelected ? 'rgba(201,154,74,0.08)' : 'transparent' }}>
                         <td>
                           <input type="checkbox"
                             style={{ width: 14, height: 14, accentColor: 'var(--accent)', cursor: 'pointer' }}
@@ -503,7 +504,7 @@ export default function ClientsPage() {
                         {(c.directions || []).map(did => {
                           const d = dirs.find(x => x.id === did);
                           return d ? (
-                            <span key={did} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 10, background: d.color + '22', color: d.color, border: `1px solid ${d.color}44` }}>
+                            <span key={did} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 10, background: d.color + '22', color: inkColor(d.color), border: `1px solid ${d.color}44` }}>
                               {d.icon} {d.name}
                             </span>
                           ) : null;

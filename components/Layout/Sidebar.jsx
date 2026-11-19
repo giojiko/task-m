@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useFlipsAccess } from '@/lib/flips/useFlipsAccess';
+import Logo from '@/components/Brand/Logo';
 
 const NAV = [
   { href: '/dashboard',  icon: '◫',  key: 'dashboard' },
@@ -58,13 +59,7 @@ export default function Sidebar() {
       ══════════════════════════════════ */}
       <aside className="sidebar desktop-sidebar">
         <div className="sidebar-logo">
-          <img
-            src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png"
-            alt="SmartPro"
-            style={{ height: 26, objectFit: 'contain' }}
-            onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
-          />
-          <span className="logo-text" style={{ display: 'none' }}>SmartPro</span>
+          <Logo />
         </div>
 
         <nav className="sidebar-nav">
@@ -98,7 +93,7 @@ export default function Sidebar() {
                       <Link
                         href="/directions?dir=online"
                         className={`nav-dir-sub ${activeParam === 'online' ? 'active' : ''}`}
-                        style={{ color: activeParam === 'online' ? '#F59E0B' : undefined }}
+                        style={{ color: activeParam === 'online' ? '#B26B00' : undefined }}
                       >
                         <span>🛒</span>
                         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

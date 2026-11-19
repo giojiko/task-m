@@ -1,16 +1,18 @@
 # SmartPro Style Guide
 
 ## Colors
-- Primary Accent: `#1BEACD` (teal) — `var(--accent)`
-- Secondary: `#E5D936` (yellow) — `var(--yellow)`
-- Background: `#0D1117` (base), `#1C2333` (cards) — `var(--bg-base)`, `var(--bg-subtle)`
-- Text: `#E6EDF3` (primary), `#8B98A5` (secondary), `#586374` (muted)
+smartpro.ge-ის ბრენდი: სპილოსძვლისფერი ფონი, მუქი ლურჯი, ოქროსფერი აქცენტი.
+- Navy: `#071A2B` — `var(--navy)` (გვერდითი მენიუ, ტექსტი)
+- Gold: `#C99A4A` — `var(--gold)` (მთავარი ღილაკი, აქცენტები); ტექსტისთვის `var(--accent)` = `#9A7230`
+- Ivory: `#F5F2EA` — `var(--bg-base)`; ბარათები თეთრი — `var(--bg-subtle)`
+- Text: `#071A2B` (primary), `#4A5868` (secondary), `#7A8592` (muted)
 - Status: `var(--success)`, `var(--warning)`, `var(--danger)`, `var(--info)`, `var(--purple)`
+- მიმართულების ფერი ტექსტად: `inkColor(color)` (`lib/color.js`) — ღია ფერს წასაკითხად ამუქებს
 
 ## Typography
-- Body: Inter, 13px, `var(--text-primary)`
-- Headings: Space Grotesk, `font-weight: 800`
-- Muted text: `var(--text-secondary)` / `var(--text-muted)`
+- Body: Noto Sans Georgian, 14px — `var(--font-sans)`
+- Page titles: Noto Serif Georgian — `var(--font-serif)`
+- Numbers / Latin: Montserrat — `var(--font-latin)`
 
 ## Components
 

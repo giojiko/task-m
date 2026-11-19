@@ -97,7 +97,7 @@ export default function PassportsPage() {
       <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
       <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#fff; font-family: 'Inter', sans-serif; }
+        body { background:#fff; font-family: 'Noto Sans Georgian', sans-serif; }
         .page { padding: 24px; display:flex; flex-direction:column; align-items:center; }
         .sticker {
           width: 300px;
@@ -109,12 +109,12 @@ export default function PassportsPage() {
         }
         .logo { height: 32px; margin-bottom: 12px; }
         .project-type {
-          font-size: 10px; color: #1BEACD; font-weight: 700;
+          font-size: 10px; color: #9A7230; font-weight: 700;
           letter-spacing: .12em; text-transform: uppercase;
           margin-bottom: 6px;
         }
         .title {
-          font-size: 14px; font-weight: 700; color: #0F1117;
+          font-size: 14px; font-weight: 700; color: #071A2B;
           margin-bottom: 16px; line-height: 1.4;
         }
         .qr-wrap {
@@ -131,7 +131,7 @@ export default function PassportsPage() {
         }
         .code {
           font-family: 'Courier New', monospace;
-          font-size: 22px; font-weight: 700; color: #0F1117;
+          font-size: 22px; font-weight: 700; color: #071A2B;
           letter-spacing: .12em;
         }
         .instruction { font-size: 10px; color: #64748B; margin-top: 10px; line-height: 1.6; }
@@ -142,7 +142,7 @@ export default function PassportsPage() {
         }
         .btn {
           margin-top: 20px; padding: 10px 24px;
-          background: #1BEACD; border: none; border-radius: 8px;
+          background: #C99A4A; color: #071A2B; border: none; border-radius: 8px;
           font-weight: 700; cursor: pointer; font-size: 13px;
         }
         @media print { .btn { display: none; } .page { padding: 0; } }
@@ -151,7 +151,7 @@ export default function PassportsPage() {
       <div class="page">
         <div class="sticker">
           <img class="logo"
-            src="https://smartpro.ge/wp-content/uploads/2025/12/LOGO-SMARTPRO_for-site-2.png"
+            src="https://office.smartpro.ge/brand/logo-navy.png"
             alt="SmartPro" onerror="this.style.display='none'" />
 
           <div class="project-type">Project Passport</div>
@@ -179,7 +179,7 @@ export default function PassportsPage() {
         new QRCode(document.getElementById('qr'), {
           text: '${url}',
           width: 148, height: 148,
-          colorDark: '#0F1117', colorLight: '#ffffff',
+          colorDark: '#071A2B', colorLight: '#ffffff',
           correctLevel: QRCode.CorrectLevel.M
         });
       </script>
